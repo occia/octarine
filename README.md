@@ -41,6 +41,7 @@ self-contained HTML report as it happens, so even an interrupted run is fully re
 It all runs in **one container** (`gcr.io/oss-fuzz-base/base-runner` + Node + Claude Code CLI + libCRS),
 so the same process both *generates* a harness and *fuzzes* the ASAN binary it produces.
 
+### A real run example
 **See a real run:** browse the [**hdf5 example report**](https://occia.github.io/octarine/examples/hdf5-round1/entry.html)
 — a full Octarine run rendered as HTML (survey → per-surface generation conversations → submitted
 harnesses). Crash details are redacted, since the run found real bugs in the target.
