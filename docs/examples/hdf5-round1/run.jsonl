@@ -1,0 +1,148 @@
+{"ts":"2026-06-06T10:31:15.523Z","level":"info","msg":"harness-gen starting","target":"hdf5","language":"c","sanitizer":"address","budget":{"maxWallTimeSec":43200,"perFuzzSec":300,"maxSurfaceAttempts":5,"maxCostUsd":50}}
+{"ts":"2026-06-06T10:31:17.341Z","level":"warn","msg":"registerLogDir failed","dir":"/work/agent","error":"Error: libCRS register-log-dir failed (code 1): Traceback (most recent call last):\n  File \"/usr/local/bin/libCRS\", line 10, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/libCRS/cli/main.py\", line 519, in main\n    args.func(args)\n  File \"/usr/local/lib/python3.11/site-packages/libCRS/cli/main.py\", line 219, in <lambda>\n    func=lambda args: crs_utils.register_log_dir(args.local_path)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/libCRS/local.py\", line 89, in register_log_dir\n    raise FileExistsError(f\"Local path '{local_path}' already exists\")\nFileExistsError: Local path '/work/agent' already exists"}
+{"ts":"2026-06-06T10:32:10.823Z","level":"info","msg":"no .git in source; initializing repo","srcDir":"/src"}
+{"ts":"2026-06-06T10:32:12.865Z","level":"warn","msg":"no OAuth token and no LLM url/key; claude may not authenticate"}
+{"ts":"2026-06-06T10:32:12.866Z","level":"info","msg":"claude auth env","ANTHROPIC_BASE_URL":"https://goldbug.gtisc.gatech.edu:41414","hasAuthToken":true,"hasApiKey":false,"hasOssCrsLlmUrl":false}
+{"ts":"2026-06-06T10:32:13.401Z","level":"info","msg":"target version","target":"hdf5","projectId":"github.com.HDFGroup.hdf5","commit":"af19d9043785"}
+{"ts":"2026-06-06T10:32:13.402Z","level":"info","msg":"surveying attack surfaces (fresh — no prior ledger)","ledgerDir":"/hack-memory/github.com.HDFGroup.hdf5-af19d9043785/ledger"}
+{"ts":"2026-06-06T10:34:43.755Z","level":"info","msg":"surfaces ready","surfaces":18,"pending":16,"covered":2,"surveySkipped":false}
+{"ts":"2026-06-06T10:34:43.797Z","level":"info","msg":"surface start","id":"dataset-read-data","title":"Dataset data read with type/space inspection","apis":["H5Dopen2","H5Dread","H5Dget_type","H5Dget_space","H5Dget_storage_size","H5Dclose"]}
+{"ts":"2026-06-06T10:34:43.797Z","level":"info","msg":"surface attempt","id":"dataset-read-data","attempt":1}
+{"ts":"2026-06-06T12:08:57.509Z","level":"info","msg":"generation session ended","code":0,"timedOut":false}
+{"ts":"2026-06-06T12:09:00.984Z","level":"info","msg":"fuzzing harness","harness":"h5_dread_fuzzer","attempt":1,"sec":300,"fork":5}
+{"ts":"2026-06-06T12:14:14.906Z","level":"info","msg":"campaign ended","harness":"h5_dread_fuzzer","code":0,"timedOut":false,"edges":2299,"features":2761,"corpusSize":41}
+{"ts":"2026-06-06T12:14:14.910Z","level":"info","msg":"fuzzing complete","harnesses":1,"crashGroups":0,"edges":2299,"features":2761,"corpusSize":41}
+{"ts":"2026-06-06T12:14:14.910Z","level":"info","msg":"correctness verdict","id":"dataset-read-data","attempt":1,"clean":true,"reason":"ok"}
+{"ts":"2026-06-06T12:15:42.382Z","level":"info","msg":"sufficiency verdict","id":"dataset-read-data","attempt":1,"sufficient":true}
+{"ts":"2026-06-06T12:15:43.314Z","level":"info","msg":"surface done — harness submitted","id":"dataset-read-data","harness":"h5_dread_fuzzer"}
+{"ts":"2026-06-06T12:15:43.365Z","level":"info","msg":"budget status","spentUsd":6.51,"maxCostUsd":50,"elapsedSec":6210}
+{"ts":"2026-06-06T12:15:43.394Z","level":"info","msg":"surface start","id":"datatype-parsing","title":"Committed datatype open and introspection","apis":["H5Topen2","H5Tget_class","H5Tget_size","H5Tget_nmembers","H5Tget_member_type","H5Tget_member_offset","H5Tis_variable_str","H5Tclose"]}
+{"ts":"2026-06-06T12:15:43.394Z","level":"info","msg":"surface attempt","id":"datatype-parsing","attempt":1}
+{"ts":"2026-06-06T14:49:49.731Z","level":"info","msg":"generation session ended","code":0,"timedOut":false}
+{"ts":"2026-06-06T14:49:52.880Z","level":"info","msg":"fuzzing harness","harness":"h5_committed_type_fuzzer","attempt":1,"sec":300,"fork":5}
+{"ts":"2026-06-06T14:55:03.788Z","level":"info","msg":"campaign ended","harness":"h5_committed_type_fuzzer","code":0,"timedOut":false,"edges":2065,"features":2308,"corpusSize":22}
+{"ts":"2026-06-06T14:55:03.789Z","level":"info","msg":"fuzzing complete","harnesses":1,"crashGroups":0,"edges":2065,"features":2308,"corpusSize":22}
+{"ts":"2026-06-06T14:55:03.789Z","level":"info","msg":"correctness verdict","id":"datatype-parsing","attempt":1,"clean":true,"reason":"ok"}
+{"ts":"2026-06-06T14:56:24.144Z","level":"info","msg":"sufficiency verdict","id":"datatype-parsing","attempt":1,"sufficient":false}
+{"ts":"2026-06-06T14:56:24.144Z","level":"info","msg":"surface attempt","id":"datatype-parsing","attempt":2}
+{"ts":"2026-06-06T15:30:56.778Z","level":"info","msg":"generation session ended","code":0,"timedOut":false}
+{"ts":"2026-06-06T15:30:58.821Z","level":"info","msg":"fuzzing harness","harness":"h5_committed_type_fuzzer","attempt":2,"sec":300,"fork":5}
+{"ts":"2026-06-06T15:36:07.664Z","level":"info","msg":"campaign ended","harness":"h5_committed_type_fuzzer","code":0,"timedOut":false,"edges":2226,"features":2677,"corpusSize":29}
+{"ts":"2026-06-06T15:36:07.664Z","level":"info","msg":"fuzzing complete","harnesses":1,"crashGroups":0,"edges":2226,"features":2677,"corpusSize":29}
+{"ts":"2026-06-06T15:36:07.665Z","level":"info","msg":"correctness verdict","id":"datatype-parsing","attempt":2,"clean":true,"reason":"ok"}
+{"ts":"2026-06-06T15:37:28.223Z","level":"info","msg":"sufficiency verdict","id":"datatype-parsing","attempt":2,"sufficient":false}
+{"ts":"2026-06-06T15:37:28.224Z","level":"info","msg":"surface attempt","id":"datatype-parsing","attempt":3}
+{"ts":"2026-06-06T16:06:15.233Z","level":"info","msg":"generation session ended","code":0,"timedOut":false}
+{"ts":"2026-06-06T16:06:17.081Z","level":"info","msg":"fuzzing harness","harness":"h5_committed_type_fuzzer","attempt":3,"sec":300,"fork":5}
+{"ts":"2026-06-06T16:11:27.143Z","level":"info","msg":"campaign ended","harness":"h5_committed_type_fuzzer","code":0,"timedOut":false,"edges":2905,"features":3754,"corpusSize":92}
+{"ts":"2026-06-06T16:11:31.274Z","level":"info","msg":"fuzzing complete","harnesses":1,"crashGroups":1,"edges":2905,"features":3754,"corpusSize":92}
+{"ts":"2026-06-06T16:12:42.126Z","level":"info","msg":"crash group analyzed","group":"8d8f684a53e1","attribution":"real_bug","fixLocation":"target"}
+{"ts":"2026-06-06T16:12:42.146Z","level":"info","msg":"correctness verdict","id":"datatype-parsing","attempt":3,"clean":true,"reason":"ok"}
+{"ts":"2026-06-06T16:13:23.315Z","level":"info","msg":"sufficiency verdict","id":"datatype-parsing","attempt":3,"sufficient":true}
+{"ts":"2026-06-06T16:13:23.822Z","level":"info","msg":"surface done — harness submitted","id":"datatype-parsing","harness":"h5_committed_type_fuzzer"}
+{"ts":"2026-06-06T16:13:23.865Z","level":"info","msg":"budget status","spentUsd":34.11,"maxCostUsd":50,"elapsedSec":20470}
+{"ts":"2026-06-06T16:13:23.871Z","level":"info","msg":"surface start","id":"object-visit-iteration","title":"Object header visiting and iteration","apis":["H5Oopen","H5Oget_info3","H5Ovisit3","H5Oclose","H5Literate2","H5Lget_val"]}
+{"ts":"2026-06-06T16:13:23.871Z","level":"info","msg":"surface attempt","id":"object-visit-iteration","attempt":1}
+{"ts":"2026-06-06T16:43:47.372Z","level":"info","msg":"generation session ended","code":0,"timedOut":false}
+{"ts":"2026-06-06T16:43:49.288Z","level":"info","msg":"fuzzing harness","harness":"h5_obj_visit_fuzzer","attempt":1,"sec":300,"fork":5}
+{"ts":"2026-06-06T16:48:56.564Z","level":"info","msg":"campaign ended","harness":"h5_obj_visit_fuzzer","code":0,"timedOut":false,"edges":2305,"features":2783,"corpusSize":54}
+{"ts":"2026-06-06T16:48:56.564Z","level":"info","msg":"fuzzing complete","harnesses":1,"crashGroups":0,"edges":2305,"features":2783,"corpusSize":54}
+{"ts":"2026-06-06T16:48:56.565Z","level":"info","msg":"correctness verdict","id":"object-visit-iteration","attempt":1,"clean":true,"reason":"ok"}
+{"ts":"2026-06-06T16:50:05.720Z","level":"info","msg":"sufficiency verdict","id":"object-visit-iteration","attempt":1,"sufficient":true}
+{"ts":"2026-06-06T16:50:06.259Z","level":"info","msg":"surface done — harness submitted","id":"object-visit-iteration","harness":"h5_obj_visit_fuzzer"}
+{"ts":"2026-06-06T16:50:06.304Z","level":"info","msg":"budget status","spentUsd":35.51,"maxCostUsd":50,"elapsedSec":22673}
+{"ts":"2026-06-06T16:50:06.313Z","level":"info","msg":"surface start","id":"filter-pipeline-read","title":"Compressed/filtered dataset read","apis":["H5Dopen2","H5Dget_create_plist","H5Pget_nfilters","H5Pget_filter2","H5Dread","H5Zfilter_avail"]}
+{"ts":"2026-06-06T16:50:06.313Z","level":"info","msg":"surface attempt","id":"filter-pipeline-read","attempt":1}
+{"ts":"2026-06-06T17:16:46.095Z","level":"info","msg":"generation session ended","code":0,"timedOut":false}
+{"ts":"2026-06-06T17:16:48.372Z","level":"info","msg":"fuzzing harness","harness":"h5_filter_read_fuzzer","attempt":1,"sec":300,"fork":5}
+{"ts":"2026-06-06T17:21:54.966Z","level":"info","msg":"campaign ended","harness":"h5_filter_read_fuzzer","code":71,"timedOut":false,"edges":2305,"features":2777,"corpusSize":50}
+{"ts":"2026-06-06T17:21:55.136Z","level":"info","msg":"fuzzing complete","harnesses":1,"crashGroups":0,"edges":2305,"features":2777,"corpusSize":50}
+{"ts":"2026-06-06T17:21:55.136Z","level":"info","msg":"correctness verdict","id":"filter-pipeline-read","attempt":1,"clean":true,"reason":"ok"}
+{"ts":"2026-06-06T17:22:57.535Z","level":"info","msg":"sufficiency verdict","id":"filter-pipeline-read","attempt":1,"sufficient":true}
+{"ts":"2026-06-06T17:22:57.898Z","level":"info","msg":"surface done — harness submitted","id":"filter-pipeline-read","harness":"h5_filter_read_fuzzer"}
+{"ts":"2026-06-06T17:22:57.949Z","level":"info","msg":"budget status","spentUsd":36.8,"maxCostUsd":50,"elapsedSec":24645}
+{"ts":"2026-06-06T17:22:57.955Z","level":"info","msg":"surface start","id":"attribute-iteration-read","title":"Attribute iteration and data read","apis":["H5Aiterate2","H5Aopen_by_idx","H5Aget_type","H5Aget_space","H5Aread","H5Aclose"]}
+{"ts":"2026-06-06T17:22:57.955Z","level":"info","msg":"surface attempt","id":"attribute-iteration-read","attempt":1}
+{"ts":"2026-06-06T17:41:55.669Z","level":"info","msg":"generation session ended","code":0,"timedOut":false}
+{"ts":"2026-06-06T17:41:56.418Z","level":"info","msg":"fuzzing harness","harness":"h5_attr_iter_fuzzer","attempt":1,"sec":300,"fork":5}
+{"ts":"2026-06-06T17:47:11.664Z","level":"info","msg":"campaign ended","harness":"h5_attr_iter_fuzzer","code":0,"timedOut":false,"edges":2755,"features":3479,"corpusSize":91}
+{"ts":"2026-06-06T17:47:13.906Z","level":"info","msg":"fuzzing complete","harnesses":1,"crashGroups":1,"edges":2755,"features":3479,"corpusSize":91}
+{"ts":"2026-06-06T17:48:10.023Z","level":"info","msg":"crash group analyzed","group":"8d8f684a53e1","attribution":"real_bug","fixLocation":"target"}
+{"ts":"2026-06-06T17:48:10.034Z","level":"info","msg":"correctness verdict","id":"attribute-iteration-read","attempt":1,"clean":true,"reason":"ok"}
+{"ts":"2026-06-06T17:48:55.208Z","level":"info","msg":"sufficiency verdict","id":"attribute-iteration-read","attempt":1,"sufficient":true}
+{"ts":"2026-06-06T17:48:55.859Z","level":"info","msg":"surface done — harness submitted","id":"attribute-iteration-read","harness":"h5_attr_iter_fuzzer"}
+{"ts":"2026-06-06T17:48:55.884Z","level":"info","msg":"budget status","spentUsd":38.35,"maxCostUsd":50,"elapsedSec":26202}
+{"ts":"2026-06-06T17:48:55.889Z","level":"info","msg":"surface start","id":"group-link-iteration","title":"Group open and link traversal","apis":["H5Gopen2","H5Gget_info","H5Giterate","H5Lvisit2","H5Lget_info2","H5Gclose"]}
+{"ts":"2026-06-06T17:48:55.890Z","level":"info","msg":"surface attempt","id":"group-link-iteration","attempt":1}
+{"ts":"2026-06-06T18:03:16.625Z","level":"info","msg":"generation session ended","code":0,"timedOut":false}
+{"ts":"2026-06-06T18:03:17.780Z","level":"info","msg":"fuzzing harness","harness":"h5_group_link_fuzzer","attempt":1,"sec":300,"fork":5}
+{"ts":"2026-06-06T18:08:27.224Z","level":"info","msg":"campaign ended","harness":"h5_group_link_fuzzer","code":0,"timedOut":false,"edges":2788,"features":3573,"corpusSize":94}
+{"ts":"2026-06-06T18:08:31.819Z","level":"info","msg":"fuzzing complete","harnesses":1,"crashGroups":1,"edges":2788,"features":3573,"corpusSize":94}
+{"ts":"2026-06-06T18:09:21.763Z","level":"info","msg":"crash group analyzed","group":"8d8f684a53e1","attribution":"real_bug","fixLocation":"target"}
+{"ts":"2026-06-06T18:09:21.773Z","level":"info","msg":"correctness verdict","id":"group-link-iteration","attempt":1,"clean":true,"reason":"ok"}
+{"ts":"2026-06-06T18:10:18.689Z","level":"info","msg":"sufficiency verdict","id":"group-link-iteration","attempt":1,"sufficient":true}
+{"ts":"2026-06-06T18:10:18.822Z","level":"info","msg":"surface done — harness submitted","id":"group-link-iteration","harness":"h5_group_link_fuzzer"}
+{"ts":"2026-06-06T18:10:18.835Z","level":"info","msg":"budget status","spentUsd":39.68,"maxCostUsd":50,"elapsedSec":27485}
+{"ts":"2026-06-06T18:10:18.837Z","level":"info","msg":"surface start","id":"dataspace-encode-decode","title":"Dataspace encode/decode round-trip","apis":["H5Sget_select_type","H5Sencode2","H5Sdecode","H5Sis_simple","H5Sget_simple_extent_dims","H5Sclose"]}
+{"ts":"2026-06-06T18:10:18.837Z","level":"info","msg":"surface attempt","id":"dataspace-encode-decode","attempt":1}
+{"ts":"2026-06-06T18:26:25.302Z","level":"info","msg":"generation session ended","code":0,"timedOut":false}
+{"ts":"2026-06-06T18:26:26.598Z","level":"info","msg":"fuzzing harness","harness":"h5_dataspace_encode_decode_fuzzer","attempt":1,"sec":300,"fork":5}
+{"ts":"2026-06-06T18:31:27.422Z","level":"info","msg":"campaign ended","harness":"h5_dataspace_encode_decode_fuzzer","code":1,"timedOut":false,"edges":1538,"features":1612,"corpusSize":18}
+{"ts":"2026-06-06T18:38:41.190Z","level":"info","msg":"fuzzing complete","harnesses":1,"crashGroups":5,"edges":1538,"features":1612,"corpusSize":18}
+{"ts":"2026-06-06T18:39:44.440Z","level":"info","msg":"crash group analyzed","group":"8014a9773ec5","attribution":"real_bug","fixLocation":"target"}
+{"ts":"2026-06-06T18:39:50.632Z","level":"info","msg":"crash group analyzed","group":"7a593dba0b66","attribution":"real_bug","fixLocation":"target"}
+{"ts":"2026-06-06T18:40:11.657Z","level":"info","msg":"crash group analyzed","group":"3f3deb242c49","attribution":"real_bug","fixLocation":"target"}
+{"ts":"2026-06-06T18:41:43.197Z","level":"info","msg":"crash group analyzed","group":"900897797d44","attribution":"real_bug","fixLocation":"target"}
+{"ts":"2026-06-06T18:47:28.521Z","level":"info","msg":"crash group analyzed","group":"bc9ff125a602","attribution":"real_bug","fixLocation":"target"}
+{"ts":"2026-06-06T18:47:28.614Z","level":"info","msg":"correctness verdict","id":"dataspace-encode-decode","attempt":1,"clean":true,"reason":"ok"}
+{"ts":"2026-06-06T18:48:29.017Z","level":"info","msg":"sufficiency verdict","id":"dataspace-encode-decode","attempt":1,"sufficient":true}
+{"ts":"2026-06-06T18:48:29.237Z","level":"info","msg":"surface done — harness submitted","id":"dataspace-encode-decode","harness":"h5_dataspace_encode_decode_fuzzer"}
+{"ts":"2026-06-06T18:48:29.265Z","level":"info","msg":"budget status","spentUsd":40.61,"maxCostUsd":50,"elapsedSec":29776}
+{"ts":"2026-06-06T18:48:29.267Z","level":"info","msg":"surface start","id":"property-list-encode-decode","title":"Property list encode/decode","apis":["H5Pencode2","H5Pdecode","H5Pget_filter2","H5Pclose"]}
+{"ts":"2026-06-06T18:48:29.267Z","level":"info","msg":"surface attempt","id":"property-list-encode-decode","attempt":1}
+{"ts":"2026-06-06T19:02:03.843Z","level":"info","msg":"generation session ended","code":0,"timedOut":false}
+{"ts":"2026-06-06T19:02:04.699Z","level":"info","msg":"fuzzing harness","harness":"h5_plist_encode_decode_fuzzer","attempt":1,"sec":300,"fork":5}
+{"ts":"2026-06-06T19:07:05.740Z","level":"info","msg":"campaign ended","harness":"h5_plist_encode_decode_fuzzer","code":1,"timedOut":false,"edges":1951,"features":2848,"corpusSize":58}
+{"ts":"2026-06-06T19:14:12.929Z","level":"info","msg":"fuzzing complete","harnesses":1,"crashGroups":1,"edges":1951,"features":2848,"corpusSize":58}
+{"ts":"2026-06-06T19:15:14.591Z","level":"info","msg":"crash group analyzed","group":"f7b83ae539e3","attribution":"real_bug","fixLocation":"target"}
+{"ts":"2026-06-06T19:15:14.599Z","level":"info","msg":"correctness verdict","id":"property-list-encode-decode","attempt":1,"clean":true,"reason":"ok"}
+{"ts":"2026-06-06T19:16:49.229Z","level":"info","msg":"sufficiency verdict","id":"property-list-encode-decode","attempt":1,"sufficient":true}
+{"ts":"2026-06-06T19:16:49.475Z","level":"info","msg":"surface done — harness submitted","id":"property-list-encode-decode","harness":"h5_plist_encode_decode_fuzzer"}
+{"ts":"2026-06-06T19:16:49.499Z","level":"info","msg":"budget status","spentUsd":41.63,"maxCostUsd":50,"elapsedSec":31476}
+{"ts":"2026-06-06T19:16:49.507Z","level":"info","msg":"surface start","id":"references","title":"Object and region references","apis":["H5Rcreate_object","H5Rcreate_region","H5Rget_obj_type3","H5Ropen_object","H5Ropen_region","H5Rdestroy"]}
+{"ts":"2026-06-06T19:16:49.507Z","level":"info","msg":"surface attempt","id":"references","attempt":1}
+{"ts":"2026-06-06T19:27:41.959Z","level":"info","msg":"generation session ended","code":0,"timedOut":false}
+{"ts":"2026-06-06T19:27:42.488Z","level":"info","msg":"fuzzing harness","harness":"h5_ref_fuzzer","attempt":1,"sec":300,"fork":5}
+{"ts":"2026-06-06T19:32:47.380Z","level":"info","msg":"campaign ended","harness":"h5_ref_fuzzer","code":0,"timedOut":false,"edges":2767,"features":3513,"corpusSize":113}
+{"ts":"2026-06-06T19:33:18.855Z","level":"info","msg":"fuzzing complete","harnesses":1,"crashGroups":2,"edges":2767,"features":3513,"corpusSize":113}
+{"ts":"2026-06-06T19:34:00.245Z","level":"info","msg":"crash group analyzed","group":"8d8f684a53e1","attribution":"real_bug","fixLocation":"target"}
+{"ts":"2026-06-06T19:35:33.728Z","level":"info","msg":"crash group analyzed","group":"d9c8128eaca8","attribution":"real_bug","fixLocation":"target"}
+{"ts":"2026-06-06T19:35:33.743Z","level":"info","msg":"correctness verdict","id":"references","attempt":1,"clean":true,"reason":"ok"}
+{"ts":"2026-06-06T19:36:31.643Z","level":"info","msg":"sufficiency verdict","id":"references","attempt":1,"sufficient":true}
+{"ts":"2026-06-06T19:36:31.776Z","level":"info","msg":"surface done — harness submitted","id":"references","harness":"h5_ref_fuzzer"}
+{"ts":"2026-06-06T19:36:31.798Z","level":"info","msg":"budget status","spentUsd":44.53,"maxCostUsd":50,"elapsedSec":32658}
+{"ts":"2026-06-06T19:36:31.801Z","level":"info","msg":"surface start","id":"high-level-lite-api","title":"High-level Lite API (H5LT)","apis":["H5LTread_dataset","H5LTget_dataset_info","H5LTfind_dataset","H5LTget_attribute_string"]}
+{"ts":"2026-06-06T19:36:31.801Z","level":"info","msg":"surface attempt","id":"high-level-lite-api","attempt":1}
+{"ts":"2026-06-06T19:53:53.172Z","level":"info","msg":"generation session ended","code":0,"timedOut":false}
+{"ts":"2026-06-06T19:53:53.959Z","level":"info","msg":"fuzzing harness","harness":"h5_hlt_fuzzer","attempt":1,"sec":300,"fork":5}
+{"ts":"2026-06-06T19:58:58.248Z","level":"info","msg":"campaign ended","harness":"h5_hlt_fuzzer","code":71,"timedOut":false,"edges":3023,"features":3925,"corpusSize":97}
+{"ts":"2026-06-06T19:59:07.578Z","level":"info","msg":"fuzzing complete","harnesses":1,"crashGroups":1,"edges":3023,"features":3925,"corpusSize":97}
+{"ts":"2026-06-06T20:00:01.499Z","level":"info","msg":"crash group analyzed","group":"8d8f684a53e1","attribution":"real_bug","fixLocation":"target"}
+{"ts":"2026-06-06T20:00:01.503Z","level":"info","msg":"correctness verdict","id":"high-level-lite-api","attempt":1,"clean":true,"reason":"ok"}
+{"ts":"2026-06-06T20:01:32.339Z","level":"info","msg":"sufficiency verdict","id":"high-level-lite-api","attempt":1,"sufficient":true}
+{"ts":"2026-06-06T20:01:32.588Z","level":"info","msg":"surface done — harness submitted","id":"high-level-lite-api","harness":"h5_hlt_fuzzer"}
+{"ts":"2026-06-06T20:01:32.619Z","level":"info","msg":"budget status","spentUsd":47.58,"maxCostUsd":50,"elapsedSec":34159}
+{"ts":"2026-06-06T20:01:32.621Z","level":"info","msg":"surface start","id":"image-api","title":"High-level Image API (H5IM)","apis":["H5IMread_image","H5IMget_image_info","H5IMis_image"]}
+{"ts":"2026-06-06T20:01:32.621Z","level":"info","msg":"surface attempt","id":"image-api","attempt":1}
+{"ts":"2026-06-06T20:11:28.406Z","level":"info","msg":"generation session ended","code":0,"timedOut":false}
+{"ts":"2026-06-06T20:11:28.939Z","level":"info","msg":"fuzzing harness","harness":"h5im_fuzzer","attempt":1,"sec":300,"fork":5}
+{"ts":"2026-06-06T20:16:30.404Z","level":"info","msg":"campaign ended","harness":"h5im_fuzzer","code":71,"timedOut":false,"edges":2788,"features":3529,"corpusSize":101}
+{"ts":"2026-06-06T20:17:01.098Z","level":"info","msg":"fuzzing complete","harnesses":1,"crashGroups":1,"edges":2788,"features":3529,"corpusSize":101}
+{"ts":"2026-06-06T20:18:12.209Z","level":"info","msg":"crash group analyzed","group":"8d8f684a53e1","attribution":"real_bug","fixLocation":"target"}
+{"ts":"2026-06-06T20:18:12.215Z","level":"info","msg":"correctness verdict","id":"image-api","attempt":1,"clean":true,"reason":"ok"}
+{"ts":"2026-06-06T20:18:56.354Z","level":"info","msg":"sufficiency verdict","id":"image-api","attempt":1,"sufficient":true}
+{"ts":"2026-06-06T20:18:56.492Z","level":"info","msg":"surface done — harness submitted","id":"image-api","harness":"h5im_fuzzer"}
+{"ts":"2026-06-06T20:18:56.514Z","level":"info","msg":"budget status","spentUsd":50.22,"maxCostUsd":50,"elapsedSec":35203}
+{"ts":"2026-06-06T20:18:56.515Z","level":"warn","msg":"cost budget reached — stopping run","spentUsd":50.22,"maxCostUsd":50}
+{"ts":"2026-06-06T20:18:56.532Z","level":"info","msg":"exploration complete","done":11,"submitted":11,"surfaces":18,"spentUsd":50.22}
+{"ts":"2026-06-06T20:18:56.534Z","level":"info","msg":"done","surfaces":18,"submitted":11}

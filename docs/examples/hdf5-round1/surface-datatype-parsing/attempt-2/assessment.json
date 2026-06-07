@@ -1,0 +1,11 @@
+{
+  "sufficient": false,
+  "reasoning": "The harness covers all target APIs (H5Topen2, H5Tget_class, H5Tget_size, H5Tget_nmembers, H5Tget_member_type, H5Tget_member_offset, H5Tis_variable_str, H5Tclose) and the introspection logic is sound. However, the golden-image overlay strategy creates a hard gate that severely limits coverage: the fuzzer must preserve enough file structure to pass H5Fopen before any introspection API is called, and most mutations fail this gate, meaning the type-parsing code paths are rarely exercised. The fuzz log confirms this: coverage stagnated at 2197 edges within the first 5 seconds of a 308-second run, with only trivial bumps (to 2226) over the remaining 300 seconds and a final corpus of only 29 entries. Additionally, SAFE_OFFSET=512 protects far more than the 8-byte HDF5 magic — it shields the entire superblock region where object headers encoding type descriptors reside, so the fuzzer cannot meaningfully vary the type descriptor bytes. Inputs larger than (golden_sz - 512) bytes are silently truncated, wasting entropy.",
+  "feedback": "Replace the golden-image overlay approach with one that feeds fuzzer bytes directly as raw HDF5 file content (similar to h5_read_fuzzer.c): copy fuzz data into an in-memory buffer, open it via H5Pset_file_image + CORE VFD, then call H5Topen2 for a set of candidate names. This eliminates the hard H5Fopen gate caused by heavy mutation. If the golden-image approach is kept, reduce SAFE_OFFSET from 512 to 8 (just the HDF5 magic \"\\x89HDF\\r\\n\\x1a\\n\") so the fuzzer can mutate the superblock and object-header regions where committed type descriptors are actually encoded; the current 512-byte protection zone prevents the fuzzer from reaching the datatype-parsing code at all. Also avoid silently truncating inputs longer than the golden image — instead allocate max(golden_sz, size + SAFE_OFFSET) to allow the fuzzer to explore larger type descriptor payloads.",
+  "stats": {
+    "durationMs": 77446,
+    "inputTokens": 242509,
+    "outputTokens": 3291,
+    "costUsd": 0.26025585
+  }
+}

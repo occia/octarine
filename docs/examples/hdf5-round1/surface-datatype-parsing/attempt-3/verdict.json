@@ -1,0 +1,21 @@
+{
+  "groups": [
+    {
+      "groupId": "8d8f684a53e1",
+      "attribution": "real_bug",
+      "fixLocation": "target",
+      "explanation": "The harness is correct: it uses H5Pset_file_image with the CORE VFD and H5Fopen, which is the documented pattern for in-memory HDF5 fuzzing. The OOM occurs in H5C__load_entry:1155 where H5MM_realloc is called with actual_len ≈ 4.29 GB. The EOA guard (H5C__verify_len_eoa) fails to catch this because the EOA itself is derived from the stored_eof field in the fuzz-controlled superblock; a crafted input sets both fields to near-UINT32_MAX, causing the EOA check to pass and the library to attempt an unbounded allocation on corrupt input.",
+      "suggestedFixDirection": "In H5C__load_entry (H5Centry.c ~line 1147-1155), add a hard upper-bound check on actual_len before calling H5MM_realloc — e.g., reject or clamp actual_len to a value no larger than the physical file/image size — so that a fuzz-controlled stored_eof cannot bypass the EOA guard and trigger an unbounded allocation.",
+      "sessionId": "e894959e-0702-444b-adb0-ed2cf9ed3af9"
+    }
+  ],
+  "coverage": {
+    "edges": 2905,
+    "features": 3754,
+    "corpusSize": 92
+  },
+  "round": 3,
+  "clean": true,
+  "reason": "ok",
+  "findings": "[redacted — crash / sanitizer detail]"
+}

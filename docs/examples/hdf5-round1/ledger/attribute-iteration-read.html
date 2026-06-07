@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"><title>attribute-iteration-read</title>
+<style>
+ body{font:14px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#f6f7f9;color:#1c2128}
+ .md{max-width:900px;margin:0 auto;padding:28px 24px;background:#fff;min-height:100vh;border-left:1px solid #eaeef2;border-right:1px solid #eaeef2}
+ .md h1{font-size:22px;border-bottom:1px solid #d0d7de;padding-bottom:8px} .md h2{font-size:18px;margin-top:24px;border-bottom:1px solid #eaeef2;padding-bottom:5px}
+ .md h3{font-size:15px} .md p,.md li{font-size:14px}
+ .md table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px}
+ .md th,.md td{border:1px solid #d0d7de;padding:6px 10px;text-align:left} .md th{background:#f6f8fa}
+ .md tr:nth-child(2n) td{background:#fbfcfd}
+ .md code{background:#eff1f3;padding:1px 5px;border-radius:5px;font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
+ .md pre{background:#0d1117;color:#e6edf3;padding:12px;border-radius:6px;overflow-x:auto} .md pre code{background:none;padding:0}
+ .md a{color:#0969da;text-decoration:none} .md a:hover{text-decoration:underline}
+ .md blockquote{margin:8px 0;padding:4px 14px;border-left:3px solid #d0d7de;color:#57606a}
+ .hljs-comment,.hljs-quote{color:#8b949e} .hljs-keyword,.hljs-selector-tag,.hljs-type{color:#cf222e}
+ .hljs-string,.hljs-attr{color:#0a3069} .hljs-number,.hljs-literal{color:#0550ae} .hljs-title{color:#6639ba}
+</style></head><body><article class="md"><h1>Attribute iteration and data read  (attribute-iteration-read)</h1>
+<ul>
+<li>status: done</li>
+<li>priority: 8</li>
+<li>harness: h5_attr_iter_fuzzer</li>
+<li>attempts: 1</li>
+</ul>
+<h2>APIs</h2>
+<ul>
+<li><code>H5Aiterate2</code></li>
+<li><code>H5Aopen_by_idx</code></li>
+<li><code>H5Aget_type</code></li>
+<li><code>H5Aget_space</code></li>
+<li><code>H5Aread</code></li>
+<li><code>H5Aclose</code></li>
+</ul>
+<h2>Rationale</h2>
+<p>Existing harness opens one hardcoded attribute name; no harness iterates all attributes or calls H5Aread to pull attribute data through the type/space layer, missing conversion and vlen-string bugs.</p>
+<h2>Last feedback</h2>
+<p>The harness correctly drives all 6 target APIs: H5Aiterate2 (name-order iteration callback), H5Aopen_by_idx (creation-order with name-order fallback), H5Aget_type, H5Aget_space, H5Aread, and H5Aclose. The entire fuzzer input is fed as an HDF5 file without hardcoding or short-circuiting. Two distinct iteration code paths are exercised per object. H5Ovisit3 walks the full object hierarchy so attributes on groups, datasets, and named types are all reachable. Coverage grew steadily from 0 to 2755 edges / 3479 features with corpus reaching 91 entries; the plateau only appears near the end of the ~5-minute run, consistent with natural exhaustion rather than structural blockage. OOM events (not crashes) indicate the fuzzer is reaching deep parsing paths.</p>
+</article></body></html>

@@ -1,0 +1,11 @@
+{
+  "sufficient": false,
+  "reasoning": "The harness is structurally correct (writes fuzz bytes as a file, opens it with H5Fopen, visits objects with H5Ovisit3, calls H5Topen2 on named types, then recursively introspects with all target APIs). However, the fuzz log shows the core target APIs were never reached: no NEW_FUNC entry appears for H5Topen2, H5Tget_class, H5Tget_nmembers, H5Tget_member_type, H5Tget_member_offset, or H5Tis_variable_str. All discovered new functions are in file-open/superblock layers (H5Fsuper_cache.c, H5Fio.c, H5checksum.c). Coverage plateaued at 2065 edges with only 22 corpus entries after 310 seconds — entirely consistent with the fuzzer spending nearly all time generating structurally invalid HDF5 files that fail H5Fopen before any type parsing occurs. The committed-type attack surface is unreachable without valid HDF5 seed files containing named datatypes.",
+  "feedback": "The harness must overcome the file-format barrier so the fuzzer can actually reach H5Topen2 and the type introspection APIs. Two concrete fixes: (1) Construct a valid minimal HDF5 file in-memory at startup (using H5Fcreate into a memmap or tmpfs), commit several committed types of varying classes (compound, enum, vlen, array, string) to it, close and re-open it read-only, then use fuzz data to mutate bytes in the raw file buffer corresponding to the type-descriptor region only — so every input reaches a parseable file with at least one named type. (2) Alternatively, keep the current whole-file approach but supply a seed corpus of valid HDF5 files that each contain at least one committed datatype with compound/enum/vlen/array nesting. Without one of these changes the fuzzer never exits the superblock-parsing layer and the H5T* attack surface is never exercised.",
+  "stats": {
+    "durationMs": 77188,
+    "inputTokens": 232964,
+    "outputTokens": 3191,
+    "costUsd": 0.2484093
+  }
+}

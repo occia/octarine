@@ -1,0 +1,21 @@
+{
+  "groups": [
+    {
+      "groupId": "8d8f684a53e1",
+      "attribution": "real_bug",
+      "fixLocation": "target",
+      "explanation": "The harness correctly passes fuzzer-controlled bytes to H5LTopen_file_image, which is the intended API for parsing in-memory HDF5 images. The OOM occurs because H5C__load_entry (H5Centry.c:1155) calls H5MM_realloc with actual_len (~4 GB) derived from a size field in the file data. The EOA guard (H5C__verify_len_eoa) is ineffective because EOA itself is populated from the fuzzer-controlled superblock (H5Fsuper.c:606: sblock->driver_addr + HDR_SIZE sets EOA), so an attacker-crafted driver_addr makes EOA arbitrarily large, allowing actual_len to pass the check and trigger the enormous allocation. The library must not trust in-file size/address fields for allocations without bounding them against the physical size of the image buffer.",
+      "suggestedFixDirection": "In H5C__load_entry (H5Centry.c around line 1147), before calling H5MM_realloc, add a check that actual_len does not exceed the physical size of the backing store (the in-memory image buffer size for core/image files), rather than relying solely on the EOA value that is itself derived from untrusted file data.",
+      "sessionId": "6d48e6d1-c10d-46b3-bf9f-14a13c210f94"
+    }
+  ],
+  "coverage": {
+    "edges": 3023,
+    "features": 3925,
+    "corpusSize": 97
+  },
+  "round": 1,
+  "clean": true,
+  "reason": "ok",
+  "findings": "[redacted — crash / sanitizer detail]"
+}

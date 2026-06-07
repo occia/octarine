@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"><title>references</title>
+<style>
+ body{font:14px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#f6f7f9;color:#1c2128}
+ .md{max-width:900px;margin:0 auto;padding:28px 24px;background:#fff;min-height:100vh;border-left:1px solid #eaeef2;border-right:1px solid #eaeef2}
+ .md h1{font-size:22px;border-bottom:1px solid #d0d7de;padding-bottom:8px} .md h2{font-size:18px;margin-top:24px;border-bottom:1px solid #eaeef2;padding-bottom:5px}
+ .md h3{font-size:15px} .md p,.md li{font-size:14px}
+ .md table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px}
+ .md th,.md td{border:1px solid #d0d7de;padding:6px 10px;text-align:left} .md th{background:#f6f8fa}
+ .md tr:nth-child(2n) td{background:#fbfcfd}
+ .md code{background:#eff1f3;padding:1px 5px;border-radius:5px;font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
+ .md pre{background:#0d1117;color:#e6edf3;padding:12px;border-radius:6px;overflow-x:auto} .md pre code{background:none;padding:0}
+ .md a{color:#0969da;text-decoration:none} .md a:hover{text-decoration:underline}
+ .md blockquote{margin:8px 0;padding:4px 14px;border-left:3px solid #d0d7de;color:#57606a}
+ .hljs-comment,.hljs-quote{color:#8b949e} .hljs-keyword,.hljs-selector-tag,.hljs-type{color:#cf222e}
+ .hljs-string,.hljs-attr{color:#0a3069} .hljs-number,.hljs-literal{color:#0550ae} .hljs-title{color:#6639ba}
+</style></head><body><article class="md"><h1>Object and region references  (references)</h1>
+<ul>
+<li>status: done</li>
+<li>priority: 6</li>
+<li>harness: h5_ref_fuzzer</li>
+<li>attempts: 1</li>
+</ul>
+<h2>APIs</h2>
+<ul>
+<li><code>H5Rcreate_object</code></li>
+<li><code>H5Rcreate_region</code></li>
+<li><code>H5Rget_obj_type3</code></li>
+<li><code>H5Ropen_object</code></li>
+<li><code>H5Ropen_region</code></li>
+<li><code>H5Rdestroy</code></li>
+</ul>
+<h2>Rationale</h2>
+<p>References store pointers into the file. Dereferencing a fuzz-controlled reference exercises file-offset arithmetic and address validation, historically a source of wild-read bugs.</p>
+<h2>Last feedback</h2>
+<p>The harness covers all six specified APIs: H5Rcreate_object and H5Rcreate_region are called via H5Ovisit3 for every named object/dataset found in the fuzz file; H5Rget_obj_type3, H5Ropen_object, and H5Ropen_region are all called in exercise_ref; H5Rdestroy is called after every reference. Two meaningful code paths are exercised: (1) construction+dereference on objects discovered via file traversal, and (2) raw dereference of H5T_STD_REF dataset elements whose bytes come directly from the fuzzer, exercising attacker-controlled offset arithmetic. The coverage trajectory is consistent with genuine surface saturation: edges grew rapidly from 0 to ~2750 in the first 60 seconds, then continued climbing slowly to 2767 by ~224 seconds, followed by a flat plateau through 304 seconds. A corpus of 113 inputs and 3513 features across a structured binary format is healthy. The high crash count (72) indicates the fuzzer is reaching interesting states. No major branch of the specified attack surface appears unreachable.</p>
+</article></body></html>

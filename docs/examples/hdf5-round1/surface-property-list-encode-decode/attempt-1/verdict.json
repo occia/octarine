@@ -1,0 +1,21 @@
+{
+  "groups": [
+    {
+      "groupId": "f7b83ae539e3",
+      "attribution": "real_bug",
+      "fixLocation": "target",
+      "explanation": "[redacted — crash / sanitizer detail]",
+      "suggestedFixDirection": "The harness is correct as written; the fix belongs in H5P__decode (H5Pencdec.c): the decode loop at line 762 should use a bounded string scan (e.g., strnlen or memchr for '\\0') against a tracked end-of-buffer pointer rather than a raw strlen, and H5Pdecode's public API should ideally be extended with a `size` parameter to make safe decoding possible.",
+      "sessionId": "bc915a65-0eca-4562-99b1-61d786909729"
+    }
+  ],
+  "coverage": {
+    "edges": 1951,
+    "features": 2848,
+    "corpusSize": 58
+  },
+  "round": 1,
+  "clean": true,
+  "reason": "ok",
+  "findings": "[redacted — crash / sanitizer detail]"
+}

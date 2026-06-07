@@ -1,0 +1,34 @@
+<!doctype html><html><head><meta charset="utf-8"><title>property-list-encode-decode</title>
+<style>
+ body{font:14px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#f6f7f9;color:#1c2128}
+ .md{max-width:900px;margin:0 auto;padding:28px 24px;background:#fff;min-height:100vh;border-left:1px solid #eaeef2;border-right:1px solid #eaeef2}
+ .md h1{font-size:22px;border-bottom:1px solid #d0d7de;padding-bottom:8px} .md h2{font-size:18px;margin-top:24px;border-bottom:1px solid #eaeef2;padding-bottom:5px}
+ .md h3{font-size:15px} .md p,.md li{font-size:14px}
+ .md table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px}
+ .md th,.md td{border:1px solid #d0d7de;padding:6px 10px;text-align:left} .md th{background:#f6f8fa}
+ .md tr:nth-child(2n) td{background:#fbfcfd}
+ .md code{background:#eff1f3;padding:1px 5px;border-radius:5px;font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
+ .md pre{background:#0d1117;color:#e6edf3;padding:12px;border-radius:6px;overflow-x:auto} .md pre code{background:none;padding:0}
+ .md a{color:#0969da;text-decoration:none} .md a:hover{text-decoration:underline}
+ .md blockquote{margin:8px 0;padding:4px 14px;border-left:3px solid #d0d7de;color:#57606a}
+ .hljs-comment,.hljs-quote{color:#8b949e} .hljs-keyword,.hljs-selector-tag,.hljs-type{color:#cf222e}
+ .hljs-string,.hljs-attr{color:#0a3069} .hljs-number,.hljs-literal{color:#0550ae} .hljs-title{color:#6639ba}
+</style></head><body><article class="md"><h1>Property list encode/decode  (property-list-encode-decode)</h1>
+<ul>
+<li>status: done</li>
+<li>priority: 7</li>
+<li>harness: h5_plist_encode_decode_fuzzer</li>
+<li>attempts: 1</li>
+</ul>
+<h2>APIs</h2>
+<ul>
+<li><code>H5Pencode2</code></li>
+<li><code>H5Pdecode</code></li>
+<li><code>H5Pget_filter2</code></li>
+<li><code>H5Pclose</code></li>
+</ul>
+<h2>Rationale</h2>
+<p>H5Pdecode parses a binary property-list blob. Property lists are used everywhere (creation, access, transfer); bugs in their parser affect every HDF5 operation.</p>
+<h2>Last feedback</h2>
+<p>The harness correctly feeds raw fuzzer bytes to H5Pdecode (the primary parser), re-encodes successful decodes with H5Pencode2, iterates any filter pipeline with H5Pget_filter2, and closes with H5Pclose. The version byte is H5P_ENCODE_VERS=0 (trivially discoverable), and the type field is a small integer range — both easily handled by coverage-guided fuzzing. The log confirms the fuzzer DID get past these checks: coverage grew from 0 to 1951 edges, a corpus of 58 inputs was built, and 1054 crashes were triggered (real library bugs). The plateau is consistent with having explored the reachable decode/encode surface. All four target APIs are exercised on the data-dependent path.</p>
+</article></body></html>

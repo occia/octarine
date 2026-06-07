@@ -1,0 +1,10 @@
+{
+  "sufficient": true,
+  "reasoning": "[redacted — crash / sanitizer detail]",
+  "stats": {
+    "durationMs": 58692,
+    "inputTokens": 258081,
+    "outputTokens": 2926,
+    "costUsd": 0.2875803
+  }
+}

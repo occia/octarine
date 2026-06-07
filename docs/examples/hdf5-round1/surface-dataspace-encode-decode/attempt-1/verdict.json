@@ -1,0 +1,53 @@
+{
+  "groups": [
+    {
+      "groupId": "7a593dba0b66",
+      "attribution": "real_bug",
+      "fixLocation": "target",
+      "explanation": "[redacted — crash / sanitizer detail]",
+      "suggestedFixDirection": "The harness is correct; fix the target by adding a size-aware H5Sdecode_n(buf, buflen) variant (or extend H5S_decode to accept and propagate the remaining buffer size) so that H5S_SELECT_DESERIALIZE receives the actual number of bytes remaining instead of SIZE_MAX, re-enabling bounds checks throughout the selection deserializer.",
+      "sessionId": "58409a7c-dfa0-4d40-815a-a5951bc07f27"
+    },
+    {
+      "groupId": "3f3deb242c49",
+      "attribution": "real_bug",
+      "fixLocation": "target",
+      "explanation": "H5S_decode reads extent_size from untrusted fuzz input (UINT32DECODE at H5S.c:1594) and passes it directly as the p_size bound to H5O_msg_decode/H5O__sdspace_decode. H5O__sdspace_decode sets p_end = p + p_size - 1; if the attacker-supplied extent_size exceeds the actual remaining bytes in the buffer, p_end points past the real allocation. Every subsequent H5_IS_BUFFER_OVERFLOW check validates against this bogus p_end, so they all pass, and the H5F_DECODE_LENGTH loop at H5Osdspace.c:186 reads beyond the actual allocation. The harness calls H5Sdecode(data) correctly — the public API has no length parameter — so the root cause is that H5S_decode never validates that the encoded extent_size field is within the true buffer bounds before using it as a safety boundary.",
+      "suggestedFixDirection": "The harness is correct; fix H5S_decode (H5S.c) to track the total available buffer length and validate that extent_size does not exceed the remaining bytes before passing it as p_size to H5O_msg_decode — e.g., add a buf_size parameter to H5S_decode (propagated from H5Sdecode) and assert/check that (pp - start) + extent_size <= buf_size before the H5O_msg_decode call.",
+      "sessionId": "45c4ef9a-c7f9-46b7-9a96-24e5cb100e5e"
+    },
+    {
+      "groupId": "8014a9773ec5",
+      "attribution": "real_bug",
+      "fixLocation": "target",
+      "explanation": "The harness correctly calls H5Sdecode(data), the documented public API. The crash originates in H5S_decode (H5S.c:1619), which explicitly passes SIZE_MAX to H5S_SELECT_DESERIALIZE with the comment \"size of buffer is unknown\". SIZE_MAX sets skip=true in H5S_select_deserialize, disabling all bounds checks, so UINT32DECODE at line 547 reads 4 bytes past the end of the fuzz-supplied allocation. The library must safely parse truncated or crafted blobs without reading beyond the supplied buffer; the harness is not at fault.",
+      "suggestedFixDirection": "The harness is correct as-is; the fix belongs in H5S_decode: compute the actual remaining byte count (total encoded length minus the offset already consumed by extent decoding) and pass that real size — rather than SIZE_MAX — to H5S_SELECT_DESERIALIZE so bounds checks are active when the public H5Sdecode API receives externally-supplied data.",
+      "sessionId": "10508d80-8cae-4f33-9c8e-117133697e1b"
+    },
+    {
+      "groupId": "900897797d44",
+      "attribution": "real_bug",
+      "fixLocation": "target",
+      "explanation": "The harness correctly calls `H5Sdecode(data)` — the documented public API that takes only a pointer with no size parameter. Internally, `H5S_decode` (H5S.c:1619) passes `SIZE_MAX` as the buffer-end sentinel to `H5S_SELECT_DESERIALIZE`, which causes `H5S_select_deserialize` (H5Sselect.c:529–536) to set `skip=true`, explicitly bypassing all downstream bounds checks. In `H5S__none_deserialize` (H5Snone.c:580–608), `p_end` is computed as `*p + (SIZE_MAX-4) - 1`, which wraps to a tiny address, but `H5_IS_KNOWN_BUFFER_OVERFLOW` returns false unconditionally because `skip=true`. Consequently, `UINT32DECODE` at line 608 reads 4 bytes past the end of the actual allocated buffer. The root cause is the target library's design: `H5Sdecode` has no size parameter, so the library deliberately disables bounds checking for the selection portion of the decode, making it unable to safely parse any truncated or malformed input without reading out-of-bounds.",
+      "suggestedFixDirection": "The harness is correct; the target should be fixed by either adding a `size` parameter to `H5Sdecode`/`H5S_decode` so the true buffer end can be propagated to `H5S_SELECT_DESERIALIZE` instead of `SIZE_MAX`, or by encoding the total serialized size of the selection block in the on-disk format so `H5S_decode` can derive the correct bound before calling the deserializer.",
+      "sessionId": "ca366351-761e-4e35-9d95-1ede2e0dad90"
+    },
+    {
+      "groupId": "bc9ff125a602",
+      "attribution": "real_bug",
+      "fixLocation": "target",
+      "explanation": "[redacted — crash / sanitizer detail]",
+      "suggestedFixDirection": "The harness is correct as-is; fix H5S_decode (H5S.c ~line 1594-1600) to validate that `extent_size` does not exceed the number of bytes remaining in the input buffer before calling H5O_msg_decode and executing `pp += extent_size`, and pass the actual remaining size (rather than SIZE_MAX) to H5S_SELECT_DESERIALIZE so bounds checking is re-enabled.",
+      "sessionId": "6bd1be78-4668-4438-b170-fd26709a67b4"
+    }
+  ],
+  "coverage": {
+    "edges": 1538,
+    "features": 1612,
+    "corpusSize": 18
+  },
+  "round": 1,
+  "clean": true,
+  "reason": "ok",
+  "findings": "[redacted — crash / sanitizer detail]"
+}

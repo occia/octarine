@@ -1,0 +1,21 @@
+{
+  "groups": [
+    {
+      "groupId": "8d8f684a53e1",
+      "attribution": "real_bug",
+      "fixLocation": "target",
+      "explanation": "The harness correctly writes fuzz bytes to a temp file and opens it read-only with H5Fopen — valid API usage with no precondition violations. The OOM occurs inside H5C__load_entry (H5Centry.c:1155) where actual_len (~4 GB) is derived from file-controlled metadata via get_final_load_size. The only guard is H5C__verify_len_eoa, but the fuzzer can craft matching EOA metadata so that check passes, and H5MM_realloc is called with the unreasonable size. HDF5 needs an absolute sanity cap on actual_len before allocating.",
+      "suggestedFixDirection": "In H5C__load_entry (H5Centry.c, after the H5C__verify_len_eoa call), add a hard upper-bound check on actual_len (e.g., reject values exceeding a few hundred MB or a configurable cache maximum) before calling H5MM_realloc, so that a crafted file cannot trigger an unbounded allocation during speculative superblock loading.",
+      "sessionId": "72fc66d5-0d3f-4bd2-a6b8-04d7eabe2254"
+    }
+  ],
+  "coverage": {
+    "edges": 2755,
+    "features": 3479,
+    "corpusSize": 91
+  },
+  "round": 1,
+  "clean": true,
+  "reason": "ok",
+  "findings": "[redacted — crash / sanitizer detail]"
+}

@@ -1,0 +1,1418 @@
+<!doctype html><html><head><meta charset="utf-8"><title>hdf5 — high-level-lite-api · attempt 1 · assessment</title>
+<style>
+ body{font:14px/1.55 -apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#f6f7f9;color:#1c2128}
+ .wrap{max-width:900px;margin:0 auto;padding:20px}
+ h1{font-size:17px;margin:0 0 4px} .sub{color:#636c76;margin-bottom:16px;font-size:12px}
+ .turn{background:#fff;border:1px solid #d0d7de;border-radius:8px;margin:10px 0;padding:10px 14px;overflow:hidden}
+ .turn.assistant{border-left:3px solid #0969da} .turn.user{border-left:3px solid #8c959f;background:#fbfcfd}
+ .who{font-size:11px;font-weight:700;color:#636c76;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px}
+ .who .side{margin-left:8px;background:#fff1e5;color:#bc4c00;padding:1px 6px;border-radius:999px;font-size:10px}
+ .who .ts{margin-left:8px;font-weight:400;color:#a0a8b0;text-transform:none;letter-spacing:0}
+ .msg-text{font-size:14px} .msg-text p{margin:6px 0} .msg-text h1,.msg-text h2,.msg-text h3{font-size:15px;margin:10px 0 4px}
+ .msg-text ul,.msg-text ol{margin:6px 0 6px 22px} .msg-text code{background:#eff1f3;padding:1px 5px;border-radius:5px;font-size:12.5px}
+ .thinking{margin:6px 0;background:#fffbf0;border:1px solid #f0e6c8;border-radius:6px;padding:2px 10px}
+ .thinking>summary{cursor:pointer;color:#9a6700;font-size:12.5px;font-weight:600;padding:4px 0}
+ .thinking .msg-text{color:#6f5b1e;font-size:13px}
+ .tool{margin:8px 0;border:1px solid #d0d7de;border-radius:6px;overflow:hidden}
+ .tool-head{background:#ddf4ff;color:#0550ae;padding:5px 10px;font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
+ .tool details>summary,.result>summary{cursor:pointer;font-size:12px;color:#636c76;padding:5px 10px;user-select:none}
+ .result{margin:8px 0;border:1px solid #d0d7de;border-radius:6px;background:#f6f8fa}
+ .result.err{border-color:#ff818266;background:#fff5f5} .result.err>summary{color:#cf222e}
+ pre{margin:0;padding:10px 12px;overflow-x:auto;background:#0d1117;color:#e6edf3;font-size:12px;line-height:1.45}
+ pre code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:none;padding:0;color:inherit;white-space:pre}
+ .msg-text pre{border-radius:6px;margin:8px 0}
+ /* Block code (crash dumps / logs) must stay light-on-dark: the inline .msg-text code rule below
+    has higher specificity than the bare pre-code reset and would otherwise paint the code element
+    with a light inline-code background -- light-on-light (invisible until selected). Re-assert here. */
+ .msg-text pre code,.thinking .msg-text pre code{background:transparent;color:#e6edf3;font-size:12px;padding:0;border-radius:0}
+ /* compact highlight.js (github-dark subset) */
+ .hljs-comment,.hljs-quote{color:#8b949e} .hljs-keyword,.hljs-selector-tag,.hljs-type{color:#ff7b72}
+ .hljs-string,.hljs-attr,.hljs-template-tag{color:#a5d6ff} .hljs-number,.hljs-literal{color:#79c0ff}
+ .hljs-title,.hljs-function .hljs-title,.hljs-section{color:#d2a8ff} .hljs-built_in,.hljs-builtin-name{color:#ffa657}
+ .hljs-name,.hljs-tag{color:#7ee787} .hljs-meta{color:#79c0ff} .hljs-symbol,.hljs-bullet,.hljs-variable{color:#ffa657}
+ .foot{margin-top:18px;color:#636c76;font-size:12px}
+</style></head><body><div class="wrap">
+ <h1>hdf5 — high-level-lite-api · attempt 1 · assessment</h1>
+ <div class="sub">35 turn(s) · Claude-Code conversation</div>
+ <div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 20:00:04Z</span></div><div class="msg-text"><p>You are judging whether a fuzz harness <em>sufficiently explores</em> one attack surface of the OSS-Fuzz<br>project <code>hdf5</code>. This is an agentic, first-principles judgment — there is no single metric. The<br>question: can a fuzzer driven by this harness thoroughly exercise this attack surface?</p>
+<p>Attack surface: High-level Lite API (H5LT)<br>APIs: H5LTread_dataset, H5LTget_dataset_info, H5LTfind_dataset, H5LTget_attribute_string<br>Harness binary: <code>h5_hlt_fuzzer</code></p>
+<p>Method (use your tools):</p>
+<ol>
+<li>Read the harness source under <code>/work/harness-proj/fuzz-proj</code> — does it drive these APIs the way a real caller<br>would, feeding fuzzer bytes into the meaningful inputs (not hardcoding or short-circuiting them)?</li>
+<li>Read the relevant target source under <code>/src</code> — what input space / branches should a<br>thorough harness reach? Is a major part of the surface left unreachable as written?</li>
+<li>Read the fuzz run log at <code>/OSS_CRS_LOG_DIR/report/surface-high-level-lite-api/attempt-1/harness-h5_hlt_fuzzer/fuzz.log</code> and weigh coverage: edges=3023,<br>features=3925, corpus=97. Did coverage grow then plateau in a<br>way consistent with the surface being explored, or does it look stuck/shallow?</li>
+</ol>
+<p>Decide: sufficient=true if a fuzzer driven by this harness can thoroughly explore this attack surface.<br>Otherwise sufficient=false with concrete <code>feedback</code> on what to change in the harness (e.g. drive an uncovered<br>entry point, vary a mode/flag, stop discarding part of the input). Return ONLY the JSON verdict.</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:00:07Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>Let me analyze the fuzz harness for the H5LT (High-level Lite API) attack surface. I need to:</p>
+<ol>
+<li>Read the harness source</li>
+<li>Read the relevant target source</li>
+<li>Read the fuzz run log</li>
+<li>Make a judgment</li>
+</ol>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:00:07Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Glob</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;pattern&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/**/*hlt*&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:00:08Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Glob</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;pattern&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/**/*hdf5*&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 20:00:08Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">No files found</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 20:00:08Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">/work/harness-proj/fuzz-proj/h5_hlt_fuzzer.c</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:00:10Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/h5_hlt_fuzzer.c&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:00:10Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/OSS_CRS_LOG_DIR/report/surface-high-level-lite-api/attempt-1/harness-h5_hlt_fuzzer/fuzz.log&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 20:00:10Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">1	/* Copyright 2024 Google LLC
+2	 * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+3	 * you may not use this file except in compliance with the License.
+4	 * You may obtain a copy of the License at
+5	 *       http://www.apache.org/licenses/LICENSE-2.0
+6	 * Unless required by applicable law or agreed to in writing, software
+7	 * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+8	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+9	 * See the License for the specific language governing permissions and
+10	 * limitations under the License.
+11	 *
+12	 * Fuzzing harness for the HDF5 High-Level Lite API (H5LT):
+13	 *   H5LTfind_dataset, H5LTget_dataset_ndims, H5LTget_dataset_info,
+14	 *   H5LTread_dataset, H5LTget_attribute_info, H5LTget_attribute_string,
+15	 *   H5LTfind_attribute.
+16	 *
+17	 * Strategy:
+18	 *   1. Open fuzz input as an in-memory HDF5 file image (H5LTopen_file_image,
+19	 *      read-only) — exercises the HL image-open code path.
+20	 *   2. Iterate the root group to discover actual dataset names inside the
+21	 *      (potentially malformed) file.
+22	 *   3. Also probe a small set of hard-coded names to exercise the &quot;not found&quot;
+23	 *      paths.
+24	 *   4. For every candidate name, call the four target APIs in the sequence a
+25	 *      real caller would use:
+26	 *       a. H5LTfind_dataset
+27	 *       b. H5LTget_dataset_ndims  (guards the rank value)
+28	 *       c. H5LTget_dataset_info   (obtains dims + type_size)
+29	 *       d. H5LTread_dataset       (with a correctly-sized harness buffer)
+30	 *       e. H5LTfind_attribute     (for a set of known attribute names)
+31	 *       f. H5LTget_attribute_info (before any read, to size the buffer)
+32	 *       g. H5LTget_attribute_string (with the sized buffer)
+33	 */
+34	
+35	#include &quot;hdf5.h&quot;
+36	#include &quot;hdf5_hl.h&quot;
+37	
+38	#include &lt;stdint.h&gt;
+39	#include &lt;stdlib.h&gt;
+40	#include &lt;string.h&gt;
+41	
+42	/* -------------------------------------------------------------------------
+43	 * Constants
+44	 * ---------------------------------------------------------------------- */
+45	
+46	/* Maximum HDF5 rank (library limit is 32). */
+47	#define MAX_RANK  32
+48	
+49	/* Maximum bytes we are willing to allocate for a single dataset read.     */
+50	#define MAX_READ_BYTES  (4 * 1024 * 1024)   /* 4 MiB */
+51	
+52	/* Maximum bytes for an attribute string buffer. */
+53	#define MAX_ATTR_BYTES  (64 * 1024)         /* 64 KiB */
+54	
+55	/* Maximum number of dataset names we collect from the file. */
+56	#define MAX_DSETS  8
+57	
+58	/* Maximum length of a dataset or attribute name we store. */
+59	#define MAX_NAME   128
+60	
+61	/* -------------------------------------------------------------------------
+62	 * Known attribute names to probe on every dataset/group.
+63	 * ---------------------------------------------------------------------- */
+64	static const char * const KNOWN_ATTR_NAMES[] = {
+65	    &quot;CLASS&quot;, &quot;TITLE&quot;, &quot;units&quot;, &quot;description&quot;, &quot;attr&quot;, &quot;label&quot;,
+66	    &quot;version&quot;, &quot;scale&quot;, &quot;offset&quot;, &quot;long_name&quot;
+67	};
+68	#define N_KNOWN_ATTRS  (sizeof(KNOWN_ATTR_NAMES) / sizeof(KNOWN_ATTR_NAMES[0]))
+69	
+70	/* -------------------------------------------------------------------------
+71	 * Hard-coded dataset names to probe (exercising &quot;not found&quot; paths).
+72	 * ---------------------------------------------------------------------- */
+73	static const char * const FIXED_DSET_NAMES[] = {
+74	    &quot;dataset&quot;, &quot;data&quot;, &quot;dset1&quot;, &quot;x&quot;, &quot;y&quot;, &quot;z&quot;, &quot;signal&quot;, &quot;values&quot;
+75	};
+76	#define N_FIXED_NAMES  (sizeof(FIXED_DSET_NAMES) / sizeof(FIXED_DSET_NAMES[0]))
+77	
+78	/* -------------------------------------------------------------------------
+79	 * Collected dataset names.
+80	 * ---------------------------------------------------------------------- */
+81	typedef struct {
+82	    char names[MAX_DSETS][MAX_NAME];
+83	    int  count;
+84	} found_dsets_t;
+85	
+86	/* H5Literate2 callback — collect up to MAX_DSETS dataset names. */
+87	static herr_t
+88	collect_datasets(hid_t loc_id, const char *name,
+89	                 const H5L_info2_t *linfo, void *op_data)
+90	{
+91	    found_dsets_t *fd = (found_dsets_t *)op_data;
+92	    H5O_info2_t    oinfo;
+93	
+94	    (void)linfo;
+95	
+96	    if (fd-&gt;count &gt;= MAX_DSETS)
+97	        return 1; /* short-circuit */
+98	
+99	    H5E_BEGIN_TRY {
+100	        if (H5Oget_info_by_name3(loc_id, name, &amp;oinfo,
+101	                                 H5O_INFO_BASIC, H5P_DEFAULT) &gt;= 0) {
+102	            if (oinfo.type == H5O_TYPE_DATASET) {
+103	                strncpy(fd-&gt;names[fd-&gt;count], name, MAX_NAME - 1);
+104	                fd-&gt;names[fd-&gt;count][MAX_NAME - 1] = &#x27;\0&#x27;;
+105	                fd-&gt;count++;
+106	            }
+107	        }
+108	    } H5E_END_TRY
+109	
+110	    return 0; /* keep iterating */
+111	}
+112	
+113	/* -------------------------------------------------------------------------
+114	 * Exercise H5LTget_attribute_info + H5LTget_attribute_string on one
+115	 * (obj_name, attr_name) pair inside the already-open file.
+116	 * ---------------------------------------------------------------------- */
+117	static void
+118	probe_attribute_string(hid_t file_id,
+119	                       const char *obj_name,
+120	                       const char *attr_name)
+121	{
+122	    /* Check existence first. */
+123	    herr_t found;
+124	    H5E_BEGIN_TRY {
+125	        found = H5LTfind_attribute(file_id, attr_name);
+126	    } H5E_END_TRY
+127	    /* found may be 0 (not found), 1 (found), or &lt;0 (error) — all OK. */
+128	    (void)found;
+129	
+130	    /* Query info to size the read buffer correctly. */
+131	    hsize_t     adims[MAX_RANK] = {0};
+132	    H5T_class_t atype_class     = H5T_NO_CLASS;
+133	    size_t      atype_size      = 0;
+134	    herr_t      ainfo;
+135	
+136	    H5E_BEGIN_TRY {
+137	        ainfo = H5LTget_attribute_info(file_id, obj_name, attr_name,
+138	                                       adims, &amp;atype_class, &amp;atype_size);
+139	    } H5E_END_TRY
+140	
+141	    if (ainfo &lt; 0 || atype_size == 0 || atype_size &gt; MAX_ATTR_BYTES)
+142	        return;
+143	
+144	    /* Only proceed for string-class attributes (the specific target API). */
+145	    if (atype_class != H5T_STRING)
+146	        return;
+147	
+148	    /* Allocate a buffer large enough for the string (+ NUL guard byte). */
+149	    char *abuf = (char *)calloc(1, atype_size + 1);
+150	    if (!abuf)
+151	        return;
+152	
+153	    H5E_BEGIN_TRY {
+154	        H5LTget_attribute_string(file_id, obj_name, attr_name, abuf);
+155	    } H5E_END_TRY
+156	
+157	    free(abuf);
+158	}
+159	
+160	/* -------------------------------------------------------------------------
+161	 * Exercise H5LT dataset functions on one candidate name.
+162	 * ---------------------------------------------------------------------- */
+163	static void
+164	probe_dataset(hid_t file_id, const char *dset_name)
+165	{
+166	    /* 1. H5LTfind_dataset */
+167	    H5E_BEGIN_TRY {
+168	        H5LTfind_dataset(file_id, dset_name);
+169	    } H5E_END_TRY
+170	
+171	    /* 2. H5LTget_dataset_ndims */
+172	    int rank = -1;
+173	    H5E_BEGIN_TRY {
+174	        H5LTget_dataset_ndims(file_id, dset_name, &amp;rank);
+175	    } H5E_END_TRY
+176	
+177	    /* Guard: skip if rank is not sane. */
+178	    if (rank &lt; 0 || rank &gt; MAX_RANK)
+179	        return;
+180	
+181	    /* 3. H5LTget_dataset_info */
+182	    hsize_t     dims[MAX_RANK] = {0};
+183	    H5T_class_t type_class     = H5T_NO_CLASS;
+184	    size_t      type_size      = 0;
+185	    herr_t      info_ret;
+186	
+187	    H5E_BEGIN_TRY {
+188	        info_ret = H5LTget_dataset_info(file_id, dset_name,
+189	                                        dims, &amp;type_class, &amp;type_size);
+190	    } H5E_END_TRY
+191	
+192	    /* 4. H5LTread_dataset — only if the dataset info looks sane. */
+193	    if (info_ret &gt;= 0 &amp;&amp; type_size &gt; 0) {
+194	        /*
+195	         * Compute total element count, guarding against overflow and
+196	         * excessively large allocations.
+197	         *
+198	         * We read into a native-int buffer (H5T_NATIVE_INT), so the
+199	         * harness buffer size is total_elements * sizeof(int).  HDF5
+200	         * will perform type conversion internally.
+201	         *
+202	         * Scalar datasets have rank 0; treat them as 1 element.
+203	         */
+204	        hsize_t total_elements = 1;
+205	        int     overflow       = 0;
+206	
+207	        for (int d = 0; d &lt; rank; d++) {
+208	            if (dims[d] == 0) {
+209	                total_elements = 0;
+210	                break;
+211	            }
+212	            /* Overflow guard: total_elements * dims[d] &lt;= MAX_READ_BYTES */
+213	            if (total_elements &gt; (hsize_t)(MAX_READ_BYTES / sizeof(int) / (dims[d] ? dims[d] : 1))) {
+214	                overflow = 1;
+215	                break;
+216	            }
+217	            total_elements *= dims[d];
+218	        }
+219	
+220	        if (!overflow &amp;&amp; total_elements &gt; 0) {
+221	            size_t buf_bytes = (size_t)total_elements * sizeof(int);
+222	            if (buf_bytes &lt;= MAX_READ_BYTES) {
+223	                void *buf = calloc(1, buf_bytes);
+224	                if (buf) {
+225	                    H5E_BEGIN_TRY {
+226	                        H5LTread_dataset(file_id, dset_name,
+227	                                         H5T_NATIVE_INT, buf);
+228	                    } H5E_END_TRY
+229	                    free(buf);
+230	                }
+231	            }
+232	        }
+233	    }
+234	
+235	    /* 5. Probe known attribute names on this dataset. */
+236	    for (size_t a = 0; a &lt; N_KNOWN_ATTRS; a++)
+237	        probe_attribute_string(file_id, dset_name, KNOWN_ATTR_NAMES[a]);
+238	}
+239	
+240	/* -------------------------------------------------------------------------
+241	 * Fuzzer entry point
+242	 * ---------------------------------------------------------------------- */
+243	int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+244	{
+245	    if (size &lt; 8)
+246	        return 0;
+247	
+248	    /* Suppress HDF5 diagnostic output during fuzzing. */
+249	    H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
+250	
+251	    /*
+252	     * Open the fuzz input as a read-only in-memory HDF5 file image.
+253	     * flags=0 → read-only, HDF5 copies the buffer internally.
+254	     */
+255	    hid_t file_id;
+256	    H5E_BEGIN_TRY {
+257	        file_id = H5LTopen_file_image((void *)(uintptr_t)data, size, 0);
+258	    } H5E_END_TRY
+259	
+260	    if (file_id &lt; 0)
+261	        return 0;
+262	
+263	    /* Collect actual dataset names from the root group. */
+264	    found_dsets_t fd;
+265	    memset(&amp;fd, 0, sizeof(fd));
+266	    H5E_BEGIN_TRY {
+267	        H5Literate2(file_id, H5_INDEX_NAME, H5_ITER_INC,
+268	                    NULL, collect_datasets, &amp;fd);
+269	    } H5E_END_TRY
+270	
+271	    /*
+272	     * Build the full probe list: discovered names first, then the fixed
+273	     * hard-coded names (deduplicating to avoid redundant calls).
+274	     */
+275	    char all_names[MAX_DSETS + N_FIXED_NAMES][MAX_NAME];
+276	    int  all_count = 0;
+277	
+278	    /* Copy discovered names. */
+279	    for (int i = 0; i &lt; fd.count; i++) {
+280	        strncpy(all_names[all_count], fd.names[i], MAX_NAME - 1);
+281	        all_names[all_count][MAX_NAME - 1] = &#x27;\0&#x27;;
+282	        all_count++;
+283	    }
+284	
+285	    /* Append fixed names if not already present. */
+286	    for (size_t fi = 0; fi &lt; N_FIXED_NAMES; fi++) {
+287	        int dup = 0;
+288	        for (int j = 0; j &lt; all_count; j++) {
+289	            if (strcmp(all_names[j], FIXED_DSET_NAMES[fi]) == 0) {
+290	                dup = 1;
+291	                break;
+292	            }
+293	        }
+294	        if (!dup) {
+295	            strncpy(all_names[all_count], FIXED_DSET_NAMES[fi], MAX_NAME - 1);
+296	            all_names[all_count][MAX_NAME - 1] = &#x27;\0&#x27;;
+297	            all_count++;
+298	        }
+299	    }
+300	
+301	    /* Drive the H5LT functions for each candidate name. */
+302	    for (int i = 0; i &lt; all_count; i++)
+303	        probe_dataset(file_id, all_names[i]);
+304	
+305	    /* Also probe attribute strings attached directly to the root group. */
+306	    for (size_t a = 0; a &lt; N_KNOWN_ATTRS; a++)
+307	        probe_attribute_string(file_id, &quot;.&quot;, KNOWN_ATTR_NAMES[a]);
+308	
+309	    H5Fclose(file_id);
+310	    return 0;
+311	}
+312	</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 20:00:11Z</span></div><details class="result err"><summary>↳ result · error</summary><pre><code class="hljs language-plaintext">File content (34344 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:00:14Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/OSS_CRS_LOG_DIR/report/surface-high-level-lite-api/attempt-1/harness-h5_hlt_fuzzer/fuzz.log&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">100</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:00:15Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Glob</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;pattern&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/src/hl/src/H5LT*.c&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 20:00:15Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">1	INFO: Running with entropic power schedule (0xFF, 100).
+2	INFO: Seed: 588708678
+3	INFO: Loaded 1 modules   (125691 inline 8-bit counters): 125691 [0x564d57efd360, 0x564d57f1be5b), 
+4	INFO: Loaded 1 PC tables (125691 PCs): 125691 [0x564d57f1be60,0x564d58106e10), 
+5	INFO: -fork=5: fuzzing in separate process(s)
+6	INFO: -fork=5: 0 seed inputs, starting to fuzz in /tmp/libFuzzerTemp.FuzzWithFork27355.dir
+7	#2545: cov: 0 ft: 0 corp: 0 exec/s: 1272 oom/timeout/crash: 0/0/0 time: 2s job: 1 dft_time: 0
+8	  NEW_FUNC: 0x564d57054700 in LLVMFuzzerTestOneInput /src/h5_hlt_fuzzer.c:244
+9	  NEW_FUNC: 0x564d57057220 in H5LTopen_file_image /src/hdf5/hl/src/H5LT.c:764
+10	  NEW_FUNC: 0x564d5706f8a0 in H5__init_package /src/hdf5/src/H5.c:114
+11	  NEW_FUNC: 0x564d5706f9d0 in H5_init_library /src/hdf5/src/H5.c:144
+12	  NEW_FUNC: 0x564d57070310 in H5_check_version /src/hdf5/src/H5.c:853
+13	  NEW_FUNC: 0x564d57072cd0 in H5__debug_mask /src/hdf5/src/H5.c:670
+14	  NEW_FUNC: 0x564d57073b80 in H5_user_cb_prepare /src/hdf5/src/H5.c:1300
+15	  NEW_FUNC: 0x564d57073d60 in H5_user_cb_restore /src/hdf5/src/H5.c:1330
+16	  NEW_FUNC: 0x564d5708e130 in H5A_init /src/hdf5/src/H5Aint.c:148
+17	  NEW_FUNC: 0x564d5708e260 in H5A__init_package /src/hdf5/src/H5Aint.c:172
+18	  NEW_FUNC: 0x564d5709d810 in H5AC_create /src/hdf5/src/H5AC.c:251
+19	  NEW_FUNC: 0x564d5709e170 in H5AC_validate_config /src/hdf5/src/H5AC.c:1883
+20	  NEW_FUNC: 0x564d5709f150 in H5AC_validate_cache_image_config /src/hdf5/src/H5AC.c:1956
+21	  NEW_FUNC: 0x564d5709f6c0 in H5AC_set_cache_auto_resize_config /src/hdf5/src/H5AC.c:1794
+22	  NEW_FUNC: 0x564d570a0480 in H5AC_dest /src/hdf5/src/H5AC.c:428
+23	  NEW_FUNC: 0x564d570a3380 in H5AC_prep_for_file_close /src/hdf5/src/H5AC.c:1107
+24	  NEW_FUNC: 0x564d570a3c30 in H5AC_protect /src/hdf5/src/H5AC.c:1269
+25	  NEW_FUNC: 0x564d570a62e0 in H5AC_tag /src/hdf5/src/H5AC.c:2141
+26	  NEW_FUNC: 0x564d570a70f0 in H5AC_set_ring /src/hdf5/src/H5AC.c:2431
+27	  NEW_FUNC: 0x564d570e0a00 in H5C_create /src/hdf5/src/H5C.c:128
+28	  NEW_FUNC: 0x564d570e1cf0 in H5C_reset_cache_hit_rate_stats /src/hdf5/src/H5C.c:785
+29	  NEW_FUNC: 0x564d570e1ea0 in H5C_prep_for_file_close /src/hdf5/src/H5C.c:395
+30	  NEW_FUNC: 0x564d570e2200 in H5C_dest /src/hdf5/src/H5C.c:482
+31	  NEW_FUNC: 0x564d570e2e20 in H5C_set_slist_enabled /src/hdf5/src/H5C.c:1075
+32	  NEW_FUNC: 0x564d570e45b0 in H5C_set_cache_auto_resize_config /src/hdf5/src/H5C.c:818
+33	  NEW_FUNC: 0x564d570e5eb0 in H5C_validate_resize_config /src/hdf5/src/H5C.c:1207
+34	  NEW_FUNC: 0x564d570e7300 in H5C_set_evictions_enabled /src/hdf5/src/H5C.c:1005
+35	  NEW_FUNC: 0x564d570ea4d0 in H5C_stats__reset /src/hdf5/src/H5Cdbg.c:683
+36	  NEW_FUNC: 0x564d570f8ab0 in H5C_protect /src/hdf5/src/H5Centry.c:2996
+37	  NEW_FUNC: 0x564d57105d40 in H5C__verify_len_eoa /src/hdf5/src/H5Centry.c:950
+38	  NEW_FUNC: 0x564d57106f90 in H5C_cache_image_status /src/hdf5/src/H5Cimage.c:229
+39	  NEW_FUNC: 0x564d57111ea0 in H5C__prep_image_for_file_close /src/hdf5/src/H5Cimage.c:832
+40	  NEW_FUNC: 0x564d57115f90 in H5C_set_cache_image_config /src/hdf5/src/H5Cimage.c:1114
+41	  NEW_FUNC: 0x564d571162e0 in H5C_validate_cache_image_config /src/hdf5/src/H5Cimage.c:1186
+42	  NEW_FUNC: 0x564d5711bf40 in H5C__flush_invalidate_cache /src/hdf5/src/H5Cint.c:991
+43	  NEW_FUNC: 0x564d57120e20 in H5C_get_logging_status /src/hdf5/src/H5Clog.c:257
+44	  NEW_FUNC: 0x564d57138e90 in H5CX__init_package /src/hdf5/src/H5CX.c:266
+45	  NEW_FUNC: 0x564d5713a540 in H5CX_pushed /src/hdf5/src/H5CX.c:507
+46	  NEW_FUNC: 0x564d5713a5c0 in H5CX_push /src/hdf5/src/H5CX.c:533
+47	  NEW_FUNC: 0x564d5713ceb0 in H5CX_set_apl /src/hdf5/src/H5CX.c:1012
+48	  NEW_FUNC: 0x564d5713d7c0 in H5CX_set_vol_connector_prop /src/hdf5/src/H5CX.c:1210
+49	  NEW_FUNC: 0x564d5713d9c0 in H5CX_get_dxpl /src/hdf5/src/H5CX.c:1241
+50	  NEW_FUNC: 0x564d5713ddf0 in H5CX_get_vol_connector_prop /src/hdf5/src/H5CX.c:1336
+51	  NEW_FUNC: 0x564d5713e010 in H5CX_get_tag /src/hdf5/src/H5CX.c:1369
+52	  NEW_FUNC: 0x564d5713e0a0 in H5CX_get_ring /src/hdf5/src/H5CX.c:1396
+53	  NEW_FUNC: 0x564d57145190 in H5CX_set_tag /src/hdf5/src/H5CX.c:2597
+54	  NEW_FUNC: 0x564d57145220 in H5CX_set_ring /src/hdf5/src/H5CX.c:2622
+55	  NEW_FUNC: 0x564d57145f20 in H5CX_pop /src/hdf5/src/H5CX.c:3317
+56	  NEW_FUNC: 0x564d57169e50 in H5D_init /src/hdf5/src/H5Dint.c:162
+57	  NEW_FUNC: 0x564d5716a020 in H5D__init_package /src/hdf5/src/H5Dint.c:189
+58	  NEW_FUNC: 0x564d571cc340 in H5Eget_auto2 /src/hdf5/src/H5E.c:709
+59	  NEW_FUNC: 0x564d571cca80 in H5Eset_auto2 /src/hdf5/src/H5E.c:767
+60	  NEW_FUNC: 0x564d571cd1d0 in H5Eauto_is_v2 /src/hdf5/src/H5E.c:825
+61	  NEW_FUNC: 0x564d571d2d90 in H5E_init /src/hdf5/src/H5Eint.c:217
+62	  NEW_FUNC: 0x564d571d2f20 in H5E__init_package /src/hdf5/src/H5Eint.c:241
+63	  NEW_FUNC: 0x564d571d78e0 in H5E_printf_stack /src/hdf5/src/H5Eint.c:1547
+64	  NEW_FUNC: 0x564d571d8cd0 in H5E_clear_stack /src/hdf5/src/H5Eint.c:1844
+65	  NEW_FUNC: 0x564d571d8f90 in H5E_user_cb_prepare /src/hdf5/src/H5Eint.c:367
+66	  NEW_FUNC: 0x564d571d92b0 in H5E_user_cb_restore /src/hdf5/src/H5Eint.c:406
+67	  NEW_FUNC: 0x564d571dd1b0 in H5E__get_auto /src/hdf5/src/H5Eint.c:1453
+68	  NEW_FUNC: 0x564d571dd5b0 in H5E__set_auto /src/hdf5/src/H5Eint.c:1523
+69	  NEW_FUNC: 0x564d571ddc50 in H5E__clear_entries /src/hdf5/src/H5Eint.c:1775
+70	  NEW_FUNC: 0x564d571de290 in H5E_dump_api_stack /src/hdf5/src/H5Eint.c:1939
+71	  NEW_FUNC: 0x564d572027a0 in H5Fopen /src/hdf5/src/H5F.c:813
+72	  NEW_FUNC: 0x564d57202ef0 in H5F__open_api_common /src/hdf5/src/H5F.c:739
+73	  NEW_FUNC: 0x564d57205560 in H5Fclose /src/hdf5/src/H5F.c:1028
+74	  NEW_FUNC: 0x564d5721c000 in H5F_init /src/hdf5/src/H5Fint.c:138
+75	  NEW_FUNC: 0x564d5721c130 in H5F__init_package /src/hdf5/src/H5Fint.c:161
+76	  NEW_FUNC: 0x564d5721c280 in H5F__parse_file_lock_env_var /src/hdf5/src/H5Fint.c:276
+77	  NEW_FUNC: 0x564d57220b00 in H5F_open /src/hdf5/src/H5Fint.c:1827
+78	  NEW_FUNC: 0x564d57223f20 in H5F__new /src/hdf5/src/H5Fint.c:1132
+79	  NEW_FUNC: 0x564d57227b10 in H5F__dest /src/hdf5/src/H5Fint.c:1405
+80	  NEW_FUNC: 0x564d5722e820 in H5F_set_retries /src/hdf5/src/H5Fint.c:3485
+81	  NEW_FUNC: 0x564d5722f080 in H5F__set_eoa /src/hdf5/src/H5Fint.c:3582
+82	  NEW_FUNC: 0x564d57233c70 in H5F__set_vol_conn /src/hdf5/src/H5Fint.c:315
+83	  NEW_FUNC: 0x564d57234510 in H5F_block_read /src/hdf5/src/H5Fio.c:117
+84	  NEW_FUNC: 0x564d5723abe0 in H5F_get_intent /src/hdf5/src/H5Fquery.c:97
+85	  NEW_FUNC: 0x564d5723af20 in H5F_get_read_attempts /src/hdf5/src/H5Fquery.c:342
+86	  NEW_FUNC: 0x564d5723b4c0 in H5F_grp_btree_shared /src/hdf5/src/H5Fquery.c:672
+87	  NEW_FUNC: 0x564d5723bee0 in H5F_get_eoa /src/hdf5/src/H5Fquery.c:924
+88	  NEW_FUNC: 0x564d5723c7b0 in H5F_use_mdc_logging /src/hdf5/src/H5Fquery.c:1122
+89	  NEW_FUNC: 0x564d5723cfe0 in H5F__sfile_add /src/hdf5/src/H5Fsfile.c:94
+90	  NEW_FUNC: 0x564d5723d1c0 in H5F__sfile_search /src/hdf5/src/H5Fsfile.c:130
+91	  NEW_FUNC: 0x564d5723d380 in H5F__sfile_remove /src/hdf5/src/H5Fsfile.c:165
+92	  NEW_FUNC: 0x564d5723dc90 in H5F__super_read /src/hdf5/src/H5Fsuper.c:307
+93	  NEW_FUNC: 0x564d572485e0 in H5F__cache_superblock_get_initial_load_size /src/hdf5/src/H5Fsuper_cache.c:303
+94	  NEW_FUNC: 0x564d572486a0 in H5F__cache_superblock_get_final_load_size /src/hdf5/src/H5Fsuper_cache.c:325
+95	  NEW_FUNC: 0x564d5724cee0 in H5F__superblock_prefix_decode /src/hdf5/src/H5Fsuper_cache.c:142
+96	  NEW_FUNC: 0x564d57259520 in H5FD_init /src/hdf5/src/H5FD.c:110
+97	  NEW_FUNC: 0x564d57259650 in H5FD__init_package /src/hdf5/src/H5FD.c:131
+98	  NEW_FUNC: 0x564d5725ab90 in H5FD_register /src/hdf5/src/H5FD.c:388
+99	  NEW_FUNC: 0x564d5725bfc0 in H5FD_get_class /src/hdf5/src/H5FD.c:527
+100	  NEW_FUNC: 0x564d5725da30 in H5FD_free_driver_info /src/hdf5/src/H5FD.c:765</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 20:00:15Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">No files found</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:00:17Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Glob</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;pattern&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/src/**/*H5LT*&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:00:19Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/OSS_CRS_LOG_DIR/report/surface-high-level-lite-api/attempt-1/harness-h5_hlt_fuzzer/fuzz.log&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;offset&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">100</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">100</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 20:00:19Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">100	  NEW_FUNC: 0x564d5725da30 in H5FD_free_driver_info /src/hdf5/src/H5FD.c:765
+101	  NEW_FUNC: 0x564d5725e6f0 in H5FD_open /src/hdf5/src/H5FD.c:891
+102	  NEW_FUNC: 0x564d5725f780 in H5FD__query /src/hdf5/src/H5FD.c:1213
+103	  NEW_FUNC: 0x564d57260260 in H5FD_close /src/hdf5/src/H5FD.c:1055
+104	  NEW_FUNC: 0x564d57264270 in H5FD_get_maxaddr /src/hdf5/src/H5FD.c:1498
+105	  NEW_FUNC: 0x564d57264450 in H5FD_get_feature_flags /src/hdf5/src/H5FD.c:1524
+106	  NEW_FUNC: 0x564d57264590 in H5FD_get_fs_type_map /src/hdf5/src/H5FD.c:1571
+107	  NEW_FUNC: 0x564d5726df70 in H5FD_lock /src/hdf5/src/H5FD.c:2613
+108	  NEW_FUNC: 0x564d57271f70 in H5FD__core_register /src/hdf5/src/H5FDcore.c:454
+109	  NEW_FUNC: 0x564d57273360 in H5Pset_fapl_core /src/hdf5/src/H5FDcore.c:584
+110	  NEW_FUNC: 0x564d57274590 in H5FD__core_open /src/hdf5/src/H5FDcore.c:692
+111	  NEW_FUNC: 0x564d57276200 in H5FD__core_close /src/hdf5/src/H5FDcore.c:973
+112	  NEW_FUNC: 0x564d57276e00 in H5FD__core_query /src/hdf5/src/H5FDcore.c:1103
+113	  NEW_FUNC: 0x564d57276fb0 in H5FD__core_get_eoa /src/hdf5/src/H5FDcore.c:1143
+114	  NEW_FUNC: 0x564d57276fe0 in H5FD__core_set_eoa /src/hdf5/src/H5FDcore.c:1164
+115	  NEW_FUNC: 0x564d57277180 in H5FD__core_get_eof /src/hdf5/src/H5FDcore.c:1194
+116	  NEW_FUNC: 0x564d57277690 in H5FD__core_read /src/hdf5/src/H5FDcore.c:1274
+117	  NEW_FUNC: 0x564d57278a30 in H5FD__core_flush /src/hdf5/src/H5FDcore.c:1418
+118	  NEW_FUNC: 0x564d572798a0 in H5FD__core_lock /src/hdf5/src/H5FDcore.c:1602
+119	  NEW_FUNC: 0x564d5727a770 in H5FD__family_register /src/hdf5/src/H5FDfamily.c:279
+120	  NEW_FUNC: 0x564d57281fd0 in H5FD_locate_signature /src/hdf5/src/H5FDint.c:149
+121	  NEW_FUNC: 0x564d572826c0 in H5FD_get_eof /src/hdf5/src/H5FDint.c:2491
+122	  NEW_FUNC: 0x564d57282d20 in H5FD_get_eoa /src/hdf5/src/H5FDint.c:2449
+123	  NEW_FUNC: 0x564d572832f0 in H5FD_set_eoa /src/hdf5/src/H5FDint.c:2409
+124	  NEW_FUNC: 0x564d572838b0 in H5FD_read /src/hdf5/src/H5FDint.c:214
+125	  NEW_FUNC: 0x564d57293260 in H5FD_driver_query /src/hdf5/src/H5FDint.c:2533
+126	  NEW_FUNC: 0x564d57298840 in H5FD__log_register /src/hdf5/src/H5FDlog.c:215
+127	  NEW_FUNC: 0x564d5729fbe0 in H5FD__multi_register /src/hdf5/src/H5FDmulti_int.c:52
+128	  NEW_FUNC: 0x564d5729fd10 in H5FD__onion_register /src/hdf5/src/H5FDonion.c:226
+129	  NEW_FUNC: 0x564d572b5ce0 in H5FD__sec2_register /src/hdf5/src/H5FDsec2.c:174
+130	  NEW_FUNC: 0x564d572bbe40 in H5FD__splitter_register /src/hdf5/src/H5FDsplitter.c:177
+131	  NEW_FUNC: 0x564d572c3c00 in H5FD__stdio_register /src/hdf5/src/H5FDstdio_int.c:52
+132	  NEW_FUNC: 0x564d572c4d40 in H5FL_reg_free /src/hdf5/src/H5FL.c:277
+133	  NEW_FUNC: 0x564d572c5350 in H5FL_reg_malloc /src/hdf5/src/H5FL.c:334
+134	  NEW_FUNC: 0x564d572c59e0 in H5FL_reg_calloc /src/hdf5/src/H5FL.c:386
+135	  NEW_FUNC: 0x564d572c9cf0 in H5FL_fac_init /src/hdf5/src/H5FL.c:1695
+136	  NEW_FUNC: 0x564d572ca1d0 in H5FL_fac_free /src/hdf5/src/H5FL.c:1758
+137	  NEW_FUNC: 0x564d572ca7e0 in H5FL_fac_malloc /src/hdf5/src/H5FL.c:1814
+138	  NEW_FUNC: 0x564d572cbd10 in H5FO_create /src/hdf5/src/H5FO.c:72
+139	  NEW_FUNC: 0x564d572cc860 in H5FO_dest /src/hdf5/src/H5FO.c:341
+140	  NEW_FUNC: 0x564d572cca90 in H5FO_top_create /src/hdf5/src/H5FO.c:385
+141	  NEW_FUNC: 0x564d572cd310 in H5FO_top_dest /src/hdf5/src/H5FO.c:569
+142	  NEW_FUNC: 0x564d572d7260 in H5FS_init /src/hdf5/src/H5FSint.c:80
+143	  NEW_FUNC: 0x564d572e98c0 in H5G_init /src/hdf5/src/H5Gint.c:134
+144	  NEW_FUNC: 0x564d572e99f0 in H5G__init_package /src/hdf5/src/H5Gint.c:165
+145	  NEW_FUNC: 0x564d572fa460 in H5G_name_free /src/hdf5/src/H5Gname.c:536
+146	  NEW_FUNC: 0x564d572fa860 in H5G_name_reset /src/hdf5/src/H5Gname.c:513
+147	  NEW_FUNC: 0x564d57303720 in H5G_node_close /src/hdf5/src/H5Gnode.c:1112
+148	  NEW_FUNC: 0x564d57393da0 in H5I_register_type /src/hdf5/src/H5Iint.c:242
+149	  NEW_FUNC: 0x564d57395b90 in H5I__register /src/hdf5/src/H5Iint.c:581
+150	  NEW_FUNC: 0x564d57397660 in H5I_register /src/hdf5/src/H5Iint.c:639
+151	  NEW_FUNC: 0x564d573993e0 in H5I__find_id /src/hdf5/src/H5Iint.c:1666
+152	  NEW_FUNC: 0x564d57399fb0 in H5I_object /src/hdf5/src/H5Iint.c:779
+153	  NEW_FUNC: 0x564d5739a0f0 in H5I_object_verify /src/hdf5/src/H5Iint.c:807
+154	  NEW_FUNC: 0x564d5739a270 in H5I_get_type /src/hdf5/src/H5Iint.c:840
+155	  NEW_FUNC: 0x564d5739aba0 in H5I__remove_common /src/hdf5/src/H5Iint.c:944
+156	  NEW_FUNC: 0x564d5739b790 in H5I_dec_ref /src/hdf5/src/H5Iint.c:1115
+157	  NEW_FUNC: 0x564d5739b940 in H5I__dec_ref /src/hdf5/src/H5Iint.c:1036
+158	  NEW_FUNC: 0x564d5739bf60 in H5I_dec_app_ref /src/hdf5/src/H5Iint.c:1192
+159	  NEW_FUNC: 0x564d5739ccb0 in H5I_inc_ref /src/hdf5/src/H5Iint.c:1357
+160	  NEW_FUNC: 0x564d573b20d0 in H5L_init /src/hdf5/src/H5Lint.c:206
+161	  NEW_FUNC: 0x564d573b2200 in H5L__init_package /src/hdf5/src/H5Lint.c:227
+162	  NEW_FUNC: 0x564d573b2730 in H5L_register /src/hdf5/src/H5Lint.c:344
+163	  NEW_FUNC: 0x564d573bcc40 in H5M_init /src/hdf5/src/H5M.c:94
+164	  NEW_FUNC: 0x564d573bcd70 in H5M__init_package /src/hdf5/src/H5M.c:117
+165	  NEW_FUNC: 0x564d573bd350 in H5MF_init_merge_flags /src/hdf5/src/H5MF.c:137
+166	  NEW_FUNC: 0x564d573d97b0 in H5MM_realloc /src/hdf5/src/H5MM.c:77
+167	  NEW_FUNC: 0x564d573d9840 in H5MM_xstrdup /src/hdf5/src/H5MM.c:109
+168	  NEW_FUNC: 0x564d573d9900 in H5MM_strdup /src/hdf5/src/H5MM.c:136
+169	  NEW_FUNC: 0x564d573d9b60 in H5MM_xfree /src/hdf5/src/H5MM.c:197
+170	  NEW_FUNC: 0x564d573d9b90 in H5MM_xfree_const /src/hdf5/src/H5MM.c:219
+171	  NEW_FUNC: 0x564d5742f940 in H5O__fill_copy /src/hdf5/src/H5Ofill.c:534
+172	  NEW_FUNC: 0x564d5743c470 in H5O_init /src/hdf5/src/H5Oint.c:192
+173	  NEW_FUNC: 0x564d57446550 in H5O_loc_reset /src/hdf5/src/H5Oint.c:1804
+174	  NEW_FUNC: 0x564d57452d90 in H5O__layout_copy /src/hdf5/src/H5Olayout.c:750
+175	  NEW_FUNC: 0x564d574609a0 in H5O_msg_reset /src/hdf5/src/H5Omessage.c:516
+176	  NEW_FUNC: 0x564d574616d0 in H5O_msg_copy /src/hdf5/src/H5Omessage.c:665
+177	  NEW_FUNC: 0x564d57466740 in H5O_msg_reset_share /src/hdf5/src/H5Omessage.c:1530
+178	  NEW_FUNC: 0x564d5746e7a0 in H5O__pline_copy /src/hdf5/src/H5Opline.c:369
+179	  NEW_FUNC: 0x564d5746fd10 in H5O__pline_reset /src/hdf5/src/H5Opline.c:521
+180	  NEW_FUNC: 0x564d5747dd20 in H5Pcreate /src/hdf5/src/H5P.c:229
+181	  NEW_FUNC: 0x564d574865b0 in H5Pclose /src/hdf5/src/H5P.c:1458
+182	  NEW_FUNC: 0x564d57487f20 in H5P__dacc_reg_prop /src/hdf5/src/H5Pdapl.c:197
+183	  NEW_FUNC: 0x564d57493b60 in H5P__dcrt_reg_prop /src/hdf5/src/H5Pdcpl.c:301
+184	  NEW_FUNC: 0x564d574b25f0 in H5P__dcrt_layout_get /src/hdf5/src/H5Pdcpl.c:391
+185	  NEW_FUNC: 0x564d574bc730 in H5P__dcrt_fill_value_get /src/hdf5/src/H5Pdcpl.c:1098
+186	  NEW_FUNC: 0x564d574bee70 in H5P__dcrt_ext_file_list_get /src/hdf5/src/H5Pdcpl.c:1476
+187	  NEW_FUNC: 0x564d574c3aa0 in H5P__dxfr_reg_prop /src/hdf5/src/H5Pdxpl.c:313
+188	  NEW_FUNC: 0x564d574d9ad0 in H5P__facc_reg_prop /src/hdf5/src/H5Pfapl.c:553
+189	  NEW_FUNC: 0x564d574dbf90 in H5P__facc_set_def_driver /src/hdf5/src/H5Pfapl.c:860
+190	  NEW_FUNC: 0x564d574dd5c0 in H5P_set_driver /src/hdf5/src/H5Pfapl.c:1162
+191	  NEW_FUNC: 0x564d574e1750 in H5P_peek_driver_info /src/hdf5/src/H5Pfapl.c:1497
+192	  NEW_FUNC: 0x564d574ee250 in H5Pset_file_image /src/hdf5/src/H5Pfapl.c:2977
+193	  NEW_FUNC: 0x564d574f7b00 in H5P_set_vol /src/hdf5/src/H5Pfapl.c:5979
+194	  NEW_FUNC: 0x564d574f8050 in H5P_reset_vol_class /src/hdf5/src/H5Pfapl.c:6020
+195	  NEW_FUNC: 0x564d57505500 in H5P__facc_file_driver_create /src/hdf5/src/H5Pfapl.c:1765
+196	  NEW_FUNC: 0x564d57505680 in H5P__facc_file_driver_set /src/hdf5/src/H5Pfapl.c:1791
+197	  NEW_FUNC: 0x564d57505980 in H5P__facc_file_driver_del /src/hdf5/src/H5Pfapl.c:1849
+198	  NEW_FUNC: 0x564d575060e0 in H5P__facc_file_driver_close /src/hdf5/src/H5Pfapl.c:1970
+199	  NEW_FUNC: 0x564d575074f0 in H5P__facc_file_image_info_close /src/hdf5/src/H5Pfapl.c:3801</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 20:00:19Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">hdf5/hl/fortran/src/H5LTf90proto.h
+hdf5/hl/fortran/src/H5LTfc.c
+hdf5/hl/fortran/src/H5LTff.F90
+hdf5/hl/src/H5LTpublic.h
+hdf5/hl/src/H5LTanalyze.l
+hdf5/hl/src/H5LTprivate.h
+hdf5/hl/src/H5LTanalyze.c
+hdf5/hl/src/H5LT.c
+hdf5/hl/src/H5LTparse.c
+hdf5/hl/src/H5LTparse.y
+hdf5/hl/src/H5LTparse.h
+hdf5/config/toolchain/fortpregen/gfortran/H5LTff_gen.F90
+hdf5/docs/doxygen/examples/H5LT_examples.c
+hdf5/build-dir/hl/src/CMakeFiles/hdf5_hl-static.dir/H5LTparse.c.o
+hdf5/build-dir/hl/src/CMakeFiles/hdf5_hl-static.dir/H5LTparse.c.o.d
+hdf5/build-dir/hl/src/CMakeFiles/hdf5_hl-static.dir/H5LTanalyze.c.o
+hdf5/build-dir/hl/src/CMakeFiles/hdf5_hl-static.dir/H5LTanalyze.c.o.d
+hdf5/build-dir/hl/src/CMakeFiles/hdf5_hl-static.dir/H5LT.c.o
+hdf5/build-dir/hl/src/CMakeFiles/hdf5_hl-static.dir/H5LT.c.o.d
+hdf5/build-test/hl/src/CMakeFiles/hdf5_hl-static.dir/H5LTanalyze.c.o
+hdf5/build-test/hl/src/CMakeFiles/hdf5_hl-static.dir/H5LTanalyze.c.o.d
+hdf5/build-test/hl/src/CMakeFiles/hdf5_hl-static.dir/H5LT.c.o
+hdf5/build-test/hl/src/CMakeFiles/hdf5_hl-static.dir/H5LT.c.o.d
+hdf5/build-test/hl/src/CMakeFiles/hdf5_hl-static.dir/H5LTparse.c.o
+hdf5/build-test/hl/src/CMakeFiles/hdf5_hl-static.dir/H5LTparse.c.o.d
+hdf5/build-test/hl/src/CMakeFiles/hdf5_hl-shared.dir/H5LTanalyze.c.o
+hdf5/build-test/hl/src/CMakeFiles/hdf5_hl-shared.dir/H5LTanalyze.c.o.d
+hdf5/build-test/hl/src/CMakeFiles/hdf5_hl-shared.dir/H5LT.c.o
+hdf5/build-test/hl/src/CMakeFiles/hdf5_hl-shared.dir/H5LT.c.o.d
+hdf5/build-test/hl/src/CMakeFiles/hdf5_hl-shared.dir/H5LTparse.c.o.d
+hdf5/build-test/hl/src/CMakeFiles/hdf5_hl-shared.dir/H5LTparse.c.o</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:00:22Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>Let me check the end of the fuzz log to see coverage growth patterns.</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:00:24Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/OSS_CRS_LOG_DIR/report/surface-high-level-lite-api/attempt-1/harness-h5_hlt_fuzzer/fuzz.log&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;offset&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">200</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">100</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:00:25Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/src/hdf5/hl/src/H5LTpublic.h&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 20:00:25Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">200	  NEW_FUNC: 0x564d57508860 in H5P__facc_mdc_log_location_close /src/hdf5/src/H5Pfapl.c:4890
+201	  NEW_FUNC: 0x564d5750acb0 in H5P__facc_vol_create /src/hdf5/src/H5Pfapl.c:6238
+202	  NEW_FUNC: 0x564d5750ae30 in H5P__facc_vol_set /src/hdf5/src/H5Pfapl.c:6264
+203	  NEW_FUNC: 0x564d5750b130 in H5P__facc_vol_del /src/hdf5/src/H5Pfapl.c:6322
+204	  NEW_FUNC: 0x564d5750b600 in H5P__facc_vol_close /src/hdf5/src/H5Pfapl.c:6408
+205	  NEW_FUNC: 0x564d5750b780 in H5P__file_driver_copy /src/hdf5/src/H5Pfapl.c:1658
+206	  NEW_FUNC: 0x564d5750bd90 in H5P__file_driver_free /src/hdf5/src/H5Pfapl.c:1725
+207	  NEW_FUNC: 0x564d5750cbf0 in H5P__file_image_info_free /src/hdf5/src/H5Pfapl.c:3424
+208	  NEW_FUNC: 0x564d5750d3f0 in H5P_init_phase1 /src/hdf5/src/H5Pint.c:424
+209	  NEW_FUNC: 0x564d5750d5c0 in H5P__init_package /src/hdf5/src/H5Pint.c:475
+210	  NEW_FUNC: 0x564d5750e1c0 in H5P_init_phase2 /src/hdf5/src/H5Pint.c:450
+211	  NEW_FUNC: 0x564d5750e4e0 in H5P__create_class /src/hdf5/src/H5Pint.c:1781
+212	  NEW_FUNC: 0x564d5750ebb0 in H5P_create_id /src/hdf5/src/H5Pint.c:2014
+213	  NEW_FUNC: 0x564d57510890 in H5P__dup_prop /src/hdf5/src/H5Pint.c:1179
+214	  NEW_FUNC: 0x564d57510ef0 in H5P_copy_plist /src/hdf5/src/H5Pint.c:938
+215	  NEW_FUNC: 0x564d57512f30 in H5P__do_prop_cb1 /src/hdf5/src/H5Pint.c:789
+216	  NEW_FUNC: 0x564d57513840 in H5P__access_class /src/hdf5/src/H5Pint.c:1630
+217	  NEW_FUNC: 0x564d57513df0 in H5P_close /src/hdf5/src/H5Pint.c:5285
+218	  NEW_FUNC: 0x564d575150f0 in H5P__free_prop_cb /src/hdf5/src/H5Pint.c:1547
+219	  NEW_FUNC: 0x564d575155a0 in H5P__register_real /src/hdf5/src/H5Pint.c:2257
+220	  NEW_FUNC: 0x564d57515ba0 in H5P__create_prop /src/hdf5/src/H5Pint.c:1293
+221	  NEW_FUNC: 0x564d57517290 in H5P_poke /src/hdf5/src/H5Pint.c:3007
+222	  NEW_FUNC: 0x564d575176e0 in H5P__do_prop /src/hdf5/src/H5Pint.c:2818
+223	  NEW_FUNC: 0x564d57517d60 in H5P__poke_pclass_cb /src/hdf5/src/H5Pint.c:2945
+224	  NEW_FUNC: 0x564d57518330 in H5P_set /src/hdf5/src/H5Pint.c:3237
+225	  NEW_FUNC: 0x564d57518780 in H5P__set_plist_cb /src/hdf5/src/H5Pint.c:3050
+226	  NEW_FUNC: 0x564d57519c00 in H5P__class_get /src/hdf5/src/H5Pint.c:3284
+227	  NEW_FUNC: 0x564d57519e70 in H5P__class_set /src/hdf5/src/H5Pint.c:3339
+228	  NEW_FUNC: 0x564d5751acb0 in H5P__cmp_class /src/hdf5/src/H5Pint.c:3808
+229	  NEW_FUNC: 0x564d5751cfe0 in H5P_class_isa /src/hdf5/src/H5Pint.c:4078
+230	  NEW_FUNC: 0x564d5751d300 in H5P_isa_class /src/hdf5/src/H5Pint.c:4129
+231	  NEW_FUNC: 0x564d5751da30 in H5P_is_default_plist /src/hdf5/src/H5Pint.c:4161
+232	  NEW_FUNC: 0x564d5751ddf0 in H5P_object_verify /src/hdf5/src/H5Pint.c:4215
+233	  NEW_FUNC: 0x564d5751efa0 in H5P_peek /src/hdf5/src/H5Pint.c:4662
+234	  NEW_FUNC: 0x564d5751f3e0 in H5P__peek_cb /src/hdf5/src/H5Pint.c:4614
+235	  NEW_FUNC: 0x564d5751f5c0 in H5P_get /src/hdf5/src/H5Pint.c:4784
+236	  NEW_FUNC: 0x564d5751fa00 in H5P__get_cb /src/hdf5/src/H5Pint.c:4706
+237	  NEW_FUNC: 0x564d57524590 in H5P__close_list_cb /src/hdf5/src/H5Pint.c:748
+238	  NEW_FUNC: 0x564d57524700 in H5P__lacc_reg_prop /src/hdf5/src/H5Plapl.c:184
+239	  NEW_FUNC: 0x564d5752cb20 in H5P__lcrt_reg_prop /src/hdf5/src/H5Plcpl.c:108
+240	  NEW_FUNC: 0x564d5752dac0 in H5P__macc_reg_prop /src/hdf5/src/H5Pmapl.c:107
+241	  NEW_FUNC: 0x564d5752de30 in H5P__mcrt_reg_prop /src/hdf5/src/H5Pmcpl.c:96
+242	  NEW_FUNC: 0x564d5752de40 in H5P__ocrt_reg_prop /src/hdf5/src/H5Pocpl.c:147
+243	  NEW_FUNC: 0x564d57538de0 in H5P__ocrt_pipeline_get /src/hdf5/src/H5Pocpl.c:1234
+244	  NEW_FUNC: 0x564d5753c1e0 in H5P__ocrt_pipeline_copy /src/hdf5/src/H5Pocpl.c:1477
+245	  NEW_FUNC: 0x564d5753cc90 in H5P__ocrt_pipeline_close /src/hdf5/src/H5Pocpl.c:1604
+246	  NEW_FUNC: 0x564d5753ce10 in H5P__ocpy_reg_prop /src/hdf5/src/H5Pocpypl.c:149
+247	  NEW_FUNC: 0x564d57541960 in H5P__strcrt_reg_prop /src/hdf5/src/H5Pstrcpl.c:112
+248	  NEW_FUNC: 0x564d57544380 in H5PB_dest /src/hdf5/src/H5PB.c:450
+249	  NEW_FUNC: 0x564d57545e90 in H5PB_read /src/hdf5/src/H5PB.c:653
+250	  NEW_FUNC: 0x564d5754be10 in H5PL__init_package /src/hdf5/src/H5PLint.c:136
+251	  NEW_FUNC: 0x564d5754d840 in H5PL_iterate /src/hdf5/src/H5PLint.c:525
+252	  NEW_FUNC: 0x564d5754da20 in H5PL__create_path_table /src/hdf5/src/H5PLpath.c:231
+253	  NEW_FUNC: 0x564d5754e390 in H5PL__insert_at /src/hdf5/src/H5PLpath.c:104
+254	  NEW_FUNC: 0x564d5754f5d0 in H5PL__path_table_iterate /src/hdf5/src/H5PLpath.c:568
+255	  NEW_FUNC: 0x564d57550e70 in H5PL__create_plugin_cache /src/hdf5/src/H5PLplugin_cache.c:99
+256	  NEW_FUNC: 0x564d57560b70 in H5S_init /src/hdf5/src/H5S.c:114
+257	  NEW_FUNC: 0x564d57560ca0 in H5S__init_package /src/hdf5/src/H5S.c:136
+258	  NEW_FUNC: 0x564d575eb7b0 in H5SL__init_package /src/hdf5/src/H5SL.c:544
+259	  NEW_FUNC: 0x564d575eba00 in H5SL_create /src/hdf5/src/H5SL.c:931
+260	  NEW_FUNC: 0x564d575ebdd0 in H5SL__new_node /src/hdf5/src/H5SL.c:641
+261	  NEW_FUNC: 0x564d575ec0d0 in H5SL_count /src/hdf5/src/H5SL.c:1001
+262	  NEW_FUNC: 0x564d575ec100 in H5SL_insert /src/hdf5/src/H5SL.c:1036
+263	  NEW_FUNC: 0x564d575ec230 in H5SL__insert_common /src/hdf5/src/H5SL.c:688
+264	  NEW_FUNC: 0x564d5760b850 in H5SL_search /src/hdf5/src/H5SL.c:1314
+265	  NEW_FUNC: 0x564d5761d710 in H5SL_first /src/hdf5/src/H5SL.c:1896
+266	  NEW_FUNC: 0x564d5761d770 in H5SL_next /src/hdf5/src/H5SL.c:1929
+267	  NEW_FUNC: 0x564d5761d870 in H5SL_item /src/hdf5/src/H5SL.c:2029
+268	  NEW_FUNC: 0x564d5761dc20 in H5SL__release_common /src/hdf5/src/H5SL.c:806
+269	  NEW_FUNC: 0x564d5761e3f0 in H5SL_destroy /src/hdf5/src/H5SL.c:2232
+270	  NEW_FUNC: 0x564d5761e530 in H5SL__close_common /src/hdf5/src/H5SL.c:885
+271	  NEW_FUNC: 0x564d5761e790 in H5SL_close /src/hdf5/src/H5SL.c:2272
+272	  NEW_FUNC: 0x564d57634080 in H5T_init /src/hdf5/src/H5T.c:794
+273	  NEW_FUNC: 0x564d576341b0 in H5T__init_package /src/hdf5/src/H5T.c:1025
+274	  NEW_FUNC: 0x564d57642a30 in H5T_copy /src/hdf5/src/H5T.c:4430
+275	  NEW_FUNC: 0x564d57643060 in H5T__alloc /src/hdf5/src/H5T.c:4649
+276	  NEW_FUNC: 0x564d57643360 in H5T_set_loc /src/hdf5/src/H5T.c:6907
+277	  NEW_FUNC: 0x564d57644500 in H5T__create /src/hdf5/src/H5T.c:3997
+278	  NEW_FUNC: 0x564d576451c0 in H5T__register_int /src/hdf5/src/H5T.c:3201
+279	  NEW_FUNC: 0x564d57645310 in H5T__init_inf /src/hdf5/src/H5T.c:817
+280	  NEW_FUNC: 0x564d576471f0 in H5T_close_real /src/hdf5/src/H5T.c:4787
+281	  NEW_FUNC: 0x564d5764b120 in H5T_cmp /src/hdf5/src/H5T.c:5133
+282	  NEW_FUNC: 0x564d57654560 in H5T__register /src/hdf5/src/H5T.c:3245
+283	  NEW_FUNC: 0x564d5765bff0 in H5T__initiate_copy /src/hdf5/src/H5T.c:4124
+284	  NEW_FUNC: 0x564d5765c530 in H5T__copy_all /src/hdf5/src/H5T.c:4200
+285	  NEW_FUNC: 0x564d5765c660 in H5T__complete_copy /src/hdf5/src/H5T.c:4229
+286	  NEW_FUNC: 0x564d5765eeb0 in H5T__free /src/hdf5/src/H5T.c:4699
+287	  NEW_FUNC: 0x564d576604c0 in H5T__path_find_real /src/hdf5/src/H5T.c:5755
+288	  NEW_FUNC: 0x564d57668a50 in H5T__array_create /src/hdf5/src/H5Tarray.c:133
+289	  NEW_FUNC: 0x564d5766cda0 in H5T__bit_set /src/hdf5/src/H5Tbit.c:328
+290	  NEW_FUNC: 0x564d5767b7d0 in H5T__complex_create /src/hdf5/src/H5Tcomplex.c:111
+291	  NEW_FUNC: 0x564d57683ec0 in H5T__conv_noop /src/hdf5/src/H5Tconv.c:242
+292	  NEW_FUNC: 0x564d57696670 in H5T__conv_fcomplex_schar /src/hdf5/src/H5Tconv_complex.c:1436
+293	  NEW_FUNC: 0x564d5769a530 in H5T__conv_fcomplex_uchar /src/hdf5/src/H5Tconv_complex.c:1455
+294	  NEW_FUNC: 0x564d5769e3a0 in H5T__conv_fcomplex_short /src/hdf5/src/H5Tconv_complex.c:1474
+295	  NEW_FUNC: 0x564d576a24f0 in H5T__conv_fcomplex_ushort /src/hdf5/src/H5Tconv_complex.c:1493
+296	  NEW_FUNC: 0x564d576a65d0 in H5T__conv_fcomplex_int /src/hdf5/src/H5Tconv_complex.c:1512
+297	  NEW_FUNC: 0x564d576aa7b0 in H5T__conv_fcomplex_uint /src/hdf5/src/H5Tconv_complex.c:1531
+298	  NEW_FUNC: 0x564d576ae890 in H5T__conv_fcomplex_long /src/hdf5/src/H5Tconv_complex.c:1550
+299	  NEW_FUNC: 0x564d576b2410 in H5T__conv_fcomplex_ulong /src/hdf5/src/H5Tconv_complex.c:1569</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 20:00:25Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">1	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+2	 * Copyright by The HDF Group.                                               *
+3	 * All rights reserved.                                                      *
+4	 *                                                                           *
+5	 * This file is part of HDF5.  The full HDF5 copyright notice, including     *
+6	 * terms governing use, modification, and redistribution, is contained in    *
+7	 * the LICENSE file, which can be found at the root of the source code       *
+8	 * distribution tree, or in https://www.hdfgroup.org/licenses.               *
+9	 * If you do not have access to either file, you may request a copy from     *
+10	 * help@hdfgroup.org.                                                        *
+11	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+12	
+13	#ifndef H5LTpublic_H
+14	#define H5LTpublic_H
+15	
+16	/* Flag definitions for H5LTopen_file_image() */
+17	#define H5LT_FILE_IMAGE_OPEN_RW   0x0001 /* Open image for read-write */
+18	#define H5LT_FILE_IMAGE_DONT_COPY 0x0002 /* The HDF5 lib won&#x27;t copy   */
+19	/* user supplied image buffer. The same image is open with the core driver.  */
+20	#define H5LT_FILE_IMAGE_DONT_RELEASE 0x0004 /* The HDF5 lib won&#x27;t        */
+21	/* deallocate user supplied image buffer. The user application is responsible */
+22	/* for doing so.                                                             */
+23	#define H5LT_FILE_IMAGE_ALL 0x0007
+24	
+25	typedef enum H5LT_lang_t {
+26	    H5LT_LANG_ERR = -1, /*this is the first*/
+27	    H5LT_DDL      = 0,  /*for DDL*/
+28	    H5LT_C        = 1,  /*for C*/
+29	    H5LT_FORTRAN  = 2,  /*for Fortran*/
+30	    H5LT_NO_LANG  = 3   /*this is the last*/
+31	} H5LT_lang_t;
+32	
+33	#ifdef __cplusplus
+34	extern &quot;C&quot; {
+35	#endif
+36	
+37	/** \page H5LT_UG HDF5 High Level Lite
+38	 *
+39	 * Navigate back: \ref index &quot;Main&quot; / \ref UG
+40	 * &lt;hr&gt;
+41	 *
+42	 * \section sec_hl_lite_api HDF5 Lite APIs
+43	 *
+44	 * \subsection subsec_hl_lite_intro Introduction
+45	 *
+46	 * The HDF5 Lite API (H5LT) provides simplified functions for common HDF5 operations, combining
+47	 * multiple low-level calls into single high-level functions. This reduces code complexity and
+48	 * makes HDF5 more accessible for straightforward data storage tasks.
+49	 *
+50	 * @see H5LT Reference Manual
+51	 *
+52	 * \subsection subsec_hl_lite_dataset Dataset Operations
+53	 *
+54	 * Create and access datasets with single function calls using type-specific functions like
+55	 * #H5LTmake_dataset_int, #H5LTmake_dataset_float, #H5LTread_dataset_int, etc. Query dataset
+56	 * properties with #H5LTget_dataset_ndims, #H5LTget_dataset_info, and #H5LTfind_dataset.
+57	 *
+58	 * \subsection subsec_hl_lite_attr Attribute Operations
+59	 *
+60	 * Set and read attributes using type-specific functions such as #H5LTset_attribute_int,
+61	 * #H5LTset_attribute_string, #H5LTget_attribute_int, etc. Query attribute information
+62	 * with #H5LTget_attribute_ndims and #H5LTget_attribute_info.
+63	 *
+64	 * \subsection subsec_hl_lite_util Utility Functions
+65	 *
+66	 * Convert between datatypes and text representations using #H5LTtext_to_dtype and #H5LTdtype_to_text.
+67	 * Validate paths with #H5LTpath_valid, and work with file images using #H5LTopen_file_image.
+68	 *
+69	 * Previous Chapter \ref sec_hl_images - Next Chapter \ref sec_hl_table_api
+70	 *
+71	 * &lt;hr&gt;
+72	 * Navigate back: \ref index &quot;Main&quot; / \ref UG
+73	 */
+74	
+75	/**\defgroup H5LT HDF5 Lite APIs (H5LT,H5LD)
+76	 * &lt;em&gt;Functions used to simplify creating and manipulating datasets,
+77	 * attributes and other features (H5LT, H5LD)&lt;/em&gt;
+78	 *
+79	 * The HDF5 Lite API consists of higher-level functions which do
+80	 * more operations per call than the basic HDF5 interface.
+81	 * The purpose is to wrap intuitive functions around certain sets
+82	 * of features in the existing APIs.
+83	 * It has the following sets of functions listed below.
+84	 *
+85	 * \note \Bold{Programming hints:}
+86	 * \note To use any of these functions or subroutines,
+87	 *       you must first include the relevant include file (C) or
+88	 *       module (Fortran) in your application.
+89	 * \note The following line includes the HDF5 Lite package, H5LT,
+90	 *       in C applications:
+91	 *       \code #include &quot;hdf5_hl.h&quot; \endcode
+92	 * \note This line includes the H5LT module in Fortran applications:
+93	 *       \code use h5lt \endcode
+94	 *
+95	 * &lt;table&gt;
+96	 * &lt;tr valign=&quot;top&quot;&gt;&lt;td style=&quot;border: none;&quot;&gt;
+97	 *
+98	 * - Dataset Functions
+99	 *   - Make dataset functions
+100	 *      - \ref H5LTmake_dataset
+101	 *      - \ref H5LTmake_dataset_char
+102	 *      - \ref H5LTmake_dataset_short
+103	 *      - \ref H5LTmake_dataset_int
+104	 *      - \ref H5LTmake_dataset_long
+105	 *      - \ref H5LTmake_dataset_float
+106	 *      - \ref H5LTmake_dataset_double
+107	 *      - \ref H5LTmake_dataset_string
+108	 *
+109	 *   - Read dataset functions
+110	 *      - \ref H5LTread_dataset
+111	 *      - \ref H5LTread_dataset_char
+112	 *      - \ref H5LTread_dataset_short
+113	 *      - \ref H5LTread_dataset_int
+114	 *      - \ref H5LTread_dataset_long
+115	 *      - \ref H5LTread_dataset_float
+116	 *      - \ref H5LTread_dataset_double
+117	 *      - \ref H5LTread_dataset_string
+118	 *
+119	 *   - Query dataset functions
+120	 *      - \ref H5LTfind_dataset
+121	 *      - \ref H5LTget_dataset_ndims
+122	 *      - \ref H5LTget_dataset_info
+123	 *
+124	 *   - Dataset watch functions
+125	 *      - \ref H5LDget_dset_dims
+126	 *      - \ref H5LDget_dset_elmts
+127	 *      - \ref H5LDget_dset_type_size
+128	 *
+129	 * &lt;/td&gt;&lt;td style=&quot;border: none;&quot;&gt;
+130	 *
+131	 * - Attribute Functions
+132	 *   - Set attribute functions
+133	 *      - \ref H5LTset_attribute_string
+134	 *      - \ref H5LTset_attribute_char
+135	 *      - \ref H5LTset_attribute_uchar
+136	 *      - \ref H5LTset_attribute_short
+137	 *      - \ref H5LTset_attribute_ushort
+138	 *      - \ref H5LTset_attribute_int
+139	 *      - \ref H5LTset_attribute_uint
+140	 *      - \ref H5LTset_attribute_long
+141	 *      - \ref H5LTset_attribute_long_long
+142	 *      - \ref H5LTset_attribute_ulong
+143	 *      - \ref H5LTset_attribute_ullong
+144	 *      - \ref H5LTset_attribute_float
+145	 *      - \ref H5LTset_attribute_double
+146	 *      - &lt;code&gt;H5LTset_attribute_f&lt;/code&gt; (fortran ONLY)
+147	 *
+148	 *   - Get attribute functions
+149	 *      - \ref H5LTget_attribute
+150	 *      - \ref H5LTget_attribute_string
+151	 *      - \ref H5LTget_attribute_char
+152	 *      - \ref H5LTget_attribute_uchar
+153	 *      - \ref H5LTget_attribute_short
+154	 *      - \ref H5LTget_attribute_ushort
+155	 *      - \ref H5LTget_attribute_int
+156	 *      - \ref H5LTget_attribute_uint
+157	 *      - \ref H5LTget_attribute_long
+158	 *      - \ref H5LTget_attribute_long_long
+159	 *      - \ref H5LTget_attribute_ulong
+160	 *      - \ref H5LTget_attribute_ullong
+161	 *      - \ref H5LTget_attribute_float
+162	 *      - \ref H5LTget_attribute_double
+163	 *
+164	 *   - Query attribute functions
+165	 *      - \ref H5LTfind_attribute
+166	 *      - \ref H5LTget_attribute_info
+167	 *      - \ref H5LTget_attribute_ndims
+168	 *
+169	 * &lt;/td&gt;&lt;td style=&quot;border: none;&quot;&gt;
+170	 *
+171	 * - Datatype Functions
+172	 *   - Datatype translation functions
+173	 *      - \ref H5LTtext_to_dtype
+174	 *      - \ref H5LTdtype_to_text
+175	 *
+176	 * - File image function
+177	 *   - Open file image function
+178	 *      - \ref H5LTopen_file_image
+179	 *
+180	 * - Path and object function
+181	 *   - Query path and object function
+182	 *      - \ref H5LTpath_valid
+183	 *
+184	 * &lt;/td&gt;&lt;/tr&gt;
+185	 * &lt;/table&gt;
+186	 *
+187	 */
+188	
+189	/*-------------------------------------------------------------------------
+190	 *
+191	 * Make dataset functions
+192	 *
+193	 *-------------------------------------------------------------------------
+194	 */
+195	
+196	/**
+197	 *-------------------------------------------------------------------------
+198	 * \ingroup H5LT
+199	 *
+200	 * \brief Creates and writes a dataset of a type \p type_id.
+201	 *
+202	 * \fg_loc_id
+203	 * \param[in] dset_name The Name of the dataset to create
+204	 * \param[in] rank      Number of dimensions of dataspace
+205	 * \param[in] dims      An array of the size of each dimension
+206	 * \param[in] type_id   Identifier of the datatype to use when creating the dataset
+207	 * \param[in] buffer    Buffer with data to be written to the dataset
+208	 *
+209	 * \return \herr_t
+210	 *
+211	 * \details H5LTmake_dataset() creates and writes a dataset named
+212	 *          \p dset_name attached to the object specified by the
+213	 *          identifier \p loc_id.
+214	 *
+215	 *          The parameter \p type_id can be any valid HDF5 Prdefined \ref PDTNAT;
+216	 *          For example, setting \p type_id to #H5T_NATIVE_INT will result in a dataset
+217	 *          of &lt;em&gt;signed \e integer datatype&lt;/em&gt;.
+218	 *
+219	 * \version 1.10.0 Fortran 2003 subroutine added to accept a C address of the data buffer.
+220	 * \version 1.8.7 Fortran subroutine modified in this release to accommodate arrays
+221	 *                with more than three dimensions.
+222	 *
+223	 */
+224	H5HL_DLL herr_t H5LTmake_dataset(hid_t loc_id, const char *dset_name, int rank, const hsize_t *dims,
+225	                                 hid_t type_id, const void *buffer);
+226	
+227	/**
+228	 *-------------------------------------------------------------------------
+229	 * \ingroup H5LT
+230	 *
+231	 * \brief Creates and writes a dataset.
+232	 *
+233	 * \fg_loc_id
+234	 * \param[in] dset_name The Name of the dataset to create
+235	 * \param[in] rank      Number of dimensions of dataspace
+236	 * \param[in] dims      An array of the size of each dimension
+237	 * \param[in] buffer    Buffer with data to be written to the dataset
+238	 *
+239	 * \return \herr_t
+240	 *
+241	 * \details H5LTmake_dataset_char() creates and writes a dataset
+242	 *          named \p dset_name attached to the object specified by
+243	 *          the identifier \p loc_id.
+244	 *
+245	 *          The dataset&#x27;s datatype will be \e character, #H5T_NATIVE_CHAR.
+246	 *
+247	 */
+248	H5HL_DLL herr_t H5LTmake_dataset_char(hid_t loc_id, const char *dset_name, int rank, const hsize_t *dims,
+249	                                      const char *buffer);
+250	
+251	/**
+252	 *-------------------------------------------------------------------------
+253	 * \ingroup H5LT
+254	 *
+255	 * \brief Creates and writes a dataset.
+256	 *
+257	 * \fg_loc_id
+258	 * \param[in] dset_name The Name of the dataset to create
+259	 * \param[in] rank      Number of dimensions of dataspace
+260	 * \param[in] dims      An array of the size of each dimension
+261	 * \param[in] buffer    Buffer with data to be written to the dataset
+262	 *
+263	 * \return \herr_t
+264	 *
+265	 * \details H5LTmake_dataset_short() creates and writes a dataset
+266	 *          named \p dset_name attached to the object specified by
+267	 *          the identifier \p loc_id.
+268	 *
+269	 *          The dataset&#x27;s datatype will be &lt;em&gt;short signed integer&lt;/em&gt;,
+270	 *          #H5T_NATIVE_SHORT.
+271	 *
+272	 */
+273	H5HL_DLL herr_t H5LTmake_dataset_short(hid_t loc_id, const char *dset_name, int rank, const hsize_t *dims,
+274	                                       const short *buffer);
+275	
+276	/**
+277	 *-------------------------------------------------------------------------
+278	 * \ingroup H5LT
+279	 *
+280	 * \brief Creates and writes a dataset.
+281	 *
+282	 * \fg_loc_id
+283	 * \param[in] dset_name The Name of the dataset to create
+284	 * \param[in] rank      Number of dimensions of dataspace
+285	 * \param[in] dims      An array of the size of each dimension
+286	 * \param[in] buffer    Buffer with data to be written to the dataset
+287	 *
+288	 * \return \herr_t
+289	 *
+290	 * \details H5LTmake_dataset_int() creates and writes a dataset
+291	 *          named \p dset_name attached to the object specified by
+292	 *          the identifier \p loc_id.
+293	 *
+294	 *          The dataset&#x27;s datatype will be &lt;em&gt;native signed integer&lt;/em&gt;,
+295	 *          #H5T_NATIVE_INT.
+296	 *
+297	 * \version Fortran subroutine modified in this release to accommodate
+298	 *          arrays with more than three dimensions.
+299	 *
+300	 */
+301	H5HL_DLL herr_t H5LTmake_dataset_int(hid_t loc_id, const char *dset_name, int rank, const hsize_t *dims,
+302	                                     const int *buffer);
+303	
+304	/**
+305	 *-------------------------------------------------------------------------
+306	 * \ingroup H5LT
+307	 *
+308	 * \brief Creates and writes a dataset.
+309	 *
+310	 * \fg_loc_id
+311	 * \param[in] dset_name The Name of the dataset to create
+312	 * \param[in] rank      Number of dimensions of dataspace
+313	 * \param[in] dims      An array of the size of each dimension
+314	 * \param[in] buffer    Buffer with data to be written to the dataset
+315	 *
+316	 * \return \herr_t
+317	 *
+318	 * \details H5LTmake_dataset_long() creates and writes a dataset
+319	 *          named \p dset_name attached to the object specified by
+320	 *          the identifier \p loc_id.
+321	 *
+322	 *          The dataset&#x27;s datatype will be &lt;em&gt;long signed integer&lt;/em&gt;,
+323	 *          #H5T_NATIVE_LONG.
+324	 *
+325	 */
+326	H5HL_DLL herr_t H5LTmake_dataset_long(hid_t loc_id, const char *dset_name, int rank, const hsize_t *dims,
+327	                                      const long *buffer);
+328	
+329	/**
+330	 *-------------------------------------------------------------------------
+331	 * \ingroup H5LT
+332	 *
+333	 * \brief Creates and writes a dataset.
+334	 *
+335	 * \fg_loc_id
+336	 * \param[in] dset_name The Name of the dataset to create
+337	 * \param[in] rank      Number of dimensions of dataspace
+338	 * \param[in] dims      An array of the size of each dimension
+339	 * \param[in] buffer    Buffer with data to be written to the dataset
+340	 *
+341	 * \return \herr_t
+342	 *
+343	 * \details H5LTmake_dataset_float() creates and writes a dataset
+344	 *          named \p dset_name attached to the object specified by
+345	 *          the identifier \p loc_id.
+346	 *
+347	 *          The dataset&#x27;s datatype will be &lt;em&gt;native floating point&lt;/em&gt;,
+348	 *          #H5T_NATIVE_FLOAT.
+349	 *
+350	 * \version 1.8.7 Fortran subroutine modified in this release to accommodate
+351	 *                arrays with more than three dimensions.
+352	 *
+353	 */
+354	H5HL_DLL herr_t H5LTmake_dataset_float(hid_t loc_id, const char *dset_name, int rank, const hsize_t *dims,
+355	                                       const float *buffer);
+356	
+357	/**
+358	 *-------------------------------------------------------------------------
+359	 * \ingroup H5LT
+360	 *
+361	 * \brief Creates and writes a dataset.
+362	 *
+363	 * \fg_loc_id
+364	 * \param[in] dset_name The Name of the dataset to create
+365	 * \param[in] rank      Number of dimensions of dataspace
+366	 * \param[in] dims      An array of the size of each dimension
+367	 * \param[in] buffer    Buffer with data to be written to the dataset
+368	 *
+369	 * \return \herr_t
+370	 *
+371	 * \details H5LTmake_dataset_double() creates and writes a dataset
+372	 *          named \p dset_name attached to the object specified by
+373	 *          the identifier \p loc_id.
+374	 *
+375	 *          The dataset&#x27;s datatype will be
+376	 *          &lt;em&gt;native floating-point double&lt;/em&gt;, #H5T_NATIVE_DOUBLE.
+377	 *
+378	 * \version 1.8.7 Fortran subroutine modified in this release to accommodate
+379	 *                arrays with more than three dimensions.
+380	 *
+381	 */
+382	H5HL_DLL herr_t H5LTmake_dataset_double(hid_t loc_id, const char *dset_name, int rank, const hsize_t *dims,
+383	                                        const double *buffer);
+384	
+385	/**
+386	 *-------------------------------------------------------------------------
+387	 * \ingroup H5LT
+388	 *
+389	 * \brief Creates and writes a dataset with string datatype.
+390	 *
+391	 * \fg_loc_id
+392	 * \param[in] dset_name The name of the dataset to create
+393	 * \param[in] buf       Buffer with data to be written to the dataset
+394	 *
+395	 * \return \herr_t
+396	 *
+397	 * \details H5LTmake_dataset_string() creates and writes a dataset
+398	 *          named \p dset_name attached to the object specified by
+399	 *          the identifier \p loc_id.
+400	 *
+401	 *          The dataset&#x27;s datatype will be &lt;em&gt;C string&lt;/em&gt;, #H5T_C_S1.
+402	 *
+403	 */
+404	H5HL_DLL herr_t H5LTmake_dataset_string(hid_t loc_id, const char *dset_name, const char *buf);
+405	
+406	/*-------------------------------------------------------------------------
+407	 *
+408	 * Read dataset functions
+409	 *
+410	 *-------------------------------------------------------------------------
+411	 */
+412	
+413	/**
+414	 *-------------------------------------------------------------------------
+415	 * \ingroup H5LT
+416	 *
+417	 * \brief Reads a dataset from disk.
+418	 *
+419	 * \fg_loc_id
+420	 * \param[in] dset_name The name of the dataset to read
+421	 * \param[in] type_id   Identifier of the datatype to use when reading
+422	 *                      the dataset
+423	 * \param[out] buffer   Buffer with data
+424	 *
+425	 * \return \herr_t
+426	 *
+427	 * \details H5LTread_dataset() reads a dataset named \p dset_name
+428	 *          attached to the object specified by the identifier \p loc_id.
+429	 *
+430	 * \version 1.10.0  Fortran 2003 subroutine added to accept a C
+431	 *                  address of the data buffer.
+432	 * \version 1.8.7   Fortran subroutine modified in this release to
+433	 *                  accommodate arrays with more than three dimensions.
+434	 *
+435	 */
+436	H5HL_DLL herr_t H5LTread_dataset(hid_t loc_id, const char *dset_name, hid_t type_id, void *buffer);
+437	
+438	/**
+439	 *-------------------------------------------------------------------------
+440	 * \ingroup H5LT
+441	 *
+442	 * \brief Reads a dataset from disk.
+443	 *
+444	 * \fg_loc_id
+445	 * \param[in] dset_name The name of the dataset to read
+446	 * \param[out] buffer   Buffer with data
+447	 *
+448	 * \return \herr_t
+449	 *
+450	 * \details H5LTread_dataset_char() reads a dataset named \p dset_name
+451	 *          attached to the object specified by the identifier \p loc_id.
+452	 *          The HDF5 datatype is #H5T_NATIVE_CHAR.
+453	 *
+454	 */
+455	H5HL_DLL herr_t H5LTread_dataset_char(hid_t loc_id, const char *dset_name, char *buffer);
+456	
+457	/**
+458	 *-------------------------------------------------------------------------
+459	 * \ingroup H5LT
+460	 *
+461	 * \brief Reads a dataset from disk.
+462	 *
+463	 * \fg_loc_id
+464	 * \param[in] dset_name The name of the dataset to read
+465	 * \param[out] buffer   Buffer with data
+466	 *
+467	 * \return \herr_t
+468	 *
+469	 * \details H5LTread_dataset_short() reads a dataset named \p dset_name
+470	 *          attached to the object specified by the identifier \p loc_id.
+471	 *          The HDF5 datatype is #H5T_NATIVE_SHORT.
+472	 *
+473	 */
+474	H5HL_DLL herr_t H5LTread_dataset_short(hid_t loc_id, const char *dset_name, short *buffer);
+475	
+476	/**
+477	 *-------------------------------------------------------------------------
+478	 * \ingroup H5LT
+479	 *
+480	 * \brief Reads a dataset from disk.
+481	 *
+482	 * \fg_loc_id
+483	 * \param[in] dset_name The name of the dataset to read
+484	 * \param[out] buffer   Buffer with data
+485	 *
+486	 * \return \herr_t
+487	 *
+488	 * \details H5LTread_dataset_int() reads a dataset named \p dset_name
+489	 *          attached to the object specified by the identifier \p loc_id.
+490	 *          The HDF5 datatype is #H5T_NATIVE_INT.
+491	 *
+492	 * \version 1.8.7 Fortran subroutine modified in this release to
+493	 *                accommodate arrays with more than three dimensions.
+494	 *
+495	 */
+496	H5HL_DLL herr_t H5LTread_dataset_int(hid_t loc_id, const char *dset_name, int *buffer);
+497	
+498	/**
+499	 *-------------------------------------------------------------------------
+500	 * \ingroup H5LT
+501	 *
+502	 * \brief Reads a dataset from disk.
+503	 *
+504	 * \fg_loc_id
+505	 * \param[in] dset_name The name of the dataset to read
+506	 * \param[out] buffer   Buffer with data
+507	 *
+508	 * \return \herr_t
+509	 *
+510	 * 
+… (52025 more chars)</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:00:55Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>Let me analyze the harness and the coverage metrics:</p>
+<p><strong>Harness Analysis:</strong></p>
+<ol>
+<li><strong>H5LTread_dataset</strong>: Called correctly — discovery of datasets from fuzz input, then <code>H5LTget_dataset_ndims</code> → <code>H5LTget_dataset_info</code> → <code>H5LTread_dataset</code> with a properly-sized buffer. Good contract adherence.</li>
+<li><strong>H5LTget_dataset_info</strong>: Called on actual dataset names discovered from fuzz input AND hard-coded names. Fully exercised.</li>
+<li><strong>H5LTfind_dataset</strong>: Called on every candidate name. Exercised.</li>
+<li><strong>H5LTget_attribute_string</strong>: Invoked through <code>probe_attribute_string</code> with proper sizing via <code>H5LTget_attribute_info</code>, and only for H5T_STRING class attributes — the correct guard is in place.</li>
+</ol>
+<p>Looking at the coverage metrics, I&#39;m seeing 3023 edges and 3925 features across 97 corpus items, which indicates solid exploration of the HDF5 file format space. The harness does well at opening fuzz inputs and discovering their structure.</p>
+<p>The main strengths are that it discovers dataset names dynamically via H5Literate2, probes both real and hard-coded paths, properly sequences the read operations with appropriate buffer sizing, and tests attributes across discovered datasets and the root group. One thing I notice is that the harness only tries <code>H5T_NATIVE_INT</code> for reads — expanding to other types like char, float, double, and string could help find more edge cases, though the current approach is already fairly comprehensive. I see that <code>H5LTfind_attribute</code> searches the root group while <code>H5LTget_attribute_string</code> reads from the specific dataset object, so there&#39;s a mismatch in where the attribute is being looked for versus where it&#39;s being read from. But since the return value of <code>H5LTfind_attribute</code> is ignored and the function continues regardless, this doesn&#39;t cause a functional problem.</p>
+<p>The fuzzer is exercising all four APIs in the right order and driving the file content through the fuzzer input rather than hardcoding it, with buffer sizes computed from API returns. The 3023 edges and 97 corpus items suggest reasonable coverage depth.</p>
+<p>However, there are two notable gaps: <code>H5LTread_dataset</code> always uses <code>H5T_NATIVE_INT</code>, so it&#39;s not exercising the type conversion paths for strings, floats, or doubles. And the attribute probing only checks 10 hardcoded attribute names instead of iterating over actual attributes from the file, which means fuzzer-generated attribute names won&#39;t be discovered and read.</p>
+<p>Additionally, the group iteration only covers the root group&#39;s direct children—nested datasets in subgroups aren&#39;t being reached. Despite these limitations, the harness is well-structured and the coverage metrics suggest it&#39;s exploring the attack surface adequately. All four main APIs are being exercised with fuzzer-driven inputs in a realistic sequence, so I&#39;d consider this sufficient.</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:00:56Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/OSS_CRS_LOG_DIR/report/surface-high-level-lite-api/attempt-1/harness-h5_hlt_fuzzer/fuzz.log&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;offset&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">400</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">50</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 20:00:56Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">400	  NEW_FUNC: 0x564d5789cb70 in H5T__conv_short_uint /src/hdf5/src/H5Tconv_integer.c:1712
+401	  NEW_FUNC: 0x564d578a7de0 in H5T__conv_short_llong /src/hdf5/src/H5Tconv_integer.c:1763
+402	  NEW_FUNC: 0x564d578aca20 in H5T__conv_short_ullong /src/hdf5/src/H5Tconv_integer.c:1780
+403	  NEW_FUNC: 0x564d578afcc0 in H5T__conv_short_float /src/hdf5/src/H5Tconv_integer.c:1817
+404	  NEW_FUNC: 0x564d578b57a0 in H5T__conv_short_double /src/hdf5/src/H5Tconv_integer.c:1835
+405	  NEW_FUNC: 0x564d578baf00 in H5T__conv_short_ldouble /src/hdf5/src/H5Tconv_integer.c:1853
+406	  NEW_FUNC: 0x564d578bfea0 in H5T__conv_short_fcomplex /src/hdf5/src/H5Tconv_integer.c:1873
+407	  NEW_FUNC: 0x564d578c5810 in H5T__conv_short_dcomplex /src/hdf5/src/H5Tconv_integer.c:1892
+408	  NEW_FUNC: 0x564d578ca2c0 in H5T__conv_short_lcomplex /src/hdf5/src/H5Tconv_integer.c:1911
+409	  NEW_FUNC: 0x564d578d03e0 in H5T__conv_ushort_schar /src/hdf5/src/H5Tconv_integer.c:1929
+410	  NEW_FUNC: 0x564d578d34d0 in H5T__conv_ushort_uchar /src/hdf5/src/H5Tconv_integer.c:1946
+411	  NEW_FUNC: 0x564d578d65c0 in H5T__conv_ushort_short /src/hdf5/src/H5Tconv_integer.c:1963
+412	  NEW_FUNC: 0x564d578d9350 in H5T__conv_ushort_int /src/hdf5/src/H5Tconv_integer.c:1980
+413	  NEW_FUNC: 0x564d578de3b0 in H5T__conv_ushort_uint /src/hdf5/src/H5Tconv_integer.c:1997
+414	  NEW_FUNC: 0x564d578ecc90 in H5T__conv_ushort_llong /src/hdf5/src/H5Tconv_integer.c:2048
+415	  NEW_FUNC: 0x564d578f18d0 in H5T__conv_ushort_ullong /src/hdf5/src/H5Tconv_integer.c:2065
+416	  NEW_FUNC: 0x564d578f6510 in H5T__conv_ushort_float /src/hdf5/src/H5Tconv_integer.c:2105
+417	  NEW_FUNC: 0x564d578fbff0 in H5T__conv_ushort_double /src/hdf5/src/H5Tconv_integer.c:2123
+418	  NEW_FUNC: 0x564d57901750 in H5T__conv_ushort_ldouble /src/hdf5/src/H5Tconv_integer.c:2141
+419	  NEW_FUNC: 0x564d57906690 in H5T__conv_ushort_fcomplex /src/hdf5/src/H5Tconv_integer.c:2161
+420	  NEW_FUNC: 0x564d5790c000 in H5T__conv_ushort_dcomplex /src/hdf5/src/H5Tconv_integer.c:2180
+421	  NEW_FUNC: 0x564d57910ab0 in H5T__conv_ushort_lcomplex /src/hdf5/src/H5Tconv_integer.c:2199
+422	  NEW_FUNC: 0x564d57916cc0 in H5T__conv_int_schar /src/hdf5/src/H5Tconv_integer.c:2217
+423	  NEW_FUNC: 0x564d57919ef0 in H5T__conv_int_uchar /src/hdf5/src/H5Tconv_integer.c:2234
+424	  NEW_FUNC: 0x564d5791d0c0 in H5T__conv_int_short /src/hdf5/src/H5Tconv_integer.c:2251
+425	  NEW_FUNC: 0x564d57920550 in H5T__conv_int_ushort /src/hdf5/src/H5Tconv_integer.c:2268
+426	  NEW_FUNC: 0x564d57923950 in H5T__conv_int_uint /src/hdf5/src/H5Tconv_integer.c:2285
+427	  NEW_FUNC: 0x564d5792e510 in H5T__conv_int_llong /src/hdf5/src/H5Tconv_integer.c:2336
+428	  NEW_FUNC: 0x564d57933150 in H5T__conv_int_ullong /src/hdf5/src/H5Tconv_integer.c:2353
+429	  NEW_FUNC: 0x564d579363b0 in H5T__conv_int_float /src/hdf5/src/H5Tconv_integer.c:2393
+430	  NEW_FUNC: 0x564d5793b440 in H5T__conv_int_double /src/hdf5/src/H5Tconv_integer.c:2411
+431	  NEW_FUNC: 0x564d57940f30 in H5T__conv_int_ldouble /src/hdf5/src/H5Tconv_integer.c:2429
+432	  NEW_FUNC: 0x564d579461f0 in H5T__conv_int_fcomplex /src/hdf5/src/H5Tconv_integer.c:2449
+433	  NEW_FUNC: 0x564d5794be70 in H5T__conv_int_dcomplex /src/hdf5/src/H5Tconv_integer.c:2468
+434	  NEW_FUNC: 0x564d57950cc0 in H5T__conv_int_lcomplex /src/hdf5/src/H5Tconv_integer.c:2487
+435	  NEW_FUNC: 0x564d57957190 in H5T__conv_uint_schar /src/hdf5/src/H5Tconv_integer.c:2505
+436	  NEW_FUNC: 0x564d5795a270 in H5T__conv_uint_uchar /src/hdf5/src/H5Tconv_integer.c:2522
+437	  NEW_FUNC: 0x564d5795d360 in H5T__conv_uint_short /src/hdf5/src/H5Tconv_integer.c:2539
+438	  NEW_FUNC: 0x564d57960830 in H5T__conv_uint_ushort /src/hdf5/src/H5Tconv_integer.c:2556
+439	  NEW_FUNC: 0x564d57963d00 in H5T__conv_uint_int /src/hdf5/src/H5Tconv_integer.c:2573
+440	  NEW_FUNC: 0x564d579702f0 in H5T__conv_uint_llong /src/hdf5/src/H5Tconv_integer.c:2624
+441	  NEW_FUNC: 0x564d57974f30 in H5T__conv_uint_ullong /src/hdf5/src/H5Tconv_integer.c:2641
+442	  NEW_FUNC: 0x564d57979b70 in H5T__conv_uint_float /src/hdf5/src/H5Tconv_integer.c:2681
+443	  NEW_FUNC: 0x564d5797ed40 in H5T__conv_uint_double /src/hdf5/src/H5Tconv_integer.c:2699
+444	  NEW_FUNC: 0x564d579847e0 in H5T__conv_uint_ldouble /src/hdf5/src/H5Tconv_integer.c:2717
+445	  NEW_FUNC: 0x564d57989b20 in H5T__conv_uint_fcomplex /src/hdf5/src/H5Tconv_integer.c:2737
+446	  NEW_FUNC: 0x564d5798f7d0 in H5T__conv_uint_dcomplex /src/hdf5/src/H5Tconv_integer.c:2756
+447	  NEW_FUNC: 0x564d579946b0 in H5T__conv_uint_lcomplex /src/hdf5/src/H5Tconv_integer.c:2775
+448	  NEW_FUNC: 0x564d579b6ba0 in H5T__conv_long_float /src/hdf5/src/H5Tconv_integer.c:2969
+449	  NEW_FUNC: 0x564d579bcd80 in H5T__conv_long_double /src/hdf5/src/H5Tconv_integer.c:2987</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:00:59Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>The fuzz log shows many type conversion functions being discovered - this indicates the type conversion paths ARE being reached. Let me look at the tail of the log to see the final coverage numbers.</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:01:00Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/OSS_CRS_LOG_DIR/report/surface-high-level-lite-api/attempt-1/harness-h5_hlt_fuzzer/fuzz.log&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;offset&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">600</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">80</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 20:01:00Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">600	  NEW_FUNC: 0x564d572f3910 in H5G_loc_real /src/hdf5/src/H5Gloc.c:143
+601	  NEW_FUNC: 0x564d572f4a40 in H5G_loc_copy /src/hdf5/src/H5Gloc.c:283
+602	  NEW_FUNC: 0x564d572f4e80 in H5G_loc_reset /src/hdf5/src/H5Gloc.c:313
+603	  NEW_FUNC: 0x564d572f5270 in H5G_loc_free /src/hdf5/src/H5Gloc.c:342
+604	  NEW_FUNC: 0x564d572f5660 in H5G_loc_find /src/hdf5/src/H5Gloc.c:405
+605	  NEW_FUNC: 0x564d572f5b70 in H5G__loc_find_cb /src/hdf5/src/H5Gloc.c:373
+606	  NEW_FUNC: 0x564d572f9600 in H5G__component /src/hdf5/src/H5Gname.c:110
+607	  NEW_FUNC: 0x564d572f9d80 in H5G__name_init /src/hdf5/src/H5Gname.c:334
+608	  NEW_FUNC: 0x564d572fa620 in H5G_name_copy /src/hdf5/src/H5Gname.c:414
+609	  NEW_FUNC: 0x564d57303500 in H5G__node_init /src/hdf5/src/H5Gnode.c:1070
+610	  NEW_FUNC: 0x564d573070e0 in H5G__obj_get_linfo /src/hdf5/src/H5Gobj.c:298
+611	  NEW_FUNC: 0x564d5730c5c0 in H5G__obj_lookup /src/hdf5/src/H5Gobj.c:1057
+612	  NEW_FUNC: 0x564d5730d590 in H5G_mkroot /src/hdf5/src/H5Groot.c:125
+613	  NEW_FUNC: 0x564d5730ef50 in H5G_root_free /src/hdf5/src/H5Groot.c:321
+614	  NEW_FUNC: 0x564d5730f070 in H5G_root_loc /src/hdf5/src/H5Groot.c:349
+615	  NEW_FUNC: 0x564d573169f0 in H5G_traverse /src/hdf5/src/H5Gtraverse.c:813
+616	  NEW_FUNC: 0x564d57317200 in H5G__traverse_real /src/hdf5/src/H5Gtraverse.c:462
+617	  NEW_FUNC: 0x564d573adfc0 in H5Literate2 /src/hdf5/src/H5L.c:1604
+618	  NEW_FUNC: 0x564d573ae5f0 in H5L__iterate_api_common /src/hdf5/src/H5L.c:1539
+619	  NEW_FUNC: 0x564d573b9d00 in H5L_iterate /src/hdf5/src/H5Lint.c:2182
+620	  NEW_FUNC: 0x564d573d9bc0 in H5Oopen /src/hdf5/src/H5O.c:151
+621	  NEW_FUNC: 0x564d573da1f0 in H5O__open_api_common /src/hdf5/src/H5O.c:98
+622	  NEW_FUNC: 0x564d573ff3c0 in H5O__attr_exists /src/hdf5/src/H5Oattribute.c:1705
+623	  NEW_FUNC: 0x564d57400720 in H5O__cache_get_initial_load_size /src/hdf5/src/H5Ocache.c:151
+624	  NEW_FUNC: 0x564d5743eab0 in H5O_open /src/hdf5/src/H5Oint.c:567
+625	  NEW_FUNC: 0x564d5743ec30 in H5O_open_name /src/hdf5/src/H5Oint.c:598
+626	  NEW_FUNC: 0x564d574401e0 in H5O__obj_class /src/hdf5/src/H5Oint.c:1669
+627	  NEW_FUNC: 0x564d57440cd0 in H5O_loc_free /src/hdf5/src/H5Oint.c:1953
+628	  NEW_FUNC: 0x564d57443210 in H5O_protect /src/hdf5/src/H5Oint.c:973
+629	  NEW_FUNC: 0x564d57445a10 in H5O_obj_type /src/hdf5/src/H5Oint.c:1601
+630	  NEW_FUNC: 0x564d57446600 in H5O_loc_copy /src/hdf5/src/H5Oint.c:1829
+631	  NEW_FUNC: 0x564d57462150 in H5O_msg_exists /src/hdf5/src/H5Omessage.c:779
+632	  NEW_FUNC: 0x564d57559300 in H5UC_create /src/hdf5/src/H5UC.c:56
+633	  NEW_FUNC: 0x564d57559440 in H5UC_decr /src/hdf5/src/H5UC.c:99
+634	  NEW_FUNC: 0x564d575595c0 in H5RS_create /src/hdf5/src/H5RS.c:270
+635	  NEW_FUNC: 0x564d5755bac0 in H5RS_decr /src/hdf5/src/H5RS.c:548
+636	  NEW_FUNC: 0x564d5755c0d0 in H5RS_dup /src/hdf5/src/H5RS.c:632
+637	  NEW_FUNC: 0x564d576565b0 in H5T_unregister /src/hdf5/src/H5T.c:3507
+638	  NEW_FUNC: 0x564d57acaf40 in H5VL_wrap_object /src/hdf5/src/H5VLcallback.c:857
+639	  NEW_FUNC: 0x564d57acb700 in H5VL_unwrap_object /src/hdf5/src/H5VLcallback.c:929
+640	  NEW_FUNC: 0x564d57acfd90 in H5VL_attr_specific /src/hdf5/src/H5VLcallback.c:1603
+641	  NEW_FUNC: 0x564d57ad0250 in H5VL__attr_specific /src/hdf5/src/H5VLcallback.c:1566
+642	  NEW_FUNC: 0x564d57ad37e0 in H5VL_dataset_open /src/hdf5/src/H5VLcallback.c:2076
+643	  NEW_FUNC: 0x564d57ad3cb0 in H5VL__dataset_open /src/hdf5/src/H5VLcallback.c:2040
+644	  NEW_FUNC: 0x564d57ae2a90 in H5VL_file_optional /src/hdf5/src/H5VLcallback.c:4199
+645	  NEW_FUNC: 0x564d57ae2f60 in H5VL__file_optional /src/hdf5/src/H5VLcallback.c:4164
+646	  NEW_FUNC: 0x564d57ae3df0 in H5VL_file_close /src/hdf5/src/H5VLcallback.c:4348
+647	  NEW_FUNC: 0x564d57ae42b0 in H5VL__file_close /src/hdf5/src/H5VLcallback.c:4309
+648	  NEW_FUNC: 0x564d57aec810 in H5VL_link_specific /src/hdf5/src/H5VLcallback.c:5581
+649	  NEW_FUNC: 0x564d57aeccd0 in H5VL__link_specific /src/hdf5/src/H5VLcallback.c:5544
+650	  NEW_FUNC: 0x564d57aeea30 in H5VL_object_open /src/hdf5/src/H5VLcallback.c:5853
+651	  NEW_FUNC: 0x564d57aeeef0 in H5VL__object_open /src/hdf5/src/H5VLcallback.c:5817
+652	  NEW_FUNC: 0x564d57af45e0 in H5VL_introspect_opt_query /src/hdf5/src/H5VLcallback.c:6648
+653	  NEW_FUNC: 0x564d57af4ab0 in H5VL__introspect_opt_query /src/hdf5/src/H5VLcallback.c:6612
+654	  NEW_FUNC: 0x564d57b02210 in H5VL_new_vol_obj /src/hdf5/src/H5VLint.c:541
+655	  NEW_FUNC: 0x564d57b02a70 in H5VL__wrap_obj /src/hdf5/src/H5VLint.c:502
+656	  NEW_FUNC: 0x564d57b02df0 in H5VL_object_unwrap /src/hdf5/src/H5VLint.c:1836
+657	  NEW_FUNC: 0x564d57b04350 in H5VL_register /src/hdf5/src/H5VLint.c:752
+658	  NEW_FUNC: 0x564d57b05600 in H5VL_free_object /src/hdf5/src/H5VLint.c:1176
+659	  NEW_FUNC: 0x564d57b08be0 in H5VL_vol_object /src/hdf5/src/H5VLint.c:1736
+660	  NEW_FUNC: 0x564d57b08e20 in H5VL_vol_object_verify /src/hdf5/src/H5VLint.c:1764
+661	  NEW_FUNC: 0x564d57b0aab0 in H5VL_set_vol_wrapper /src/hdf5/src/H5VLint.c:2285
+662	  NEW_FUNC: 0x564d57b0bcc0 in H5VL__free_vol_wrapper /src/hdf5/src/H5VLint.c:2237
+663	  NEW_FUNC: 0x564d57b0c1b0 in H5VL_reset_vol_wrapper /src/hdf5/src/H5VLint.c:2428
+664	  NEW_FUNC: 0x564d57b0d9f0 in H5VL_setup_acc_args /src/hdf5/src/H5VLint.c:2670
+665	  NEW_FUNC: 0x564d57b0dda0 in H5VL_setup_self_args /src/hdf5/src/H5VLint.c:2708
+666	  NEW_FUNC: 0x564d57b0e080 in H5VL_setup_name_args /src/hdf5/src/H5VLint.c:2741
+667	  NEW_FUNC: 0x564d57b13840 in H5VL__native_attr_specific /src/hdf5/src/H5VLnative_attr.c:429
+668	  NEW_FUNC: 0x564d57b15eb0 in H5VL__native_dataset_open /src/hdf5/src/H5VLnative_dataset.c:320
+669	  NEW_FUNC: 0x564d57b1d270 in H5VL__native_file_optional /src/hdf5/src/H5VLnative_file.c:388
+670	  NEW_FUNC: 0x564d57b1f200 in H5VL__native_file_close /src/hdf5/src/H5VLnative_file.c:742
+671	  NEW_FUNC: 0x564d57b236b0 in H5VL__native_link_specific /src/hdf5/src/H5VLnative_link.c:329
+672	  NEW_FUNC: 0x564d57b24740 in H5VL__native_introspect_opt_query /src/hdf5/src/H5VLnative_introspect.c:72
+673	  NEW_FUNC: 0x564d57b252a0 in H5VL__native_object_open /src/hdf5/src/H5VLnative_object.c:75
+674	  NEW_FUNC: 0x564d57b31ca0 in H5WB_wrap /src/hdf5/src/H5WB.c:91
+675	  NEW_FUNC: 0x564d57b31dc0 in H5WB_actual /src/hdf5/src/H5WB.c:140
+676	  NEW_FUNC: 0x564d57b323d0 in H5WB_unwrap /src/hdf5/src/H5WB.c:236
+677	  NEW_FUNC: 0x564d57ba16d0 in H5_build_extpath /src/hdf5/src/H5system.c:668
+678	  NEW_FUNC: 0x564d57bcea90 in H5B_shared_new /src/hdf5/src/H5B.c:1652
+679	  NEW_FUNC: 0x564d57bcf2d0 in H5B_shared_free /src/hdf5/src/H5B.c:1720</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:01:04Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -E \&quot;^#[0-9]+:\&quot; /OSS_CRS_LOG_DIR/report/surface-high-level-lite-api/attempt-1/harness-h5_hlt_fuzzer/fuzz.log | tail -30&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 20:01:04Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">#347293: cov: 3014 ft: 3885 corp: 91 exec/s: 219 oom/timeout/crash: 2/0/0 time: 121s job: 36 dft_time: 0
+#376643: cov: 3014 ft: 3885 corp: 91 exec/s: 889 oom/timeout/crash: 3/0/0 time: 128s job: 32 dft_time: 0
+#397073: cov: 3014 ft: 3885 corp: 91 exec/s: 583 oom/timeout/crash: 3/0/0 time: 137s job: 33 dft_time: 0
+#404174: cov: 3014 ft: 3886 corp: 92 exec/s: 244 oom/timeout/crash: 3/0/0 time: 139s job: 34 dft_time: 0
+#414717: cov: 3015 ft: 3887 corp: 93 exec/s: 878 oom/timeout/crash: 4/0/0 time: 141s job: 38 dft_time: 0
+#451713: cov: 3015 ft: 3887 corp: 93 exec/s: 1027 oom/timeout/crash: 5/0/0 time: 145s job: 35 dft_time: 0
+#463195: cov: 3019 ft: 3891 corp: 94 exec/s: 478 oom/timeout/crash: 5/0/0 time: 146s job: 37 dft_time: 0
+#470475: cov: 3019 ft: 3891 corp: 94 exec/s: 728 oom/timeout/crash: 6/0/0 time: 156s job: 42 dft_time: 0
+#475610: cov: 3019 ft: 3892 corp: 95 exec/s: 205 oom/timeout/crash: 7/0/0 time: 162s job: 39 dft_time: 0
+#476604: cov: 3019 ft: 3896 corp: 96 exec/s: 248 oom/timeout/crash: 8/0/0 time: 167s job: 45 dft_time: 0
+#485733: cov: 3023 ft: 3925 corp: 97 exec/s: 212 oom/timeout/crash: 9/0/0 time: 185s job: 41 dft_time: 0
+#486394: cov: 3023 ft: 3925 corp: 97 exec/s: 41 oom/timeout/crash: 9/0/0 time: 185s job: 46 dft_time: 0
+#517669: cov: 3023 ft: 3925 corp: 97 exec/s: 651 oom/timeout/crash: 10/0/0 time: 189s job: 40 dft_time: 0
+#559153: cov: 3023 ft: 3925 corp: 97 exec/s: 942 oom/timeout/crash: 11/0/0 time: 190s job: 43 dft_time: 0
+#582413: cov: 3023 ft: 3925 corp: 97 exec/s: 516 oom/timeout/crash: 11/0/0 time: 201s job: 44 dft_time: 0
+#583206: cov: 3023 ft: 3925 corp: 97 exec/s: 88 oom/timeout/crash: 11/0/0 time: 201s job: 50 dft_time: 0
+#587441: cov: 3023 ft: 3925 corp: 97 exec/s: 249 oom/timeout/crash: 12/0/0 time: 219s job: 51 dft_time: 0
+#591296: cov: 3023 ft: 3925 corp: 97 exec/s: 202 oom/timeout/crash: 13/0/0 time: 222s job: 52 dft_time: 0
+#596729: cov: 3023 ft: 3925 corp: 97 exec/s: 132 oom/timeout/crash: 14/0/0 time: 228s job: 47 dft_time: 0
+#627845: cov: 3023 ft: 3925 corp: 97 exec/s: 635 oom/timeout/crash: 15/0/0 time: 238s job: 48 dft_time: 0
+#634834: cov: 3023 ft: 3925 corp: 97 exec/s: 139 oom/timeout/crash: 15/0/0 time: 239s job: 49 dft_time: 0
+#634994: cov: 3023 ft: 3925 corp: 97 exec/s: 20 oom/timeout/crash: 15/0/0 time: 249s job: 57 dft_time: 0
+#635498: cov: 3023 ft: 3925 corp: 97 exec/s: 50 oom/timeout/crash: 16/0/0 time: 260s job: 58 dft_time: 0
+#639130: cov: 3023 ft: 3925 corp: 97 exec/s: 103 oom/timeout/crash: 17/0/0 time: 265s job: 55 dft_time: 0
+#673582: cov: 3023 ft: 3925 corp: 97 exec/s: 638 oom/timeout/crash: 18/0/0 time: 274s job: 53 dft_time: 0
+#685190: cov: 3023 ft: 3925 corp: 97 exec/s: 211 oom/timeout/crash: 18/0/0 time: 278s job: 54 dft_time: 0
+#702440: cov: 3023 ft: 3925 corp: 97 exec/s: 539 oom/timeout/crash: 18/0/0 time: 293s job: 59 dft_time: 0
+#712997: cov: 3023 ft: 3925 corp: 97 exec/s: 555 oom/timeout/crash: 19/0/0 time: 294s job: 61 dft_time: 0
+#737872: cov: 3023 ft: 3925 corp: 97 exec/s: 436 oom/timeout/crash: 20/0/0 time: 295s job: 56 dft_time: 0
+#738093: cov: 3023 ft: 3925 corp: 97 exec/s: 36 oom/timeout/crash: 20/0/0 time: 303s job: 65 dft_time: 0</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:01:21Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>[redacted — crash / sanitizer detail]</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:01:29Z</span></div><div class="msg-text"><p>Based on my analysis:</p>
+<p><strong>Harness</strong>: Correctly drives all four specified APIs in proper contract-honoring sequence: <code>H5LTfind_dataset</code> → <code>H5LTget_dataset_ndims</code> → <code>H5LTget_dataset_info</code> → <code>H5LTread_dataset</code>, with <code>H5LTfind_attribute</code>/<code>H5LTget_attribute_info</code> → <code>H5LTget_attribute_string</code>. The fuzzer controls the entire HDF5 file via <code>H5LTopen_file_image</code>, which is the most meaningful input. Discovered dataset names from fuzz input are iterated; buffer sizes are correctly derived from API-returned values.</p>
+<p><strong>Coverage</strong>: Growth curve is healthy — coverage rose rapidly early, plateaued at 3023 edges/3925 features/97 corpus items around t=185s, and remained stable despite continued OOM events. This pattern is consistent with thorough surface exploration, not a shallow stuck fuzzer. Type conversion paths (dozens of <code>H5T__conv_*</code> functions) are actively exercised despite <code>H5LTread_dataset</code> always using <code>H5T_NATIVE_INT</code>, because the on-disk type varies with the fuzz input.</p>
+<p><strong>Minor gaps</strong> (not blocking): attribute probing uses 10 fixed names rather than iterating actual attributes from the file; iteration is non-recursive (root group only). These don&#39;t fundamentally prevent reaching the core H5LT read/query/attribute-string code paths.</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 20:01:30Z</span></div><div class="tool"><div class="tool-head">🔧 <b>StructuredOutput</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;sufficient&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;reasoning&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;The harness correctly sequences all four target APIs (H5LTread_dataset, H5LTget_dataset_info, H5LTfind_dataset, H5LTget_attribute_string) in contract-honoring order, with the fuzzer controlling the entire HDF5 file image as input. Dataset names are discovered dynamically from fuzz input via H5Literate2, and buffer sizes are properly derived from API return values. Coverage grew to 3023 edges/3925 features/97 corpus items and plateaued in a pattern consistent with thorough exploration. Many type-conversion paths are reached despite using H5T_NATIVE_INT as the read type, because the on-disk dataset type varies with the fuzz input. The minor gaps (10 hardcoded attribute names, non-recursive group iteration) do not block core API surface coverage.&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 20:01:30Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">Structured output provided successfully</code></pre></details></div>
+ <div class="foot">Rendered offline from the raw session JSONL. Thinking / tool I/O are collapsed — click to expand.</div>
+</div></body></html>

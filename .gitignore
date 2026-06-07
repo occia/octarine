@@ -5,6 +5,8 @@ dist/
 
 # logs
 *.log
+# ...but the committed example report under docs/ is a curated artifact — keep its logs
+!docs/**/*.log
 
 # local env / secrets — never commit tokens or proxy keys
 .env

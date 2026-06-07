@@ -1,0 +1,29 @@
+{
+  "groups": [
+    {
+      "groupId": "8d8f684a53e1",
+      "attribution": "real_bug",
+      "fixLocation": "target",
+      "explanation": "The harness writes fuzz bytes to a temp file and calls H5Fopen(..., H5F_ACC_RDONLY, H5P_DEFAULT) — a perfectly valid API use. The OOM is triggered entirely within H5F__super_read → H5C__load_entry (H5Centry.c:1155) where `actual_len`, derived from attacker-controlled superblock fields, is passed directly to H5MM_realloc (~4GB). The existing EOA bounds check (H5C__verify_len_eoa) does not prevent the huge allocation because the EOA itself is read from the same untrusted superblock. The harness does nothing wrong.",
+      "suggestedFixDirection": "In H5C__load_entry (H5Centry.c ~1147), cap `actual_len` against a hard upper bound (e.g., the actual on-disk file size or a reasonable compile-time limit) before calling H5MM_realloc, so a crafted superblock cannot force a multi-gigabyte allocation during file open.",
+      "sessionId": "2d36c6a0-bd38-40b4-86ff-94480262d6a8"
+    },
+    {
+      "groupId": "d9c8128eaca8",
+      "attribution": "real_bug",
+      "fixLocation": "target",
+      "explanation": "The OOM is caused by H5S__point_deserialize() in /src/hdf5/src/H5Spoint.c:1498, which reads `num_elem` directly from the crafted file (UINT16/32/64DECODE at lines 1447-1461) and passes it to H5MM_malloc(num_elem * rank * sizeof(hsize_t)) without any bound relative to the actual available data or file size. The sole guard (line 1489) only prevents integer overflow in the multiplication—it does not cap the allocation to a sane value. The 85-byte input encodes a large enough num_elem (~265M) to force a ~2GB single allocation. The harness is correctly written: it opens a valid HDF5 file (superblock passes H5Fopen), iterates objects with H5Ovisit3, and the OOM surfaces entirely inside library deserialization logic on attacker-controlled point-selection data.",
+      "suggestedFixDirection": "In H5S__point_deserialize() (H5Spoint.c ~line 1486), add a sanity check that rejects num_elem values that would require more bytes than the total serialized buffer length (e.g., `if (num_elem > buf_size / (rank * enc_type_size)) HGOTO_ERROR(...)`) before performing the H5MM_malloc.",
+      "sessionId": "12d0f8a6-7c5d-48c5-99ab-ada9342db7c7"
+    }
+  ],
+  "coverage": {
+    "edges": 2767,
+    "features": 3513,
+    "corpusSize": 113
+  },
+  "round": 1,
+  "clean": true,
+  "reason": "ok",
+  "findings": "[redacted — crash / sanitizer detail]"
+}

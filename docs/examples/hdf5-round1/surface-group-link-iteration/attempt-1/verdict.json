@@ -1,0 +1,21 @@
+{
+  "groups": [
+    {
+      "groupId": "8d8f684a53e1",
+      "attribution": "real_bug",
+      "fixLocation": "target",
+      "explanation": "The harness correctly writes fuzz bytes to a temp file and calls H5Fopen — valid API usage. The OOM is caused by H5C__load_entry (H5Centry.c:1155) trusting the `actual_len` returned by `get_final_load_size`, which is derived from the file-encoded superblock data. The guard H5C__verify_len_eoa only checks `addr + actual_len <= EOA`, but the EOA value itself is also stored in the superblock (the fuzz input), allowing a crafted file to set both EOA and actual_len to ~3.8 GB while the physical file is tiny. HDF5 must bound speculative allocation sizes against the actual physical file size, not just the file-stated EOA.",
+      "suggestedFixDirection": "In H5C__verify_len_eoa (or the caller in H5C__load_entry), add a check that `actual_len` does not exceed the actual physical file size (e.g., via H5FD_get_eof or stat on the underlying file descriptor) so that file-encoded size fields cannot force unbounded allocations regardless of the stated EOA.",
+      "sessionId": "993fea7a-3990-4321-a662-a6136f3f74fa"
+    }
+  ],
+  "coverage": {
+    "edges": 2788,
+    "features": 3573,
+    "corpusSize": 94
+  },
+  "round": 1,
+  "clean": true,
+  "reason": "ok",
+  "findings": "[redacted — crash / sanitizer detail]"
+}

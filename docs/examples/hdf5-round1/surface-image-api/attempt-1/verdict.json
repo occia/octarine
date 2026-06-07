@@ -1,0 +1,21 @@
+{
+  "groups": [
+    {
+      "groupId": "8d8f684a53e1",
+      "attribution": "real_bug",
+      "fixLocation": "target",
+      "explanation": "The harness correctly calls H5Fopen with valid arguments; the OOM occurs entirely within the library before any image API is reached. In H5Fsuper.c:606, the EOA is set from sblock->driver_addr, which is read directly from the crafted fuzz input, making EOA itself attacker-controlled (~4 GB). H5C__verify_len_eoa (H5Centry.c:1147) then approves actual_len against this inflated EOA, so the realloc at line 1155 attempts a ~4 GB allocation. A tiny malicious HDF5 file can therefore cause arbitrary memory allocation via the superblock's driver_addr field.",
+      "suggestedFixDirection": "In H5Fsuper.c (and/or H5C__verify_len_eoa), bound the EOA and all derived allocation sizes against the actual physical file size (H5FD_get_eof) so that file-embedded length fields in the superblock/driver-info block cannot force allocations larger than the real file.",
+      "sessionId": "6c9a8933-69a9-4411-8879-66ef55bd89dc"
+    }
+  ],
+  "coverage": {
+    "edges": 2788,
+    "features": 3529,
+    "corpusSize": 101
+  },
+  "round": 1,
+  "clean": true,
+  "reason": "ok",
+  "findings": "[redacted — crash / sanitizer detail]"
+}

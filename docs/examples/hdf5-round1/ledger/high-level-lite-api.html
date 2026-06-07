@@ -1,0 +1,34 @@
+<!doctype html><html><head><meta charset="utf-8"><title>high-level-lite-api</title>
+<style>
+ body{font:14px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#f6f7f9;color:#1c2128}
+ .md{max-width:900px;margin:0 auto;padding:28px 24px;background:#fff;min-height:100vh;border-left:1px solid #eaeef2;border-right:1px solid #eaeef2}
+ .md h1{font-size:22px;border-bottom:1px solid #d0d7de;padding-bottom:8px} .md h2{font-size:18px;margin-top:24px;border-bottom:1px solid #eaeef2;padding-bottom:5px}
+ .md h3{font-size:15px} .md p,.md li{font-size:14px}
+ .md table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px}
+ .md th,.md td{border:1px solid #d0d7de;padding:6px 10px;text-align:left} .md th{background:#f6f8fa}
+ .md tr:nth-child(2n) td{background:#fbfcfd}
+ .md code{background:#eff1f3;padding:1px 5px;border-radius:5px;font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
+ .md pre{background:#0d1117;color:#e6edf3;padding:12px;border-radius:6px;overflow-x:auto} .md pre code{background:none;padding:0}
+ .md a{color:#0969da;text-decoration:none} .md a:hover{text-decoration:underline}
+ .md blockquote{margin:8px 0;padding:4px 14px;border-left:3px solid #d0d7de;color:#57606a}
+ .hljs-comment,.hljs-quote{color:#8b949e} .hljs-keyword,.hljs-selector-tag,.hljs-type{color:#cf222e}
+ .hljs-string,.hljs-attr{color:#0a3069} .hljs-number,.hljs-literal{color:#0550ae} .hljs-title{color:#6639ba}
+</style></head><body><article class="md"><h1>High-level Lite API (H5LT)  (high-level-lite-api)</h1>
+<ul>
+<li>status: done</li>
+<li>priority: 6</li>
+<li>harness: h5_hlt_fuzzer</li>
+<li>attempts: 1</li>
+</ul>
+<h2>APIs</h2>
+<ul>
+<li><code>H5LTread_dataset</code></li>
+<li><code>H5LTget_dataset_info</code></li>
+<li><code>H5LTfind_dataset</code></li>
+<li><code>H5LTget_attribute_string</code></li>
+</ul>
+<h2>Rationale</h2>
+<p>The HL Lite API is a thin but heavily-used wrapper. It calls the core stack through a different code path and does its own size calculations; worth fuzzing independently to catch HL-specific bugs.</p>
+<h2>Last feedback</h2>
+<p>The harness correctly sequences all four target APIs (H5LTread_dataset, H5LTget_dataset_info, H5LTfind_dataset, H5LTget_attribute_string) in contract-honoring order, with the fuzzer controlling the entire HDF5 file image as input. Dataset names are discovered dynamically from fuzz input via H5Literate2, and buffer sizes are properly derived from API return values. Coverage grew to 3023 edges/3925 features/97 corpus items and plateaued in a pattern consistent with thorough exploration. Many type-conversion paths are reached despite using H5T_NATIVE_INT as the read type, because the on-disk dataset type varies with the fuzz input. The minor gaps (10 hardcoded attribute names, non-recursive group iteration) do not block core API surface coverage.</p>
+</article></body></html>

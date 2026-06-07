@@ -1,0 +1,192 @@
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 4111701463
+INFO: Loaded 1 modules   (122830 inline 8-bit counters): 122830 [0x55d141438ae0, 0x55d141456aae), 
+INFO: Loaded 1 PC tables (122830 PCs): 122830 [0x55d141456ab0,0x55d141636790), 
+INFO: -fork=5: fuzzing in separate process(s)
+INFO: -fork=5: 23 seed inputs, starting to fuzz in /tmp/libFuzzerTemp.FuzzWithFork5679.dir
+#411: cov: 2178 ft: 2470 corp: 23 exec/s: 205 oom/timeout/crash: 0/0/0 time: 2s job: 1 dft_time: 0
+  NEW_FUNC: 0x55d1405f4860 in H5AC__check_if_write_permitted /src/hdf5/src/H5AC.c:2009
+  NEW_FUNC: 0x55d1405f5f60 in H5AC_expunge_entry /src/hdf5/src/H5AC.c:580
+  NEW_FUNC: 0x55d1405f82a0 in H5AC_pin_protected_entry /src/hdf5/src/H5AC.c:1062
+  NEW_FUNC: 0x55d1405f9590 in H5AC_unpin_entry /src/hdf5/src/H5AC.c:1427
+  NEW_FUNC: 0x55d1405f9bc0 in H5AC_unprotect /src/hdf5/src/H5AC.c:1532
+  NEW_FUNC: 0x55d140640050 in H5C__flush_single_entry /src/hdf5/src/H5Centry.c:430
+  NEW_FUNC: 0x55d14064d840 in H5C_pin_protected_entry /src/hdf5/src/H5Centry.c:2937
+  NEW_FUNC: 0x55d140654610 in H5C_unpin_entry /src/hdf5/src/H5Centry.c:3398
+  NEW_FUNC: 0x55d140654880 in H5C__unpin_entry_from_client /src/hdf5/src/H5Centry.c:200
+  NEW_FUNC: 0x55d140655070 in H5C_unprotect /src/hdf5/src/H5Centry.c:3454
+  NEW_FUNC: 0x55d1406597d0 in H5C_expunge_entry /src/hdf5/src/H5Centry.c:4061
+  NEW_FUNC: 0x55d1406871c0 in H5C__tag_entry /src/hdf5/src/H5Ctag.c:186
+  NEW_FUNC: 0x55d140688f10 in H5C__untag_entry /src/hdf5/src/H5Ctag.c:266
+  NEW_FUNC: 0x55d1407635c0 in H5F_addr_decode /src/hdf5/src/H5Fint.c:3071
+  NEW_FUNC: 0x55d140771670 in H5F_sizeof_addr /src/hdf5/src/H5Fquery.c:383
+  NEW_FUNC: 0x55d1407716c0 in H5F_sizeof_size /src/hdf5/src/H5Fquery.c:404
+  NEW_FUNC: 0x55d140782840 in H5F__cache_superblock_free_icr /src/hdf5/src/H5Fsuper_cache.c:786
+  NEW_FUNC: 0x55d140831c60 in H5G_ent_decode /src/hdf5/src/H5Gent.c:109
+  NEW_FUNC: 0x55d140a336f0 in H5P__set_pclass_cb /src/hdf5/src/H5Pint.c:3138
+  NEW_FUNC: 0x55d140a346b0 in H5P_exist_plist /src/hdf5/src/H5Pint.c:3388
+#1079: cov: 2343 ft: 2716 corp: 25 exec/s: 222 oom/timeout/crash: 0/0/0 time: 5s job: 2 dft_time: 0
+#2054: cov: 2343 ft: 2716 corp: 25 exec/s: 243 oom/timeout/crash: 0/0/0 time: 5s job: 3 dft_time: 0
+#3208: cov: 2343 ft: 2717 corp: 26 exec/s: 230 oom/timeout/crash: 0/0/0 time: 5s job: 4 dft_time: 0
+#4573: cov: 2343 ft: 2717 corp: 26 exec/s: 227 oom/timeout/crash: 0/0/0 time: 6s job: 5 dft_time: 0
+#5706: cov: 2343 ft: 2717 corp: 26 exec/s: 161 oom/timeout/crash: 0/0/0 time: 12s job: 6 dft_time: 0
+#7007: cov: 2343 ft: 2717 corp: 26 exec/s: 162 oom/timeout/crash: 0/0/0 time: 13s job: 7 dft_time: 0
+#8515: cov: 2343 ft: 2717 corp: 26 exec/s: 167 oom/timeout/crash: 0/0/0 time: 15s job: 8 dft_time: 0
+#10060: cov: 2347 ft: 2728 corp: 29 exec/s: 154 oom/timeout/crash: 0/0/0 time: 16s job: 9 dft_time: 0
+#11750: cov: 2348 ft: 2730 corp: 31 exec/s: 153 oom/timeout/crash: 0/0/0 time: 18s job: 10 dft_time: 0
+#13621: cov: 2348 ft: 2730 corp: 31 exec/s: 155 oom/timeout/crash: 0/0/0 time: 25s job: 11 dft_time: 0
+#15673: cov: 2348 ft: 2730 corp: 31 exec/s: 157 oom/timeout/crash: 0/0/0 time: 27s job: 12 dft_time: 0
+#17695: cov: 2348 ft: 2730 corp: 31 exec/s: 144 oom/timeout/crash: 0/0/0 time: 30s job: 13 dft_time: 0
+#19965: cov: 2349 ft: 2731 corp: 32 exec/s: 151 oom/timeout/crash: 0/0/0 time: 32s job: 14 dft_time: 0
+#22109: cov: 2351 ft: 2734 corp: 33 exec/s: 134 oom/timeout/crash: 0/0/0 time: 34s job: 15 dft_time: 0
+#24818: cov: 2351 ft: 2734 corp: 33 exec/s: 159 oom/timeout/crash: 0/0/0 time: 43s job: 16 dft_time: 0
+#26456: cov: 2352 ft: 2736 corp: 35 exec/s: 91 oom/timeout/crash: 0/0/0 time: 46s job: 17 dft_time: 0
+#28063: cov: 2352 ft: 2736 corp: 35 exec/s: 84 oom/timeout/crash: 0/0/0 time: 51s job: 18 dft_time: 0
+#31246: cov: 2352 ft: 2736 corp: 35 exec/s: 159 oom/timeout/crash: 0/0/0 time: 53s job: 19 dft_time: 0
+#34427: cov: 2352 ft: 2736 corp: 35 exec/s: 151 oom/timeout/crash: 0/0/0 time: 56s job: 20 dft_time: 0
+  NEW_FUNC: 0x55d1407655b0 in H5F__set_base_addr /src/hdf5/src/H5Fint.c:3556
+  NEW_FUNC: 0x55d1407a72f0 in H5FD_set_base_addr /src/hdf5/src/H5FD.c:2921
+#37729: cov: 2361 ft: 2751 corp: 41 exec/s: 150 oom/timeout/crash: 0/0/0 time: 66s job: 21 dft_time: 0
+#41240: cov: 2361 ft: 2752 corp: 42 exec/s: 152 oom/timeout/crash: 0/0/0 time: 69s job: 22 dft_time: 0
+#45152: cov: 2363 ft: 2757 corp: 45 exec/s: 163 oom/timeout/crash: 0/0/0 time: 75s job: 23 dft_time: 0
+#49210: cov: 2364 ft: 2758 corp: 46 exec/s: 162 oom/timeout/crash: 0/0/0 time: 79s job: 24 dft_time: 0
+#53462: cov: 2364 ft: 2758 corp: 46 exec/s: 163 oom/timeout/crash: 0/0/0 time: 83s job: 25 dft_time: 0
+#57484: cov: 2364 ft: 2758 corp: 46 exec/s: 148 oom/timeout/crash: 0/0/0 time: 94s job: 26 dft_time: 0
+#62065: cov: 2364 ft: 2758 corp: 46 exec/s: 163 oom/timeout/crash: 0/0/0 time: 98s job: 27 dft_time: 0
+  NEW_FUNC: 0x55d1407829b0 in H5F__cache_drvrinfo_get_initial_load_size /src/hdf5/src/H5Fsuper_cache.c:813
+  NEW_FUNC: 0x55d140782a70 in H5F__cache_drvrinfo_get_final_load_size /src/hdf5/src/H5Fsuper_cache.c:835
+  NEW_FUNC: 0x55d140782c30 in H5F__cache_drvrinfo_deserialize /src/hdf5/src/H5Fsuper_cache.c:871
+  NEW_FUNC: 0x55d1407834c0 in H5F__cache_drvrinfo_free_icr /src/hdf5/src/H5Fsuper_cache.c:1000
+  NEW_FUNC: 0x55d140783ed0 in H5F__drvrinfo_prefix_decode /src/hdf5/src/H5Fsuper_cache.c:227
+  NEW_FUNC: 0x55d1407934a0 in H5FD_sb_load /src/hdf5/src/H5FD.c:682
+#66869: cov: 2411 ft: 2942 corp: 51 exec/s: 165 oom/timeout/crash: 0/0/0 time: 106s job: 28 dft_time: 0
+  NEW_FUNC: 0x55d1406927d0 in H5CX_set_vol_wrap_ctx /src/hdf5/src/H5CX.c:1179
+  NEW_FUNC: 0x55d140692d10 in H5CX_get_vol_wrap_ctx /src/hdf5/src/H5CX.c:1295
+  NEW_FUNC: 0x55d140698860 in H5CX_get_nlinks /src/hdf5/src/H5CX.c:2386
+  NEW_FUNC: 0x55d14069a7b0 in H5CX_set_nlinks /src/hdf5/src/H5CX.c:2853
+  NEW_FUNC: 0x55d140737f90 in H5F__post_open_api_common /src/hdf5/src/H5F.c:510
+  NEW_FUNC: 0x55d14073bc00 in H5Fclose /src/hdf5/src/H5F.c:1028
+  NEW_FUNC: 0x55d14075d350 in H5F__build_actual_name /src/hdf5/src/H5Fint.c:2820
+  NEW_FUNC: 0x55d140760400 in H5F__post_open /src/hdf5/src/H5Fint.c:2269
+  NEW_FUNC: 0x55d140760fc0 in H5F__close /src/hdf5/src/H5Fint.c:2456
+  NEW_FUNC: 0x55d140761470 in H5F_try_close /src/hdf5/src/H5Fint.c:2534
+  NEW_FUNC: 0x55d140762be0 in H5F_incr_nopen_objs /src/hdf5/src/H5Fint.c:2778
+  NEW_FUNC: 0x55d1407638a0 in H5F_set_grp_btree_shared /src/hdf5/src/H5Fint.c:3092
+  NEW_FUNC: 0x55d140765890 in H5F__set_paged_aggr /src/hdf5/src/H5Fint.c:3609
+  NEW_FUNC: 0x55d140769830 in H5F__close_cb /src/hdf5/src/H5Fint.c:240
+  NEW_FUNC: 0x55d14076d0a0 in H5F__close_mounts /src/hdf5/src/H5Fmount.c:37
+  NEW_FUNC: 0x55d14076fd30 in H5F_is_mount /src/hdf5/src/H5Fmount.c:393
+  NEW_FUNC: 0x55d14076fe00 in H5F__mount_count_ids /src/hdf5/src/H5Fmount.c:466
+  NEW_FUNC: 0x55d14076ff10 in H5F__mount_count_ids_recurse /src/hdf5/src/H5Fmount.c:420
+  NEW_FUNC: 0x55d140771900 in H5F_kvalue /src/hdf5/src/H5Fquery.c:531
+  NEW_FUNC: 0x55d1407719a0 in H5F_get_nrefs /src/hdf5/src/H5Fquery.c:553
+  NEW_FUNC: 0x55d1407a73b0 in H5FD_set_paged_aggr /src/hdf5/src/H5FD.c:2967
+  NEW_FUNC: 0x55d1407fc620 in H5FL_blk_malloc /src/hdf5/src/H5FL.c:733
+  NEW_FUNC: 0x55d1407fcfd0 in H5FL__blk_create_list /src/hdf5/src/H5FL.c:624
+  NEW_FUNC: 0x55d1407fd4d0 in H5FL_blk_free /src/hdf5/src/H5FL.c:844
+  NEW_FUNC: 0x55d1407ffbb0 in H5FL_seq_free /src/hdf5/src/H5FL.c:1584
+  NEW_FUNC: 0x55d1407ffc50 in H5FL_seq_malloc /src/hdf5/src/H5FL.c:1614
+  NEW_FUNC: 0x55d14081c2c0 in H5Gopen2 /src/hdf5/src/H5G.c:430
+  NEW_FUNC: 0x55d14081c8f0 in H5G__open_api_common /src/hdf5/src/H5G.c:377
+  NEW_FUNC: 0x55d140835a30 in H5G__open_name /src/hdf5/src/H5Gint.c:414
+  NEW_FUNC: 0x55d140837c30 in H5G_oloc /src/hdf5/src/H5Gint.c:701
+  NEW_FUNC: 0x55d140837c60 in H5G_nameof /src/hdf5/src/H5Gint.c:720
+  NEW_FUNC: 0x55d14083ec00 in H5G_loc_real /src/hdf5/src/H5Gloc.c:143
+  NEW_FUNC: 0x55d14083fd30 in H5G_loc_copy /src/hdf5/src/H5Gloc.c:283
+  NEW_FUNC: 0x55d140840170 in H5G_loc_reset /src/hdf5/src/H5Gloc.c:313
+  NEW_FUNC: 0x55d140840560 in H5G_loc_free /src/hdf5/src/H5Gloc.c:342
+  NEW_FUNC: 0x55d140840950 in H5G_loc_find /src/hdf5/src/H5Gloc.c:405
+  NEW_FUNC: 0x55d140840e60 in H5G__loc_find_cb /src/hdf5/src/H5Gloc.c:373
+  NEW_FUNC: 0x55d1408448f0 in H5G__component /src/hdf5/src/H5Gname.c:110
+  NEW_FUNC: 0x55d140845070 in H5G__name_init /src/hdf5/src/H5Gname.c:334
+  NEW_FUNC: 0x55d140845910 in H5G_name_copy /src/hdf5/src/H5Gname.c:414
+  NEW_FUNC: 0x55d14084e7f0 in H5G__node_init /src/hdf5/src/H5Gnode.c:1070
+  NEW_FUNC: 0x55d1408523d0 in H5G__obj_get_linfo /src/hdf5/src/H5Gobj.c:298
+  NEW_FUNC: 0x55d1408578b0 in H5G__obj_lookup /src/hdf5/src/H5Gobj.c:1057
+  NEW_FUNC: 0x55d1408586c0 in H5G_rootof /src/hdf5/src/H5Groot.c:84
+  NEW_FUNC: 0x55d140858880 in H5G_mkroot /src/hdf5/src/H5Groot.c:125
+  NEW_FUNC: 0x55d14085a240 in H5G_root_free /src/hdf5/src/H5Groot.c:321
+  NEW_FUNC: 0x55d14085a360 in H5G_root_loc /src/hdf5/src/H5Groot.c:349
+  NEW_FUNC: 0x55d140861ce0 in H5G_traverse /src/hdf5/src/H5Gtraverse.c:813
+  NEW_FUNC: 0x55d1408624f0 in H5G__traverse_real /src/hdf5/src/H5Gtraverse.c:462
+  NEW_FUNC: 0x55d14091acf0 in H5O__cache_get_initial_load_size /src/hdf5/src/H5Ocache.c:151
+  NEW_FUNC: 0x55d140959080 in H5O_open /src/hdf5/src/H5Oint.c:567
+  NEW_FUNC: 0x55d14095b2a0 in H5O_loc_free /src/hdf5/src/H5Oint.c:1953
+  NEW_FUNC: 0x55d14095d7e0 in H5O_protect /src/hdf5/src/H5Oint.c:973
+  NEW_FUNC: 0x55d14095ffe0 in H5O_obj_type /src/hdf5/src/H5Oint.c:1601
+  NEW_FUNC: 0x55d140960bd0 in H5O_loc_copy /src/hdf5/src/H5Oint.c:1829
+  NEW_FUNC: 0x55d14097c720 in H5O_msg_exists /src/hdf5/src/H5Omessage.c:779
+  NEW_FUNC: 0x55d140a738d0 in H5UC_create /src/hdf5/src/H5UC.c:56
+  NEW_FUNC: 0x55d140a73a10 in H5UC_decr /src/hdf5/src/H5UC.c:99
+  NEW_FUNC: 0x55d140a73b90 in H5RS_create /src/hdf5/src/H5RS.c:270
+  NEW_FUNC: 0x55d140a76090 in H5RS_decr /src/hdf5/src/H5RS.c:548
+  NEW_FUNC: 0x55d140a766a0 in H5RS_dup /src/hdf5/src/H5RS.c:632
+  NEW_FUNC: 0x55d140b70b80 in H5T_unregister /src/hdf5/src/H5T.c:3507
+  NEW_FUNC: 0x55d140b8e8d0 in H5Topen2 /src/hdf5/src/H5Tcommit.c:680
+  NEW_FUNC: 0x55d140b8ef00 in H5T__open_api_common /src/hdf5/src/H5Tcommit.c:628
+  NEW_FUNC: 0x55d140b92170 in H5T__open_name /src/hdf5/src/H5Tcommit.c:960
+  NEW_FUNC: 0x55d140fda450 in H5VL_wrap_object /src/hdf5/src/H5VLcallback.c:857
+  NEW_FUNC: 0x55d140fdac10 in H5VL_unwrap_object /src/hdf5/src/H5VLcallback.c:929
+  NEW_FUNC: 0x55d140fe9a80 in H5VL_datatype_open /src/hdf5/src/H5VLcallback.c:3022
+  NEW_FUNC: 0x55d140fe9f50 in H5VL__datatype_open /src/hdf5/src/H5VLcallback.c:2986
+  NEW_FUNC: 0x55d140ff1fa0 in H5VL_file_optional /src/hdf5/src/H5VLcallback.c:4199
+  NEW_FUNC: 0x55d140ff2470 in H5VL__file_optional /src/hdf5/src/H5VLcallback.c:4164
+  NEW_FUNC: 0x55d140ff3300 in H5VL_file_close /src/hdf5/src/H5VLcallback.c:4348
+  NEW_FUNC: 0x55d140ff37c0 in H5VL__file_close /src/hdf5/src/H5VLcallback.c:4309
+  NEW_FUNC: 0x55d140ff4a30 in H5VL_group_open /src/hdf5/src/H5VLcallback.c:4560
+  NEW_FUNC: 0x55d140ff4f00 in H5VL__group_open /src/hdf5/src/H5VLcallback.c:4524
+  NEW_FUNC: 0x55d141003af0 in H5VL_introspect_opt_query /src/hdf5/src/H5VLcallback.c:6648
+  NEW_FUNC: 0x55d141003fc0 in H5VL__introspect_opt_query /src/hdf5/src/H5VLcallback.c:6612
+  NEW_FUNC: 0x55d141011720 in H5VL_new_vol_obj /src/hdf5/src/H5VLint.c:541
+  NEW_FUNC: 0x55d141011f80 in H5VL__wrap_obj /src/hdf5/src/H5VLint.c:502
+  NEW_FUNC: 0x55d141012300 in H5VL_object_unwrap /src/hdf5/src/H5VLint.c:1836
+  NEW_FUNC: 0x55d141013860 in H5VL_register /src/hdf5/src/H5VLint.c:752
+  NEW_FUNC: 0x55d141014b10 in H5VL_free_object /src/hdf5/src/H5VLint.c:1176
+  NEW_FUNC: 0x55d1410180f0 in H5VL_vol_object /src/hdf5/src/H5VLint.c:1736
+  NEW_FUNC: 0x55d141018330 in H5VL_vol_object_verify /src/hdf5/src/H5VLint.c:1764
+  NEW_FUNC: 0x55d141019fc0 in H5VL_set_vol_wrapper /src/hdf5/src/H5VLint.c:2285
+  NEW_FUNC: 0x55d14101b1d0 in H5VL__free_vol_wrapper /src/hdf5/src/H5VLint.c:2237
+  NEW_FUNC: 0x55d14101b6c0 in H5VL_reset_vol_wrapper /src/hdf5/src/H5VLint.c:2428
+  NEW_FUNC: 0x55d14101cf00 in H5VL_setup_acc_args /src/hdf5/src/H5VLint.c:2670
+  NEW_FUNC: 0x55d14102a110 in H5VL__native_datatype_open /src/hdf5/src/H5VLnative_datatype.c:145
+  NEW_FUNC: 0x55d14102c780 in H5VL__native_file_optional /src/hdf5/src/H5VLnative_file.c:388
+  NEW_FUNC: 0x55d14102e710 in H5VL__native_file_close /src/hdf5/src/H5VLnative_file.c:742
+  NEW_FUNC: 0x55d14102f0c0 in H5VL__native_group_open /src/hdf5/src/H5VLnative_group.c:140
+  NEW_FUNC: 0x55d141033c50 in H5VL__native_introspect_opt_query /src/hdf5/src/H5VLnative_introspect.c:72
+  NEW_FUNC: 0x55d1410411b0 in H5WB_wrap /src/hdf5/src/H5WB.c:91
+  NEW_FUNC: 0x55d1410412d0 in H5WB_actual /src/hdf5/src/H5WB.c:140
+  NEW_FUNC: 0x55d1410418e0 in H5WB_unwrap /src/hdf5/src/H5WB.c:236
+  NEW_FUNC: 0x55d1410b0be0 in H5_build_extpath /src/hdf5/src/H5system.c:668
+  NEW_FUNC: 0x55d1410ddfa0 in H5B_shared_new /src/hdf5/src/H5B.c:1652
+  NEW_FUNC: 0x55d1410de7e0 in H5B_shared_free /src/hdf5/src/H5B.c:1720
+#71893: cov: 2863 ft: 3558 corp: 61 exec/s: 167 oom/timeout/crash: 0/0/0 time: 110s job: 29 dft_time: 0
+#76740: cov: 2863 ft: 3558 corp: 61 exec/s: 156 oom/timeout/crash: 0/0/0 time: 115s job: 30 dft_time: 0
+#82426: cov: 2864 ft: 3585 corp: 62 exec/s: 177 oom/timeout/crash: 0/0/0 time: 127s job: 31 dft_time: 0
+#88432: cov: 2868 ft: 3610 corp: 67 exec/s: 182 oom/timeout/crash: 0/0/0 time: 132s job: 32 dft_time: 0
+#93089: cov: 2868 ft: 3613 corp: 68 exec/s: 136 oom/timeout/crash: 0/0/0 time: 141s job: 33 dft_time: 0
+  NEW_FUNC: 0x55d1406708f0 in H5C__flash_increase_cache_size /src/hdf5/src/H5Cint.c:859
+  NEW_FUNC: 0x55d140673280 in H5C__make_space_in_cache /src/hdf5/src/H5Cint.c:1819
+#97426: cov: 2886 ft: 3637 corp: 69 exec/s: 123 oom/timeout/crash: 0/0/0 time: 147s job: 34 dft_time: 0
+  NEW_FUNC: 0x55d1407fdb40 in H5FL__blk_gc_list /src/hdf5/src/H5FL.c:965
+#103185: cov: 2896 ft: 3676 corp: 74 exec/s: 159 oom/timeout/crash: 0/0/0 time: 152s job: 35 dft_time: 0
+#108666: cov: 2897 ft: 3680 corp: 77 exec/s: 148 oom/timeout/crash: 0/0/0 time: 165s job: 36 dft_time: 0
+#114267: cov: 2902 ft: 3723 corp: 82 exec/s: 147 oom/timeout/crash: 0/0/0 time: 171s job: 37 dft_time: 0
+#120336: cov: 2903 ft: 3727 corp: 86 exec/s: 155 oom/timeout/crash: 0/0/0 time: 186s job: 38 dft_time: 0
+#125167: cov: 2903 ft: 3727 corp: 86 exec/s: 120 oom/timeout/crash: 0/0/0 time: 189s job: 39 dft_time: 0
+#126353: cov: 2903 ft: 3748 corp: 88 exec/s: 28 oom/timeout/crash: 0/0/0 time: 195s job: 40 dft_time: 0
+#129430: cov: 2903 ft: 3748 corp: 88 exec/s: 93 oom/timeout/crash: 0/0/0 time: 206s job: 42 dft_time: 0
+#134394: cov: 2903 ft: 3748 corp: 88 exec/s: 118 oom/timeout/crash: 1/0/0 time: 209s job: 41 dft_time: 0
+#135389: cov: 2903 ft: 3748 corp: 88 exec/s: 39 oom/timeout/crash: 1/0/0 time: 221s job: 44 dft_time: 0
+#140523: cov: 2905 ft: 3752 corp: 90 exec/s: 116 oom/timeout/crash: 2/0/0 time: 232s job: 43 dft_time: 0
+#150252: cov: 2905 ft: 3752 corp: 90 exec/s: 211 oom/timeout/crash: 2/0/0 time: 242s job: 45 dft_time: 0
+#159933: cov: 2905 ft: 3752 corp: 90 exec/s: 205 oom/timeout/crash: 2/0/0 time: 254s job: 46 dft_time: 0
+#169060: cov: 2905 ft: 3752 corp: 90 exec/s: 190 oom/timeout/crash: 2/0/0 time: 258s job: 47 dft_time: 0
+#176165: cov: 2905 ft: 3753 corp: 91 exec/s: 126 oom/timeout/crash: 2/0/0 time: 282s job: 48 dft_time: 0
+#183422: cov: 2905 ft: 3753 corp: 91 exec/s: 145 oom/timeout/crash: 3/0/0 time: 283s job: 49 dft_time: 0
+#183859: cov: 2905 ft: 3754 corp: 92 exec/s: 8 oom/timeout/crash: 3/0/0 time: 298s job: 50 dft_time: 0
+#192104: cov: 2905 ft: 3754 corp: 92 exec/s: 158 oom/timeout/crash: 3/0/0 time: 307s job: 51 dft_time: 0
+  NEW_FUNC: 0x55d14091adb0 in H5O__cache_get_final_load_size /src/hdf5/src/H5Ocache.c:172
+  NEW_FUNC: 0x55d14091ef10 in H5O__prefix_deserialize /src/hdf5/src/H5Ocache.c:984
+  NEW_FUNC: 0x55d140958c10 in H5O__free /src/hdf5/src/H5Oint.c:2803
+INFO: fuzzed for 308 seconds, wrapping up soon
+INFO: exiting: 0 time: 309s

@@ -1,0 +1,12 @@
+{
+  "groups": [],
+  "coverage": {
+    "edges": 2305,
+    "features": 2783,
+    "corpusSize": 54
+  },
+  "round": 1,
+  "clean": true,
+  "reason": "ok",
+  "findings": "Coverage observed: 2305 edges, 2783 features, corpus 54.\nNo crashes were found during fuzzing."
+}

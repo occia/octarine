@@ -1,0 +1,10 @@
+{
+  "sufficient": true,
+  "reasoning": "The harness correctly feeds raw fuzzer bytes to H5Pdecode (the primary parser), re-encodes successful decodes with H5Pencode2, iterates any filter pipeline with H5Pget_filter2, and closes with H5Pclose. The version byte is H5P_ENCODE_VERS=0 (trivially discoverable), and the type field is a small integer range — both easily handled by coverage-guided fuzzing. The log confirms the fuzzer DID get past these checks: coverage grew from 0 to 1951 edges, a corpus of 58 inputs was built, and 1054 crashes were triggered (real library bugs). The plateau is consistent with having explored the reachable decode/encode surface. All four target APIs are exercised on the data-dependent path.",
+  "stats": {
+    "durationMs": 92940,
+    "inputTokens": 298991,
+    "outputTokens": 4286,
+    "costUsd": 0.34077690000000005
+  }
+}

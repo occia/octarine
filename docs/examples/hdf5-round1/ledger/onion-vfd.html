@@ -1,0 +1,33 @@
+<!doctype html><html><head><meta charset="utf-8"><title>onion-vfd</title>
+<style>
+ body{font:14px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#f6f7f9;color:#1c2128}
+ .md{max-width:900px;margin:0 auto;padding:28px 24px;background:#fff;min-height:100vh;border-left:1px solid #eaeef2;border-right:1px solid #eaeef2}
+ .md h1{font-size:22px;border-bottom:1px solid #d0d7de;padding-bottom:8px} .md h2{font-size:18px;margin-top:24px;border-bottom:1px solid #eaeef2;padding-bottom:5px}
+ .md h3{font-size:15px} .md p,.md li{font-size:14px}
+ .md table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px}
+ .md th,.md td{border:1px solid #d0d7de;padding:6px 10px;text-align:left} .md th{background:#f6f8fa}
+ .md tr:nth-child(2n) td{background:#fbfcfd}
+ .md code{background:#eff1f3;padding:1px 5px;border-radius:5px;font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
+ .md pre{background:#0d1117;color:#e6edf3;padding:12px;border-radius:6px;overflow-x:auto} .md pre code{background:none;padding:0}
+ .md a{color:#0969da;text-decoration:none} .md a:hover{text-decoration:underline}
+ .md blockquote{margin:8px 0;padding:4px 14px;border-left:3px solid #d0d7de;color:#57606a}
+ .hljs-comment,.hljs-quote{color:#8b949e} .hljs-keyword,.hljs-selector-tag,.hljs-type{color:#cf222e}
+ .hljs-string,.hljs-attr{color:#0a3069} .hljs-number,.hljs-literal{color:#0550ae} .hljs-title{color:#6639ba}
+</style></head><body><article class="md"><h1>Onion (versioned) virtual file driver  (onion-vfd)</h1>
+<ul>
+<li>status: pending</li>
+<li>priority: 5</li>
+<li>harness: -</li>
+<li>attempts: 0</li>
+</ul>
+<h2>APIs</h2>
+<ul>
+<li><code>H5Pset_fapl_onion</code></li>
+<li><code>H5Fopen</code></li>
+<li><code>H5Fclose</code></li>
+</ul>
+<h2>Rationale</h2>
+<p>The Onion VFD has its own header, history, and index record formats parsed on open. These multi-format parsers are new (HDF5 1.13+) and lightly tested by fuzz infrastructure.</p>
+<h2>Last feedback</h2>
+<p>(none)</p>
+</article></body></html>

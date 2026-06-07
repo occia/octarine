@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset="utf-8"><title>datatype-parsing</title>
+<style>
+ body{font:14px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#f6f7f9;color:#1c2128}
+ .md{max-width:900px;margin:0 auto;padding:28px 24px;background:#fff;min-height:100vh;border-left:1px solid #eaeef2;border-right:1px solid #eaeef2}
+ .md h1{font-size:22px;border-bottom:1px solid #d0d7de;padding-bottom:8px} .md h2{font-size:18px;margin-top:24px;border-bottom:1px solid #eaeef2;padding-bottom:5px}
+ .md h3{font-size:15px} .md p,.md li{font-size:14px}
+ .md table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px}
+ .md th,.md td{border:1px solid #d0d7de;padding:6px 10px;text-align:left} .md th{background:#f6f8fa}
+ .md tr:nth-child(2n) td{background:#fbfcfd}
+ .md code{background:#eff1f3;padding:1px 5px;border-radius:5px;font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
+ .md pre{background:#0d1117;color:#e6edf3;padding:12px;border-radius:6px;overflow-x:auto} .md pre code{background:none;padding:0}
+ .md a{color:#0969da;text-decoration:none} .md a:hover{text-decoration:underline}
+ .md blockquote{margin:8px 0;padding:4px 14px;border-left:3px solid #d0d7de;color:#57606a}
+ .hljs-comment,.hljs-quote{color:#8b949e} .hljs-keyword,.hljs-selector-tag,.hljs-type{color:#cf222e}
+ .hljs-string,.hljs-attr{color:#0a3069} .hljs-number,.hljs-literal{color:#0550ae} .hljs-title{color:#6639ba}
+</style></head><body><article class="md"><h1>Committed datatype open and introspection  (datatype-parsing)</h1>
+<ul>
+<li>status: done</li>
+<li>priority: 9</li>
+<li>harness: h5_committed_type_fuzzer</li>
+<li>attempts: 3</li>
+</ul>
+<h2>APIs</h2>
+<ul>
+<li><code>H5Topen2</code></li>
+<li><code>H5Tget_class</code></li>
+<li><code>H5Tget_size</code></li>
+<li><code>H5Tget_nmembers</code></li>
+<li><code>H5Tget_member_type</code></li>
+<li><code>H5Tget_member_offset</code></li>
+<li><code>H5Tis_variable_str</code></li>
+<li><code>H5Tclose</code></li>
+</ul>
+<h2>Rationale</h2>
+<p>Committed (named) datatypes are stored in the file and decoded on H5Topen2. Compound, enum, vlen, and array type descriptors are deeply nested and hand-parsed; historically a rich source of OOB/UAF bugs.</p>
+<h2>Last feedback</h2>
+<p>The harness drives all 8 target APIs correctly. It loads the full fuzz input as an HDF5 file image (H5Pset_file_image + CORE VFD), tries both hardcoded candidate names and a dynamic root-group walk via H5Gget_objname_by_idx to call H5Topen2, then recursively calls H5Tget_class/H5Tget_size/H5Tis_variable_str and descends into compound members (H5Tget_nmembers, H5Tget_member_type, H5Tget_member_offset) and super-types for array/vlen. The fuzz log shows healthy coverage growth (edges 2905, features 3754, corpus 92) with new functions discovered well into the run and 3 crashes found, indicating genuine depth of exploration rather than an early plateau.</p>
+</article></body></html>

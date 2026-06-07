@@ -1,0 +1,876 @@
+{
+  "target": "hdf5",
+  "commit": "af19d9043785",
+  "language": "c",
+  "sanitizer": "address",
+  "budget": {
+    "maxWallTimeSec": 43200,
+    "perFuzzSec": 300,
+    "maxSurfaceAttempts": 5,
+    "maxCostUsd": 50
+  },
+  "startedAtMs": 1780741933402,
+  "startedAtLabel": "2026-06-06 10:32:13 UTC",
+  "endedAtMs": 1780777136530,
+  "survey": {
+    "stats": {
+      "durationMs": 146279,
+      "inputTokens": 136901,
+      "outputTokens": 5004,
+      "costUsd": 0.3692396
+    },
+    "total": 18,
+    "covered": 2,
+    "pending": 16,
+    "surfaces": [
+      {
+        "id": "file-open-basic",
+        "title": "Basic HDF5 file open (H5Fopen)",
+        "apis": [
+          "H5Fopen",
+          "H5Fclose"
+        ],
+        "priority": 5,
+        "status": "covered"
+      },
+      {
+        "id": "dataset-attribute-open",
+        "title": "Dataset + attribute open",
+        "apis": [
+          "H5Fopen",
+          "H5Dopen2",
+          "H5Aopen_name",
+          "H5Aclose",
+          "H5Dclose",
+          "H5Fclose"
+        ],
+        "priority": 5,
+        "status": "covered"
+      },
+      {
+        "id": "dataset-read-data",
+        "title": "Dataset data read with type/space inspection",
+        "apis": [
+          "H5Dopen2",
+          "H5Dread",
+          "H5Dget_type",
+          "H5Dget_space",
+          "H5Dget_storage_size",
+          "H5Dclose"
+        ],
+        "priority": 10,
+        "status": "done"
+      },
+      {
+        "id": "datatype-parsing",
+        "title": "Committed datatype open and introspection",
+        "apis": [
+          "H5Topen2",
+          "H5Tget_class",
+          "H5Tget_size",
+          "H5Tget_nmembers",
+          "H5Tget_member_type",
+          "H5Tget_member_offset",
+          "H5Tis_variable_str",
+          "H5Tclose"
+        ],
+        "priority": 9,
+        "status": "done"
+      },
+      {
+        "id": "object-visit-iteration",
+        "title": "Object header visiting and iteration",
+        "apis": [
+          "H5Oopen",
+          "H5Oget_info3",
+          "H5Ovisit3",
+          "H5Oclose",
+          "H5Literate2",
+          "H5Lget_val"
+        ],
+        "priority": 9,
+        "status": "done"
+      },
+      {
+        "id": "filter-pipeline-read",
+        "title": "Compressed/filtered dataset read",
+        "apis": [
+          "H5Dopen2",
+          "H5Dget_create_plist",
+          "H5Pget_nfilters",
+          "H5Pget_filter2",
+          "H5Dread",
+          "H5Zfilter_avail"
+        ],
+        "priority": 8,
+        "status": "done"
+      },
+      {
+        "id": "attribute-iteration-read",
+        "title": "Attribute iteration and data read",
+        "apis": [
+          "H5Aiterate2",
+          "H5Aopen_by_idx",
+          "H5Aget_type",
+          "H5Aget_space",
+          "H5Aread",
+          "H5Aclose"
+        ],
+        "priority": 8,
+        "status": "done"
+      },
+      {
+        "id": "group-link-iteration",
+        "title": "Group open and link traversal",
+        "apis": [
+          "H5Gopen2",
+          "H5Gget_info",
+          "H5Giterate",
+          "H5Lvisit2",
+          "H5Lget_info2",
+          "H5Gclose"
+        ],
+        "priority": 7,
+        "status": "done"
+      },
+      {
+        "id": "dataspace-encode-decode",
+        "title": "Dataspace encode/decode round-trip",
+        "apis": [
+          "H5Sget_select_type",
+          "H5Sencode2",
+          "H5Sdecode",
+          "H5Sis_simple",
+          "H5Sget_simple_extent_dims",
+          "H5Sclose"
+        ],
+        "priority": 7,
+        "status": "done"
+      },
+      {
+        "id": "property-list-encode-decode",
+        "title": "Property list encode/decode",
+        "apis": [
+          "H5Pencode2",
+          "H5Pdecode",
+          "H5Pget_filter2",
+          "H5Pclose"
+        ],
+        "priority": 7,
+        "status": "done"
+      },
+      {
+        "id": "references",
+        "title": "Object and region references",
+        "apis": [
+          "H5Rcreate_object",
+          "H5Rcreate_region",
+          "H5Rget_obj_type3",
+          "H5Ropen_object",
+          "H5Ropen_region",
+          "H5Rdestroy"
+        ],
+        "priority": 6,
+        "status": "done"
+      },
+      {
+        "id": "high-level-lite-api",
+        "title": "High-level Lite API (H5LT)",
+        "apis": [
+          "H5LTread_dataset",
+          "H5LTget_dataset_info",
+          "H5LTfind_dataset",
+          "H5LTget_attribute_string"
+        ],
+        "priority": 6,
+        "status": "done"
+      },
+      {
+        "id": "image-api",
+        "title": "High-level Image API (H5IM)",
+        "apis": [
+          "H5IMread_image",
+          "H5IMget_image_info",
+          "H5IMis_image"
+        ],
+        "priority": 5,
+        "status": "done"
+      },
+      {
+        "id": "table-api",
+        "title": "High-level Table API (H5TB)",
+        "apis": [
+          "H5TBread_table",
+          "H5TBread_records",
+          "H5TBget_table_info",
+          "H5TBget_field_info"
+        ],
+        "priority": 5,
+        "status": "pending"
+      },
+      {
+        "id": "onion-vfd",
+        "title": "Onion (versioned) virtual file driver",
+        "apis": [
+          "H5Pset_fapl_onion",
+          "H5Fopen",
+          "H5Fclose"
+        ],
+        "priority": 5,
+        "status": "pending"
+      },
+      {
+        "id": "swmr-refresh",
+        "title": "SWMR dataset refresh",
+        "apis": [
+          "H5Fopen (H5F_ACC_RDONLY|H5F_ACC_SWMR_READ)",
+          "H5Dopen2",
+          "H5Drefresh",
+          "H5Fstart_swmr_write"
+        ],
+        "priority": 4,
+        "status": "pending"
+      },
+      {
+        "id": "vfd-core",
+        "title": "Core (in-memory) VFD with backing-store open",
+        "apis": [
+          "H5Pset_fapl_core",
+          "H5Fopen",
+          "H5Fflush",
+          "H5Fclose"
+        ],
+        "priority": 3,
+        "status": "pending"
+      },
+      {
+        "id": "async-event-set",
+        "title": "Asynchronous event-set API",
+        "apis": [
+          "H5EScreate",
+          "H5ESinsert_request",
+          "H5ESwait",
+          "H5ESget_err_info",
+          "H5ESclose"
+        ],
+        "priority": 3,
+        "status": "pending"
+      }
+    ],
+    "transcriptRel": "survey/transcript.html",
+    "skipped": false
+  },
+  "surfaces": [
+    {
+      "id": "dataset-read-data",
+      "title": "Dataset data read with type/space inspection",
+      "apis": [
+        "H5Dopen2",
+        "H5Dread",
+        "H5Dget_type",
+        "H5Dget_space",
+        "H5Dget_storage_size",
+        "H5Dclose"
+      ],
+      "priority": 10,
+      "status": "done",
+      "attempts": [
+        {
+          "attempt": 1,
+          "dir": "surface-dataset-read-data/attempt-1",
+          "generation": {
+            "durationMs": 5630942,
+            "inputTokens": 1707663,
+            "outputTokens": 14258,
+            "costUsd": 1.4987185500000002
+          },
+          "outcome": "submitted",
+          "conversationRel": "surface-dataset-read-data/attempt-1/conversation.html",
+          "verify": {
+            "durationMs": 317194,
+            "clean": true,
+            "reason": "ok",
+            "edges": 2299,
+            "features": 2761,
+            "corpus": 41,
+            "crashGroups": 0
+          },
+          "harnessName": "h5_dread_fuzzer",
+          "assess": {
+            "durationMs": 83493,
+            "inputTokens": 285983,
+            "outputTokens": 3260,
+            "costUsd": 0.24915330000000002,
+            "sufficient": true,
+            "reasoning": "The harness drives all six target APIs in correct real-caller order: H5Dopen2 → H5Dget_type → H5Dget_storage_size → H5Dget_space → H5Dread → H5Dclose. The entire fuzzer input is used as the HDF5 file (no hardcoding), H5Ovisit3 enumerates all datasets, VL types are handled properly with H5Treclaim, and H5Tget_native_type exercises the type-conversion pipeline. Coverage grew steadily to 2299 edges / 2761 features / 41 corpus items before plateauing — a pattern consistent with the HDF5 format complexity limiting valid file generation rather than any harness shortcut. The harness thoroughly exercises the attack surface."
+          },
+          "assessConversationRel": "surface-dataset-read-data/attempt-1/assessment-conversation.html"
+        }
+      ],
+      "harnessSrcRel": "surface-dataset-read-data/submitted",
+      "harnessName": "h5_dread_fuzzer"
+    },
+    {
+      "id": "datatype-parsing",
+      "title": "Committed datatype open and introspection",
+      "apis": [
+        "H5Topen2",
+        "H5Tget_class",
+        "H5Tget_size",
+        "H5Tget_nmembers",
+        "H5Tget_member_type",
+        "H5Tget_member_offset",
+        "H5Tis_variable_str",
+        "H5Tclose"
+      ],
+      "priority": 9,
+      "status": "done",
+      "attempts": [
+        {
+          "attempt": 1,
+          "dir": "surface-datatype-parsing/attempt-1",
+          "generation": {
+            "durationMs": 9214737,
+            "inputTokens": 4562221,
+            "outputTokens": 22106,
+            "costUsd": 3.515778450000001
+          },
+          "outcome": "insufficient",
+          "conversationRel": "surface-datatype-parsing/attempt-1/conversation.html",
+          "verify": {
+            "durationMs": 313619,
+            "clean": true,
+            "reason": "ok",
+            "edges": 2065,
+            "features": 2308,
+            "corpus": 22,
+            "crashGroups": 0
+          },
+          "harnessName": "h5_committed_type_fuzzer",
+          "assess": {
+            "durationMs": 77188,
+            "inputTokens": 232964,
+            "outputTokens": 3191,
+            "costUsd": 0.2484093,
+            "sufficient": false,
+            "reasoning": "The harness is structurally correct (writes fuzz bytes as a file, opens it with H5Fopen, visits objects with H5Ovisit3, calls H5Topen2 on named types, then recursively introspects with all target APIs). However, the fuzz log shows the core target APIs were never reached: no NEW_FUNC entry appears for H5Topen2, H5Tget_class, H5Tget_nmembers, H5Tget_member_type, H5Tget_member_offset, or H5Tis_variable_str. All discovered new functions are in file-open/superblock layers (H5Fsuper_cache.c, H5Fio.c, H5checksum.c). Coverage plateaued at 2065 edges with only 22 corpus entries after 310 seconds — entirely consistent with the fuzzer spending nearly all time generating structurally invalid HDF5 files that fail H5Fopen before any type parsing occurs. The committed-type attack surface is unreachable without valid HDF5 seed files containing named datatypes."
+          },
+          "assessConversationRel": "surface-datatype-parsing/attempt-1/assessment-conversation.html"
+        },
+        {
+          "attempt": 2,
+          "dir": "surface-datatype-parsing/attempt-2",
+          "generation": {
+            "durationMs": 2066484,
+            "inputTokens": 1600345,
+            "outputTokens": 21849,
+            "costUsd": 0.9925456500000003
+          },
+          "outcome": "insufficient",
+          "conversationRel": "surface-datatype-parsing/attempt-2/conversation.html",
+          "verify": {
+            "durationMs": 310837,
+            "clean": true,
+            "reason": "ok",
+            "edges": 2226,
+            "features": 2677,
+            "corpus": 29,
+            "crashGroups": 0
+          },
+          "harnessName": "h5_committed_type_fuzzer",
+          "assess": {
+            "durationMs": 77446,
+            "inputTokens": 242509,
+            "outputTokens": 3291,
+            "costUsd": 0.26025585,
+            "sufficient": false,
+            "reasoning": "The harness covers all target APIs (H5Topen2, H5Tget_class, H5Tget_size, H5Tget_nmembers, H5Tget_member_type, H5Tget_member_offset, H5Tis_variable_str, H5Tclose) and the introspection logic is sound. However, the golden-image overlay strategy creates a hard gate that severely limits coverage: the fuzzer must preserve enough file structure to pass H5Fopen before any introspection API is called, and most mutations fail this gate, meaning the type-parsing code paths are rarely exercised. The fuzz log confirms this: coverage stagnated at 2197 edges within the first 5 seconds of a 308-second run, with only trivial bumps (to 2226) over the remaining 300 seconds and a final corpus of only 29 entries. Additionally, SAFE_OFFSET=512 protects far more than the 8-byte HDF5 magic — it shields the entire superblock region where object headers encoding type descriptors reside, so the fuzzer cannot meaningfully vary the type descriptor bytes. Inputs larger than (golden_sz - 512) bytes are silently truncated, wasting entropy."
+          },
+          "assessConversationRel": "surface-datatype-parsing/attempt-2/assessment-conversation.html"
+        },
+        {
+          "attempt": 3,
+          "dir": "surface-datatype-parsing/attempt-3",
+          "generation": {
+            "durationMs": 1720814,
+            "inputTokens": 794303,
+            "outputTokens": 6002,
+            "costUsd": 0.4844427
+          },
+          "outcome": "submitted",
+          "conversationRel": "surface-datatype-parsing/attempt-3/conversation.html",
+          "verify": {
+            "durationMs": 386832,
+            "clean": true,
+            "reason": "ok",
+            "edges": 2905,
+            "features": 3754,
+            "corpus": 92,
+            "crashGroups": 1
+          },
+          "harnessName": "h5_committed_type_fuzzer",
+          "verifyConversationRel": "surface-datatype-parsing/attempt-3/attribution-conversation.html",
+          "assess": {
+            "durationMs": 37147,
+            "inputTokens": 118633,
+            "outputTokens": 1474,
+            "costUsd": 0.16972035,
+            "sufficient": true,
+            "reasoning": "The harness drives all 8 target APIs correctly. It loads the full fuzz input as an HDF5 file image (H5Pset_file_image + CORE VFD), tries both hardcoded candidate names and a dynamic root-group walk via H5Gget_objname_by_idx to call H5Topen2, then recursively calls H5Tget_class/H5Tget_size/H5Tis_variable_str and descends into compound members (H5Tget_nmembers, H5Tget_member_type, H5Tget_member_offset) and super-types for array/vlen. The fuzz log shows healthy coverage growth (edges 2905, features 3754, corpus 92) with new functions discovered well into the run and 3 crashes found, indicating genuine depth of exploration rather than an early plateau."
+          },
+          "assessConversationRel": "surface-datatype-parsing/attempt-3/assessment-conversation.html"
+        }
+      ],
+      "harnessSrcRel": "surface-datatype-parsing/submitted",
+      "harnessName": "h5_committed_type_fuzzer"
+    },
+    {
+      "id": "object-visit-iteration",
+      "title": "Object header visiting and iteration",
+      "apis": [
+        "H5Oopen",
+        "H5Oget_info3",
+        "H5Ovisit3",
+        "H5Oclose",
+        "H5Literate2",
+        "H5Lget_val"
+      ],
+      "priority": 9,
+      "status": "done",
+      "attempts": [
+        {
+          "attempt": 1,
+          "dir": "surface-object-visit-iteration/attempt-1",
+          "generation": {
+            "durationMs": 1818566,
+            "inputTokens": 1009041,
+            "outputTokens": 9375,
+            "costUsd": 0.5530120500000001
+          },
+          "outcome": "submitted",
+          "conversationRel": "surface-object-visit-iteration/attempt-1/conversation.html",
+          "verify": {
+            "durationMs": 309126,
+            "clean": true,
+            "reason": "ok",
+            "edges": 2305,
+            "features": 2783,
+            "corpus": 54,
+            "crashGroups": 0
+          },
+          "harnessName": "h5_obj_visit_fuzzer",
+          "assess": {
+            "durationMs": 66428,
+            "inputTokens": 369868,
+            "outputTokens": 2841,
+            "costUsd": 0.3138924,
+            "sufficient": true,
+            "reasoning": "The harness drives all six target APIs (H5Oopen, H5Oget_info3, H5Ovisit3, H5Oclose, H5Literate2, H5Lget_val) the way a real caller would, feeding fuzzer-controlled bytes as the raw HDF5 file content. H5Literate2 is called with three distinct index/order combinations and H5Ovisit3 with two, covering the main traversal code paths. Both callbacks open child objects independently, exercising the object-header parser via different internal code paths. Coverage grew from ~2067 to 2305 edges with new functions still appearing at job 43-44, and the corpus reached 54 — consistent with genuine surface exploration rather than a shallow plateau. No major branch families of the target surface are left unreachable by the harness design."
+          },
+          "assessConversationRel": "surface-object-visit-iteration/attempt-1/assessment-conversation.html"
+        }
+      ],
+      "harnessSrcRel": "surface-object-visit-iteration/submitted",
+      "harnessName": "h5_obj_visit_fuzzer"
+    },
+    {
+      "id": "filter-pipeline-read",
+      "title": "Compressed/filtered dataset read",
+      "apis": [
+        "H5Dopen2",
+        "H5Dget_create_plist",
+        "H5Pget_nfilters",
+        "H5Pget_filter2",
+        "H5Dread",
+        "H5Zfilter_avail"
+      ],
+      "priority": 8,
+      "status": "done",
+      "attempts": [
+        {
+          "attempt": 1,
+          "dir": "surface-filter-pipeline-read/attempt-1",
+          "generation": {
+            "durationMs": 1594585,
+            "inputTokens": 849521,
+            "outputTokens": 11162,
+            "costUsd": 0.53239395
+          },
+          "outcome": "submitted",
+          "conversationRel": "surface-filter-pipeline-read/attempt-1/conversation.html",
+          "verify": {
+            "durationMs": 308979,
+            "clean": true,
+            "reason": "ok",
+            "edges": 2305,
+            "features": 2777,
+            "corpus": 50,
+            "crashGroups": 0
+          },
+          "harnessName": "h5_filter_read_fuzzer",
+          "assess": {
+            "durationMs": 58548,
+            "inputTokens": 163734,
+            "outputTokens": 2695,
+            "costUsd": 0.23979720000000002,
+            "sufficient": true,
+            "reasoning": "The harness correctly drives all six target APIs in proper caller order without hardcoding or short-circuiting any inputs — the entire fuzzer-supplied buffer is used as the HDF5 file content. Buffer allocation honors documented API contracts (element count × type size, 64 MiB cap), so there are no harness-induced false-positive crashes. H5Ovisit3 ensures all datasets in the fuzz input are visited, maximizing the chance of hitting datasets with filter pipelines. Coverage grew steadily to 2305 edges / 2777 features in 5 minutes from a cold start against a complex binary format, and was still incrementing at run end — consistent with gradual structural exploration rather than a stuck harness. No structural barrier prevents the fuzzer from eventually reaching filter decompression paths (H5Z deflate/shuffle/Fletcher32) once valid-enough chunked+filtered dataset inputs are discovered."
+          },
+          "assessConversationRel": "surface-filter-pipeline-read/attempt-1/assessment-conversation.html"
+        }
+      ],
+      "harnessSrcRel": "surface-filter-pipeline-read/submitted",
+      "harnessName": "h5_filter_read_fuzzer"
+    },
+    {
+      "id": "attribute-iteration-read",
+      "title": "Attribute iteration and data read",
+      "apis": [
+        "H5Aiterate2",
+        "H5Aopen_by_idx",
+        "H5Aget_type",
+        "H5Aget_space",
+        "H5Aread",
+        "H5Aclose"
+      ],
+      "priority": 8,
+      "status": "done",
+      "attempts": [
+        {
+          "attempt": 1,
+          "dir": "surface-attribute-iteration-read/attempt-1",
+          "generation": {
+            "durationMs": 1133246,
+            "inputTokens": 995574,
+            "outputTokens": 12642,
+            "costUsd": 0.66193095
+          },
+          "outcome": "submitted",
+          "conversationRel": "surface-attribute-iteration-read/attempt-1/conversation.html",
+          "verify": {
+            "durationMs": 374320,
+            "clean": true,
+            "reason": "ok",
+            "edges": 2755,
+            "features": 3479,
+            "corpus": 91,
+            "crashGroups": 1
+          },
+          "harnessName": "h5_attr_iter_fuzzer",
+          "verifyConversationRel": "surface-attribute-iteration-read/attempt-1/attribution-conversation.html",
+          "assess": {
+            "durationMs": 43003,
+            "inputTokens": 226772,
+            "outputTokens": 1617,
+            "costUsd": 0.24801704999999996,
+            "sufficient": true,
+            "reasoning": "The harness correctly drives all 6 target APIs: H5Aiterate2 (name-order iteration callback), H5Aopen_by_idx (creation-order with name-order fallback), H5Aget_type, H5Aget_space, H5Aread, and H5Aclose. The entire fuzzer input is fed as an HDF5 file without hardcoding or short-circuiting. Two distinct iteration code paths are exercised per object. H5Ovisit3 walks the full object hierarchy so attributes on groups, datasets, and named types are all reachable. Coverage grew steadily from 0 to 2755 edges / 3479 features with corpus reaching 91 entries; the plateau only appears near the end of the ~5-minute run, consistent with natural exhaustion rather than structural blockage. OOM events (not crashes) indicate the fuzzer is reaching deep parsing paths."
+          },
+          "assessConversationRel": "surface-attribute-iteration-read/attempt-1/assessment-conversation.html"
+        }
+      ],
+      "harnessSrcRel": "surface-attribute-iteration-read/submitted",
+      "harnessName": "h5_attr_iter_fuzzer"
+    },
+    {
+      "id": "group-link-iteration",
+      "title": "Group open and link traversal",
+      "apis": [
+        "H5Gopen2",
+        "H5Gget_info",
+        "H5Giterate",
+        "H5Lvisit2",
+        "H5Lget_info2",
+        "H5Gclose"
+      ],
+      "priority": 7,
+      "status": "done",
+      "attempts": [
+        {
+          "attempt": 1,
+          "dir": "surface-group-link-iteration/attempt-1",
+          "generation": {
+            "durationMs": 856573,
+            "inputTokens": 1058775,
+            "outputTokens": 5952,
+            "costUsd": 0.54665205
+          },
+          "outcome": "submitted",
+          "conversationRel": "surface-group-link-iteration/attempt-1/conversation.html",
+          "verify": {
+            "durationMs": 365109,
+            "clean": true,
+            "reason": "ok",
+            "edges": 2788,
+            "features": 3573,
+            "corpus": 94,
+            "crashGroups": 1
+          },
+          "harnessName": "h5_group_link_fuzzer",
+          "verifyConversationRel": "surface-group-link-iteration/attempt-1/attribution-conversation.html",
+          "assess": {
+            "durationMs": 54739,
+            "inputTokens": 239055,
+            "outputTokens": 2317,
+            "costUsd": 0.2571678,
+            "sufficient": true,
+            "reasoning": "The harness correctly drives all 6 specified APIs (H5Gopen2, H5Gget_info, H5Giterate, H5Lvisit2, H5Lget_info2, H5Gclose) on fuzzer-controlled bytes written to a temp file. It exercises both the legacy B-tree iteration path (H5Giterate) and the modern fractal-heap/v2-B-tree path (H5Lvisit2), with two index types (H5_INDEX_NAME, H5_INDEX_CRT_ORDER) and two orderings. H5Lget_info2 is called both by name (in the giterate callback for each link) and by index. Coverage grew steadily from ~2717 edges at 81s to 2788 edges at ~300s, reaching 3573 features and 94 corpus entries, with 6 OOM crashes — all consistent with real HDF5 group/link parsing bugs being triggered. The plateau in the final ~80s is natural for a short run. The only minor gap is the hardcoded sub-group name \"group\" for the non-root group open path, but all substantive group/link parsing code is exercised through the root group traversal. The surface is thoroughly reachable as written."
+          },
+          "assessConversationRel": "surface-group-link-iteration/attempt-1/assessment-conversation.html"
+        }
+      ],
+      "harnessSrcRel": "surface-group-link-iteration/submitted",
+      "harnessName": "h5_group_link_fuzzer"
+    },
+    {
+      "id": "dataspace-encode-decode",
+      "title": "Dataspace encode/decode round-trip",
+      "apis": [
+        "H5Sget_select_type",
+        "H5Sencode2",
+        "H5Sdecode",
+        "H5Sis_simple",
+        "H5Sget_simple_extent_dims",
+        "H5Sclose"
+      ],
+      "priority": 7,
+      "status": "done",
+      "attempts": [
+        {
+          "attempt": 1,
+          "dir": "surface-dataspace-encode-decode/attempt-1",
+          "generation": {
+            "durationMs": 963288,
+            "inputTokens": 548234,
+            "outputTokens": 6232,
+            "costUsd": 0.32759835
+          },
+          "outcome": "submitted",
+          "conversationRel": "surface-dataspace-encode-decode/attempt-1/conversation.html",
+          "verify": {
+            "durationMs": 1263194,
+            "clean": true,
+            "reason": "ok",
+            "edges": 1538,
+            "features": 1612,
+            "corpus": 18,
+            "crashGroups": 5
+          },
+          "harnessName": "h5_dataspace_encode_decode_fuzzer",
+          "verifyConversationRel": "surface-dataspace-encode-decode/attempt-1/attribution-conversation.html",
+          "assess": {
+            "durationMs": 58692,
+            "inputTokens": 258081,
+            "outputTokens": 2926,
+            "costUsd": 0.2875803,
+            "sufficient": true,
+            "reasoning": "[redacted — crash / sanitizer detail]"
+          },
+          "assessConversationRel": "surface-dataspace-encode-decode/attempt-1/assessment-conversation.html"
+        }
+      ],
+      "harnessSrcRel": "surface-dataspace-encode-decode/submitted",
+      "harnessName": "h5_dataspace_encode_decode_fuzzer"
+    },
+    {
+      "id": "property-list-encode-decode",
+      "title": "Property list encode/decode",
+      "apis": [
+        "H5Pencode2",
+        "H5Pdecode",
+        "H5Pget_filter2",
+        "H5Pclose"
+      ],
+      "priority": 7,
+      "status": "done",
+      "attempts": [
+        {
+          "attempt": 1,
+          "dir": "surface-property-list-encode-decode/attempt-1",
+          "generation": {
+            "durationMs": 810252,
+            "inputTokens": 650233,
+            "outputTokens": 5431,
+            "costUsd": 0.34815240000000003
+          },
+          "outcome": "submitted",
+          "conversationRel": "surface-property-list-encode-decode/attempt-1/conversation.html",
+          "verify": {
+            "durationMs": 790727,
+            "clean": true,
+            "reason": "ok",
+            "edges": 1951,
+            "features": 2848,
+            "corpus": 58,
+            "crashGroups": 1
+          },
+          "harnessName": "h5_plist_encode_decode_fuzzer",
+          "verifyConversationRel": "surface-property-list-encode-decode/attempt-1/attribution-conversation.html",
+          "assess": {
+            "durationMs": 92940,
+            "inputTokens": 298991,
+            "outputTokens": 4286,
+            "costUsd": 0.34077690000000005,
+            "sufficient": true,
+            "reasoning": "The harness correctly feeds raw fuzzer bytes to H5Pdecode (the primary parser), re-encodes successful decodes with H5Pencode2, iterates any filter pipeline with H5Pget_filter2, and closes with H5Pclose. The version byte is H5P_ENCODE_VERS=0 (trivially discoverable), and the type field is a small integer range — both easily handled by coverage-guided fuzzing. The log confirms the fuzzer DID get past these checks: coverage grew from 0 to 1951 edges, a corpus of 58 inputs was built, and 1054 crashes were triggered (real library bugs). The plateau is consistent with having explored the reachable decode/encode surface. All four target APIs are exercised on the data-dependent path."
+          },
+          "assessConversationRel": "surface-property-list-encode-decode/attempt-1/assessment-conversation.html"
+        }
+      ],
+      "harnessSrcRel": "surface-property-list-encode-decode/submitted",
+      "harnessName": "h5_plist_encode_decode_fuzzer"
+    },
+    {
+      "id": "references",
+      "title": "Object and region references",
+      "apis": [
+        "H5Rcreate_object",
+        "H5Rcreate_region",
+        "H5Rget_obj_type3",
+        "H5Ropen_object",
+        "H5Ropen_region",
+        "H5Rdestroy"
+      ],
+      "priority": 6,
+      "status": "done",
+      "attempts": [
+        {
+          "attempt": 1,
+          "dir": "surface-references/attempt-1",
+          "generation": {
+            "durationMs": 646881,
+            "inputTokens": 1554619,
+            "outputTokens": 11912,
+            "costUsd": 0.8901621
+          },
+          "outcome": "submitted",
+          "conversationRel": "surface-references/attempt-1/conversation.html",
+          "verify": {
+            "durationMs": 471736,
+            "clean": true,
+            "reason": "ok",
+            "edges": 2767,
+            "features": 3513,
+            "corpus": 113,
+            "crashGroups": 2
+          },
+          "harnessName": "h5_ref_fuzzer",
+          "verifyConversationRel": "surface-references/attempt-1/attribution-conversation.html",
+          "assess": {
+            "durationMs": 56984,
+            "inputTokens": 257833,
+            "outputTokens": 2656,
+            "costUsd": 0.30060555,
+            "sufficient": true,
+            "reasoning": "The harness covers all six specified APIs: H5Rcreate_object and H5Rcreate_region are called via H5Ovisit3 for every named object/dataset found in the fuzz file; H5Rget_obj_type3, H5Ropen_object, and H5Ropen_region are all called in exercise_ref; H5Rdestroy is called after every reference. Two meaningful code paths are exercised: (1) construction+dereference on objects discovered via file traversal, and (2) raw dereference of H5T_STD_REF dataset elements whose bytes come directly from the fuzzer, exercising attacker-controlled offset arithmetic. The coverage trajectory is consistent with genuine surface saturation: edges grew rapidly from 0 to ~2750 in the first 60 seconds, then continued climbing slowly to 2767 by ~224 seconds, followed by a flat plateau through 304 seconds. A corpus of 113 inputs and 3513 features across a structured binary format is healthy. The high crash count (72) indicates the fuzzer is reaching interesting states. No major branch of the specified attack surface appears unreachable."
+          },
+          "assessConversationRel": "surface-references/attempt-1/assessment-conversation.html"
+        }
+      ],
+      "harnessSrcRel": "surface-references/submitted",
+      "harnessName": "h5_ref_fuzzer"
+    },
+    {
+      "id": "high-level-lite-api",
+      "title": "High-level Lite API (H5LT)",
+      "apis": [
+        "H5LTread_dataset",
+        "H5LTget_dataset_info",
+        "H5LTfind_dataset",
+        "H5LTget_attribute_string"
+      ],
+      "priority": 6,
+      "status": "done",
+      "attempts": [
+        {
+          "attempt": 1,
+          "dir": "surface-high-level-lite-api/attempt-1",
+          "generation": {
+            "durationMs": 1038256,
+            "inputTokens": 2468994,
+            "outputTokens": 18725,
+            "costUsd": 1.2776466
+          },
+          "outcome": "submitted",
+          "conversationRel": "surface-high-level-lite-api/attempt-1/conversation.html",
+          "verify": {
+            "durationMs": 368277,
+            "clean": true,
+            "reason": "ok",
+            "edges": 3023,
+            "features": 3925,
+            "corpus": 97,
+            "crashGroups": 1
+          },
+          "harnessName": "h5_hlt_fuzzer",
+          "verifyConversationRel": "surface-high-level-lite-api/attempt-1/attribution-conversation.html",
+          "assess": {
+            "durationMs": 89404,
+            "inputTokens": 547814,
+            "outputTokens": 4014,
+            "costUsd": 0.5207466,
+            "sufficient": true,
+            "reasoning": "The harness correctly sequences all four target APIs (H5LTread_dataset, H5LTget_dataset_info, H5LTfind_dataset, H5LTget_attribute_string) in contract-honoring order, with the fuzzer controlling the entire HDF5 file image as input. Dataset names are discovered dynamically from fuzz input via H5Literate2, and buffer sizes are properly derived from API return values. Coverage grew to 3023 edges/3925 features/97 corpus items and plateaued in a pattern consistent with thorough exploration. Many type-conversion paths are reached despite using H5T_NATIVE_INT as the read type, because the on-disk dataset type varies with the fuzz input. The minor gaps (10 hardcoded attribute names, non-recursive group iteration) do not block core API surface coverage."
+          },
+          "assessConversationRel": "surface-high-level-lite-api/attempt-1/assessment-conversation.html"
+        }
+      ],
+      "harnessSrcRel": "surface-high-level-lite-api/submitted",
+      "harnessName": "h5_hlt_fuzzer"
+    },
+    {
+      "id": "image-api",
+      "title": "High-level Image API (H5IM)",
+      "apis": [
+        "H5IMread_image",
+        "H5IMget_image_info",
+        "H5IMis_image"
+      ],
+      "priority": 5,
+      "status": "done",
+      "attempts": [
+        {
+          "attempt": 1,
+          "dir": "surface-image-api/attempt-1",
+          "generation": {
+            "durationMs": 590101,
+            "inputTokens": 1361515,
+            "outputTokens": 11215,
+            "costUsd": 0.8343776999999999
+          },
+          "outcome": "submitted",
+          "conversationRel": "surface-image-api/attempt-1/conversation.html",
+          "verify": {
+            "durationMs": 403772,
+            "clean": true,
+            "reason": "ok",
+            "edges": 2788,
+            "features": 3529,
+            "corpus": 101,
+            "crashGroups": 1
+          },
+          "harnessName": "h5im_fuzzer",
+          "verifyConversationRel": "surface-image-api/attempt-1/attribution-conversation.html",
+          "assess": {
+            "durationMs": 43210,
+            "inputTokens": 185038,
+            "outputTokens": 1964,
+            "costUsd": 0.20672969999999996,
+            "sufficient": true,
+            "reasoning": "The harness correctly sequences H5IMis_image → H5IMget_image_info → H5IMread_image on every dataset in the root group of an HDF5 file whose bytes come entirely from the fuzzer. Both interlace modes (INTERLACE_PIXEL/INTERLACE_PLANE) are reachable via the on-disk attribute, buffer sizes are derived from queried dimensions, and palette sub-APIs are also exercised. Coverage grew steadily to 2788 edges / 3529 features / 101 corpus entries then plateaued, which is expected for a thin HL wrapper API — the fuzzer has exhausted the main branching paths in H5IM. The high OOM count (102) confirms large-image inputs are being generated and hitting internal size guards, not merely failing at file-open. No significant code path in the three target APIs is left structurally unreachable by this harness."
+          },
+          "assessConversationRel": "surface-image-api/attempt-1/assessment-conversation.html"
+        }
+      ],
+      "harnessSrcRel": "surface-image-api/submitted",
+      "harnessName": "h5im_fuzzer"
+    }
+  ],
+  "sourceVersion": {
+    "repoUrl": "https://github.com/HDFGroup/hdf5",
+    "branch": "develop",
+    "commit": "e124c36c55bf69e9087352a91c77e62ad52f4306",
+    "shortCommit": "e124c36c55bf",
+    "note": "commit re-derived 2026-06-07 (upstream HEAD) — the original build used an unpinned shallow clone and did not record the exact commit"
+  }
+}

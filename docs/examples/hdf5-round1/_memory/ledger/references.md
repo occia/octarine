@@ -1,0 +1,20 @@
+# Object and region references  (references)
+
+- status: done
+- priority: 6
+- harness: h5_ref_fuzzer
+- attempts: 1
+
+## APIs
+- `H5Rcreate_object`
+- `H5Rcreate_region`
+- `H5Rget_obj_type3`
+- `H5Ropen_object`
+- `H5Ropen_region`
+- `H5Rdestroy`
+
+## Rationale
+References store pointers into the file. Dereferencing a fuzz-controlled reference exercises file-offset arithmetic and address validation, historically a source of wild-read bugs.
+
+## Last feedback
+The harness covers all six specified APIs: H5Rcreate_object and H5Rcreate_region are called via H5Ovisit3 for every named object/dataset found in the fuzz file; H5Rget_obj_type3, H5Ropen_object, and H5Ropen_region are all called in exercise_ref; H5Rdestroy is called after every reference. Two meaningful code paths are exercised: (1) construction+dereference on objects discovered via file traversal, and (2) raw dereference of H5T_STD_REF dataset elements whose bytes come directly from the fuzzer, exercising attacker-controlled offset arithmetic. The coverage trajectory is consistent with genuine surface saturation: edges grew rapidly from 0 to ~2750 in the first 60 seconds, then continued climbing slowly to 2767 by ~224 seconds, followed by a flat plateau through 304 seconds. A corpus of 113 inputs and 3513 features across a structured binary format is healthy. The high crash count (72) indicates the fuzzer is reaching interesting states. No major branch of the specified attack surface appears unreachable.

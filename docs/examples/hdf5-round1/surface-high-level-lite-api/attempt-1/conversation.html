@@ -1,0 +1,1696 @@
+<!doctype html><html><head><meta charset="utf-8"><title>hdf5 — high-level-lite-api · attempt 1 · generation</title>
+<style>
+ body{font:14px/1.55 -apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#f6f7f9;color:#1c2128}
+ .wrap{max-width:900px;margin:0 auto;padding:20px}
+ h1{font-size:17px;margin:0 0 4px} .sub{color:#636c76;margin-bottom:16px;font-size:12px}
+ .turn{background:#fff;border:1px solid #d0d7de;border-radius:8px;margin:10px 0;padding:10px 14px;overflow:hidden}
+ .turn.assistant{border-left:3px solid #0969da} .turn.user{border-left:3px solid #8c959f;background:#fbfcfd}
+ .who{font-size:11px;font-weight:700;color:#636c76;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px}
+ .who .side{margin-left:8px;background:#fff1e5;color:#bc4c00;padding:1px 6px;border-radius:999px;font-size:10px}
+ .who .ts{margin-left:8px;font-weight:400;color:#a0a8b0;text-transform:none;letter-spacing:0}
+ .msg-text{font-size:14px} .msg-text p{margin:6px 0} .msg-text h1,.msg-text h2,.msg-text h3{font-size:15px;margin:10px 0 4px}
+ .msg-text ul,.msg-text ol{margin:6px 0 6px 22px} .msg-text code{background:#eff1f3;padding:1px 5px;border-radius:5px;font-size:12.5px}
+ .thinking{margin:6px 0;background:#fffbf0;border:1px solid #f0e6c8;border-radius:6px;padding:2px 10px}
+ .thinking>summary{cursor:pointer;color:#9a6700;font-size:12.5px;font-weight:600;padding:4px 0}
+ .thinking .msg-text{color:#6f5b1e;font-size:13px}
+ .tool{margin:8px 0;border:1px solid #d0d7de;border-radius:6px;overflow:hidden}
+ .tool-head{background:#ddf4ff;color:#0550ae;padding:5px 10px;font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
+ .tool details>summary,.result>summary{cursor:pointer;font-size:12px;color:#636c76;padding:5px 10px;user-select:none}
+ .result{margin:8px 0;border:1px solid #d0d7de;border-radius:6px;background:#f6f8fa}
+ .result.err{border-color:#ff818266;background:#fff5f5} .result.err>summary{color:#cf222e}
+ pre{margin:0;padding:10px 12px;overflow-x:auto;background:#0d1117;color:#e6edf3;font-size:12px;line-height:1.45}
+ pre code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:none;padding:0;color:inherit;white-space:pre}
+ .msg-text pre{border-radius:6px;margin:8px 0}
+ /* Block code (crash dumps / logs) must stay light-on-dark: the inline .msg-text code rule below
+    has higher specificity than the bare pre-code reset and would otherwise paint the code element
+    with a light inline-code background -- light-on-light (invisible until selected). Re-assert here. */
+ .msg-text pre code,.thinking .msg-text pre code{background:transparent;color:#e6edf3;font-size:12px;padding:0;border-radius:0}
+ /* compact highlight.js (github-dark subset) */
+ .hljs-comment,.hljs-quote{color:#8b949e} .hljs-keyword,.hljs-selector-tag,.hljs-type{color:#ff7b72}
+ .hljs-string,.hljs-attr,.hljs-template-tag{color:#a5d6ff} .hljs-number,.hljs-literal{color:#79c0ff}
+ .hljs-title,.hljs-function .hljs-title,.hljs-section{color:#d2a8ff} .hljs-built_in,.hljs-builtin-name{color:#ffa657}
+ .hljs-name,.hljs-tag{color:#7ee787} .hljs-meta{color:#79c0ff} .hljs-symbol,.hljs-bullet,.hljs-variable{color:#ffa657}
+ .foot{margin-top:18px;color:#636c76;font-size:12px}
+</style></head><body><div class="wrap">
+ <h1>hdf5 — high-level-lite-api · attempt 1 · generation</h1>
+ <div class="sub">114 turn(s) · Claude-Code conversation</div>
+ <div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:36:33Z</span></div><div class="msg-text"><p>Write a fuzzing harness for ONE specific attack surface of <code>hdf5</code> (c, address).</p>
+<p>Attack surface: High-level Lite API (H5LT)<br>Target API(s): H5LTread_dataset, H5LTget_dataset_info, H5LTfind_dataset, H5LTget_attribute_string<br>Why this surface: The HL Lite API is a thin but heavily-used wrapper. It calls the core stack through a different code path and does its own size calculations; worth fuzzing independently to catch HL-specific bugs.</p>
+<p>This is the first attempt for this surface.</p>
+<p>Follow CLAUDE.md for the full workflow (download, write into fuzz-proj, build green via build-project,<br>write /work/agent/new-harnesses.txt). Exercise the API the way a real caller would — a crash from<br>harness misuse is a false positive and will be rejected.</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:36:36Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>Let me start by following the workflow outlined in CLAUDE.md:</p>
+<ol>
+<li>Download the OSS-Fuzz project</li>
+<li>Download the upstream source</li>
+<li>Read the existing build.sh and harness sources</li>
+<li>Write the new harness</li>
+<li>Build it</li>
+<li>Write the harness name to new-harnesses.txt</li>
+</ol>
+<p>Let me begin with downloading the sources.</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:36:37Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;libCRS download-source fuzz-proj /work/harness-proj/fuzz-proj 2&gt;&amp;1 | tail -5&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Download OSS-Fuzz project for hdf5&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:36:37Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;libCRS download-source target-source /work/agent/target-src 2&gt;&amp;1 | tail -5&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Download upstream HDF5 source&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:36:38Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">(Bash completed with no output)</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:36:38Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">(Bash completed with no output)</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:36:40Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;ls /work/harness-proj/fuzz-proj/ &amp;&amp; echo \&quot;---\&quot; &amp;&amp; ls /work/agent/target-src/&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;List downloaded project files&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:36:40Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">Dockerfile
+build.sh
+h5_extended_fuzzer.c
+h5_read_fuzzer.c
+project.yaml
+run_tests.sh
+---
+ACKNOWLEDGMENTS
+CITATION.cff
+CMakeBuildOptions.cmake
+CMakeInstallation.cmake
+CMakeLists.txt
+CMakePlugins.cmake
+CMakePresets.json
+CMakeTests.cmake
+CMakeVOL.cmake
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+CTestConfig.cmake
+HDF5Examples
+LICENSE
+README.md
+SECURITY.md
+UserMacros.cmake
+bin
+c++
+config
+docs
+fortran
+hl
+java
+release_docs
+src
+test
+testpar
+tools
+utils</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:36:42Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/build.sh&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:36:43Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;ls /work/agent/target-src/hl/src/ | head -40&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;List HL source files&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:36:43Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">1	#!/bin/bash -eu
+2	# Copyright 2023 Google LLC.
+3	#
+4	# Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+5	# you may not use this file except in compliance with the License.
+6	# You may obtain a copy of the License at
+7	#
+8	#      http://www.apache.org/licenses/LICENSE-2.0
+9	#
+10	# Unless required by applicable law or agreed to in writing, software
+11	# distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+12	# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+13	# See the License for the specific language governing permissions and
+14	# limitations under the License.
+15	#
+16	################################################################################
+17	
+18	export LDFLAGS=&quot;${CFLAGS}&quot;
+19	export CMAKE_C_FLAGS=&quot;${CC} ${CFLAGS}&quot;
+20	export CMAKE_CXX_FLAGS=&quot;${CXX} ${CXXFLAGS}&quot;
+21	
+22	mkdir build-dir
+23	cd build-dir
+24	cmake -G &quot;Unix Makefiles&quot; \
+25	    -DCMAKE_BUILD_TYPE:STRING=Release \
+26	    -DBUILD_SHARED_LIBS:BOOL=OFF \
+27	    -DBUILD_TESTING:BOOL=OFF \
+28	    -DCMAKE_VERBOSE_MAKEFILES:BOOL=ON \
+29	    -DHDF5_BUILD_EXAMPLES:BOOL=OFF \
+30	    -DHDF5_BUILD_TOOLS:BOOL=OFF \
+31	    -DHDF5_ENABLE_SANITIZERS:BOOL=ON \
+32	    -DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=ON \
+33	    ..
+34	
+35	# Make the build verbose for easy logging inspection
+36	cmake --build . --verbose --config Release -j$(nproc)
+37	cd $SRC/hdf5
+38	
+39	$CC $CFLAGS  -std=c99 -c \
+40	  -I/src/hdf5/src -I/src/hdf5/build-dir/src -I./src/H5FDsubfiling/ \
+41	  $SRC/h5_read_fuzzer.c
+42	$CXX $CXXFLAGS $LIB_FUZZING_ENGINE h5_read_fuzzer.o ./build-dir/bin/libhdf5.a -lz -o $OUT/h5_read_fuzzer
+43	
+44	$CC $CFLAGS  -std=c99 -c \
+45	  -I/src/hdf5/src -I/src/hdf5/build-dir/src -I./src/H5FDsubfiling/ \
+46	  $SRC/h5_extended_fuzzer.c
+47	$CXX $CXXFLAGS $LIB_FUZZING_ENGINE h5_extended_fuzzer.o ./build-dir/bin/libhdf5.a -lz -o $OUT/h5_extended_fuzzer
+48	
+49	zip -j $OUT/h5_extended_fuzzer_seed_corpus.zip $SRC/hdf5/test/testfiles/*.h5
+50	
+51	# Build test
+52	mkdir $SRC/hdf5/build-test
+53	cd $SRC/hdf5/build-test
+54	cmake -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_TESTING:BOOL=ON ..
+55	cmake --build . --verbose --config Release -j$(nproc)
+56	</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:36:43Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">CMakeLists.txt
+H5DO.c
+H5DOpublic.h
+H5DS.c
+H5DSprivate.h
+H5DSpublic.h
+H5HLprivate2.h
+H5IM.c
+H5IMprivate.h
+H5IMpublic.h
+H5LD.c
+H5LDprivate.h
+H5LDpublic.h
+H5LT.c
+H5LTanalyze.c
+H5LTanalyze.l
+H5LTparse.c
+H5LTparse.h
+H5LTparse.y
+H5LTprivate.h
+H5LTpublic.h
+H5PT.c
+H5PTprivate.h
+H5PTpublic.h
+H5TB.c
+H5TBprivate.h
+H5TBpublic.h
+hdf5_hl.h</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:36:45Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/agent/target-src/hl/src/H5LTpublic.h&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:36:46Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/h5_read_fuzzer.c&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:36:46Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">1	/* Copyright 2023 Google LLC
+2	Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+3	you may not use this file except in compliance with the License.
+4	You may obtain a copy of the License at
+5	      http://www.apache.org/licenses/LICENSE-2.0
+6	Unless required by applicable law or agreed to in writing, software
+7	distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+8	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+9	See the License for the specific language governing permissions and
+10	limitations under the License.
+11	*/
+12	
+13	#include &quot;hdf5.h&quot;
+14	
+15	#include &lt;unistd.h&gt;
+16	
+17	extern int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+18	{
+19	    // Some old logic with regards to skipping first byte. Leaving it here
+20	    // to avoid affecting the clusterfuzz-generated corpus.
+21	    if (size == 0) {
+22	        return 0;
+23	    }
+24	    uint8_t decider = data[0];
+25	    size -= 1;
+26	    data += 1;
+27	
+28	    char filename[256];
+29	    sprintf(filename, &quot;/tmp/libfuzzer.%d&quot;, getpid());
+30	
+31	    FILE *fp = fopen(filename, &quot;wb&quot;);
+32	    if (!fp) {
+33	        return 0;
+34	    }
+35	    fwrite(data, size, 1, fp);
+36	    fclose(fp);
+37	
+38	    hid_t fuzz_h5_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
+39	    if (fuzz_h5_id != H5I_INVALID_HID) {
+40	        H5Fclose(fuzz_h5_id);
+41	    }
+42	
+43	    return 0;
+44	}
+45	</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:36:46Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">1	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+2	 * Copyright by The HDF Group.                                               *
+3	 * All rights reserved.                                                      *
+4	 *                                                                           *
+5	 * This file is part of HDF5.  The full HDF5 copyright notice, including     *
+6	 * terms governing use, modification, and redistribution, is contained in    *
+7	 * the LICENSE file, which can be found at the root of the source code       *
+8	 * distribution tree, or in https://www.hdfgroup.org/licenses.               *
+9	 * If you do not have access to either file, you may request a copy from     *
+10	 * help@hdfgroup.org.                                                        *
+11	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+12	
+13	#ifndef H5LTpublic_H
+14	#define H5LTpublic_H
+15	
+16	/* Flag definitions for H5LTopen_file_image() */
+17	#define H5LT_FILE_IMAGE_OPEN_RW   0x0001 /* Open image for read-write */
+18	#define H5LT_FILE_IMAGE_DONT_COPY 0x0002 /* The HDF5 lib won&#x27;t copy   */
+19	/* user supplied image buffer. The same image is open with the core driver.  */
+20	#define H5LT_FILE_IMAGE_DONT_RELEASE 0x0004 /* The HDF5 lib won&#x27;t        */
+21	/* deallocate user supplied image buffer. The user application is responsible */
+22	/* for doing so.                                                             */
+23	#define H5LT_FILE_IMAGE_ALL 0x0007
+24	
+25	typedef enum H5LT_lang_t {
+26	    H5LT_LANG_ERR = -1, /*this is the first*/
+27	    H5LT_DDL      = 0,  /*for DDL*/
+28	    H5LT_C        = 1,  /*for C*/
+29	    H5LT_FORTRAN  = 2,  /*for Fortran*/
+30	    H5LT_NO_LANG  = 3   /*this is the last*/
+31	} H5LT_lang_t;
+32	
+33	#ifdef __cplusplus
+34	extern &quot;C&quot; {
+35	#endif
+36	
+37	/** \page H5LT_UG HDF5 High Level Lite
+38	 *
+39	 * Navigate back: \ref index &quot;Main&quot; / \ref UG
+40	 * &lt;hr&gt;
+41	 *
+42	 * \section sec_hl_lite_api HDF5 Lite APIs
+43	 *
+44	 * \subsection subsec_hl_lite_intro Introduction
+45	 *
+46	 * The HDF5 Lite API (H5LT) provides simplified functions for common HDF5 operations, combining
+47	 * multiple low-level calls into single high-level functions. This reduces code complexity and
+48	 * makes HDF5 more accessible for straightforward data storage tasks.
+49	 *
+50	 * @see H5LT Reference Manual
+51	 *
+52	 * \subsection subsec_hl_lite_dataset Dataset Operations
+53	 *
+54	 * Create and access datasets with single function calls using type-specific functions like
+55	 * #H5LTmake_dataset_int, #H5LTmake_dataset_float, #H5LTread_dataset_int, etc. Query dataset
+56	 * properties with #H5LTget_dataset_ndims, #H5LTget_dataset_info, and #H5LTfind_dataset.
+57	 *
+58	 * \subsection subsec_hl_lite_attr Attribute Operations
+59	 *
+60	 * Set and read attributes using type-specific functions such as #H5LTset_attribute_int,
+61	 * #H5LTset_attribute_string, #H5LTget_attribute_int, etc. Query attribute information
+62	 * with #H5LTget_attribute_ndims and #H5LTget_attribute_info.
+63	 *
+64	 * \subsection subsec_hl_lite_util Utility Functions
+65	 *
+66	 * Convert between datatypes and text representations using #H5LTtext_to_dtype and #H5LTdtype_to_text.
+67	 * Validate paths with #H5LTpath_valid, and work with file images using #H5LTopen_file_image.
+68	 *
+69	 * Previous Chapter \ref sec_hl_images - Next Chapter \ref sec_hl_table_api
+70	 *
+71	 * &lt;hr&gt;
+72	 * Navigate back: \ref index &quot;Main&quot; / \ref UG
+73	 */
+74	
+75	/**\defgroup H5LT HDF5 Lite APIs (H5LT,H5LD)
+76	 * &lt;em&gt;Functions used to simplify creating and manipulating datasets,
+77	 * attributes and other features (H5LT, H5LD)&lt;/em&gt;
+78	 *
+79	 * The HDF5 Lite API consists of higher-level functions which do
+80	 * more operations per call than the basic HDF5 interface.
+81	 * The purpose is to wrap intuitive functions around certain sets
+82	 * of features in the existing APIs.
+83	 * It has the following sets of functions listed below.
+84	 *
+85	 * \note \Bold{Programming hints:}
+86	 * \note To use any of these functions or subroutines,
+87	 *       you must first include the relevant include file (C) or
+88	 *       module (Fortran) in your application.
+89	 * \note The following line includes the HDF5 Lite package, H5LT,
+90	 *       in C applications:
+91	 *       \code #include &quot;hdf5_hl.h&quot; \endcode
+92	 * \note This line includes the H5LT module in Fortran applications:
+93	 *       \code use h5lt \endcode
+94	 *
+95	 * &lt;table&gt;
+96	 * &lt;tr valign=&quot;top&quot;&gt;&lt;td style=&quot;border: none;&quot;&gt;
+97	 *
+98	 * - Dataset Functions
+99	 *   - Make dataset functions
+100	 *      - \ref H5LTmake_dataset
+101	 *      - \ref H5LTmake_dataset_char
+102	 *      - \ref H5LTmake_dataset_short
+103	 *      - \ref H5LTmake_dataset_int
+104	 *      - \ref H5LTmake_dataset_long
+105	 *      - \ref H5LTmake_dataset_float
+106	 *      - \ref H5LTmake_dataset_double
+107	 *      - \ref H5LTmake_dataset_string
+108	 *
+109	 *   - Read dataset functions
+110	 *      - \ref H5LTread_dataset
+111	 *      - \ref H5LTread_dataset_char
+112	 *      - \ref H5LTread_dataset_short
+113	 *      - \ref H5LTread_dataset_int
+114	 *      - \ref H5LTread_dataset_long
+115	 *      - \ref H5LTread_dataset_float
+116	 *      - \ref H5LTread_dataset_double
+117	 *      - \ref H5LTread_dataset_string
+118	 *
+119	 *   - Query dataset functions
+120	 *      - \ref H5LTfind_dataset
+121	 *      - \ref H5LTget_dataset_ndims
+122	 *      - \ref H5LTget_dataset_info
+123	 *
+124	 *   - Dataset watch functions
+125	 *      - \ref H5LDget_dset_dims
+126	 *      - \ref H5LDget_dset_elmts
+127	 *      - \ref H5LDget_dset_type_size
+128	 *
+129	 * &lt;/td&gt;&lt;td style=&quot;border: none;&quot;&gt;
+130	 *
+131	 * - Attribute Functions
+132	 *   - Set attribute functions
+133	 *      - \ref H5LTset_attribute_string
+134	 *      - \ref H5LTset_attribute_char
+135	 *      - \ref H5LTset_attribute_uchar
+136	 *      - \ref H5LTset_attribute_short
+137	 *      - \ref H5LTset_attribute_ushort
+138	 *      - \ref H5LTset_attribute_int
+139	 *      - \ref H5LTset_attribute_uint
+140	 *      - \ref H5LTset_attribute_long
+141	 *      - \ref H5LTset_attribute_long_long
+142	 *      - \ref H5LTset_attribute_ulong
+143	 *      - \ref H5LTset_attribute_ullong
+144	 *      - \ref H5LTset_attribute_float
+145	 *      - \ref H5LTset_attribute_double
+146	 *      - &lt;code&gt;H5LTset_attribute_f&lt;/code&gt; (fortran ONLY)
+147	 *
+148	 *   - Get attribute functions
+149	 *      - \ref H5LTget_attribute
+150	 *      - \ref H5LTget_attribute_string
+151	 *      - \ref H5LTget_attribute_char
+152	 *      - \ref H5LTget_attribute_uchar
+153	 *      - \ref H5LTget_attribute_short
+154	 *      - \ref H5LTget_attribute_ushort
+155	 *      - \ref H5LTget_attribute_int
+156	 *      - \ref H5LTget_attribute_uint
+157	 *      - \ref H5LTget_attribute_long
+158	 *      - \ref H5LTget_attribute_long_long
+159	 *      - \ref H5LTget_attribute_ulong
+160	 *      - \ref H5LTget_attribute_ullong
+161	 *      - \ref H5LTget_attribute_float
+162	 *      - \ref H5LTget_attribute_double
+163	 *
+164	 *   - Query attribute functions
+165	 *      - \ref H5LTfind_attribute
+166	 *      - \ref H5LTget_attribute_info
+167	 *      - \ref H5LTget_attribute_ndims
+168	 *
+169	 * &lt;/td&gt;&lt;td style=&quot;border: none;&quot;&gt;
+170	 *
+171	 * - Datatype Functions
+172	 *   - Datatype translation functions
+173	 *      - \ref H5LTtext_to_dtype
+174	 *      - \ref H5LTdtype_to_text
+175	 *
+176	 * - File image function
+177	 *   - Open file image function
+178	 *      - \ref H5LTopen_file_image
+179	 *
+180	 * - Path and object function
+181	 *   - Query path and object function
+182	 *      - \ref H5LTpath_valid
+183	 *
+184	 * &lt;/td&gt;&lt;/tr&gt;
+185	 * &lt;/table&gt;
+186	 *
+187	 */
+188	
+189	/*-------------------------------------------------------------------------
+190	 *
+191	 * Make dataset functions
+192	 *
+193	 *-------------------------------------------------------------------------
+194	 */
+195	
+196	/**
+197	 *-------------------------------------------------------------------------
+198	 * \ingroup H5LT
+199	 *
+200	 * \brief Creates and writes a dataset of a type \p type_id.
+201	 *
+202	 * \fg_loc_id
+203	 * \param[in] dset_name The Name of the dataset to create
+204	 * \param[in] rank      Number of dimensions of dataspace
+205	 * \param[in] dims      An array of the size of each dimension
+206	 * \param[in] type_id   Identifier of the datatype to use when creating the dataset
+207	 * \param[in] buffer    Buffer with data to be written to the dataset
+208	 *
+209	 * \return \herr_t
+210	 *
+211	 * \details H5LTmake_dataset() creates and writes a dataset named
+212	 *          \p dset_name attached to the object specified by the
+213	 *          identifier \p loc_id.
+214	 *
+215	 *          The parameter \p type_id can be any valid HDF5 Prdefined \ref PDTNAT;
+216	 *          For example, setting \p type_id to #H5T_NATIVE_INT will result in a dataset
+217	 *          of &lt;em&gt;signed \e integer datatype&lt;/em&gt;.
+218	 *
+219	 * \version 1.10.0 Fortran 2003 subroutine added to accept a C address of the data buffer.
+220	 * \version 1.8.7 Fortran subroutine modified in this release to accommodate arrays
+221	 *                with more than three dimensions.
+222	 *
+223	 */
+224	H5HL_DLL herr_t H5LTmake_dataset(hid_t loc_id, const char *dset_name, int rank, const hsize_t *dims,
+225	                                 hid_t type_id, const void *buffer);
+226	
+227	/**
+228	 *-------------------------------------------------------------------------
+229	 * \ingroup H5LT
+230	 *
+231	 * \brief Creates and writes a dataset.
+232	 *
+233	 * \fg_loc_id
+234	 * \param[in] dset_name The Name of the dataset to create
+235	 * \param[in] rank      Number of dimensions of dataspace
+236	 * \param[in] dims      An array of the size of each dimension
+237	 * \param[in] buffer    Buffer with data to be written to the dataset
+238	 *
+239	 * \return \herr_t
+240	 *
+241	 * \details H5LTmake_dataset_char() creates and writes a dataset
+242	 *          named \p dset_name attached to the object specified by
+243	 *          the identifier \p loc_id.
+244	 *
+245	 *          The dataset&#x27;s datatype will be \e character, #H5T_NATIVE_CHAR.
+246	 *
+247	 */
+248	H5HL_DLL herr_t H5LTmake_dataset_char(hid_t loc_id, const char *dset_name, int rank, const hsize_t *dims,
+249	                                      const char *buffer);
+250	
+251	/**
+252	 *-------------------------------------------------------------------------
+253	 * \ingroup H5LT
+254	 *
+255	 * \brief Creates and writes a dataset.
+256	 *
+257	 * \fg_loc_id
+258	 * \param[in] dset_name The Name of the dataset to create
+259	 * \param[in] rank      Number of dimensions of dataspace
+260	 * \param[in] dims      An array of the size of each dimension
+261	 * \param[in] buffer    Buffer with data to be written to the dataset
+262	 *
+263	 * \return \herr_t
+264	 *
+265	 * \details H5LTmake_dataset_short() creates and writes a dataset
+266	 *          named \p dset_name attached to the object specified by
+267	 *          the identifier \p loc_id.
+268	 *
+269	 *          The dataset&#x27;s datatype will be &lt;em&gt;short signed integer&lt;/em&gt;,
+270	 *          #H5T_NATIVE_SHORT.
+271	 *
+272	 */
+273	H5HL_DLL herr_t H5LTmake_dataset_short(hid_t loc_id, const char *dset_name, int rank, const hsize_t *dims,
+274	                                       const short *buffer);
+275	
+276	/**
+277	 *-------------------------------------------------------------------------
+278	 * \ingroup H5LT
+279	 *
+280	 * \brief Creates and writes a dataset.
+281	 *
+282	 * \fg_loc_id
+283	 * \param[in] dset_name The Name of the dataset to create
+284	 * \param[in] rank      Number of dimensions of dataspace
+285	 * \param[in] dims      An array of the size of each dimension
+286	 * \param[in] buffer    Buffer with data to be written to the dataset
+287	 *
+288	 * \return \herr_t
+289	 *
+290	 * \details H5LTmake_dataset_int() creates and writes a dataset
+291	 *          named \p dset_name attached to the object specified by
+292	 *          the identifier \p loc_id.
+293	 *
+294	 *          The dataset&#x27;s datatype will be &lt;em&gt;native signed integer&lt;/em&gt;,
+295	 *          #H5T_NATIVE_INT.
+296	 *
+297	 * \version Fortran subroutine modified in this release to accommodate
+298	 *          arrays with more than three dimensions.
+299	 *
+300	 */
+301	H5HL_DLL herr_t H5LTmake_dataset_int(hid_t loc_id, const char *dset_name, int rank, const hsize_t *dims,
+302	                                     const int *buffer);
+303	
+304	/**
+305	 *-------------------------------------------------------------------------
+306	 * \ingroup H5LT
+307	 *
+308	 * \brief Creates and writes a dataset.
+309	 *
+310	 * \fg_loc_id
+311	 * \param[in] dset_name The Name of the dataset to create
+312	 * \param[in] rank      Number of dimensions of dataspace
+313	 * \param[in] dims      An array of the size of each dimension
+314	 * \param[in] buffer    Buffer with data to be written to the dataset
+315	 *
+316	 * \return \herr_t
+317	 *
+318	 * \details H5LTmake_dataset_long() creates and writes a dataset
+319	 *          named \p dset_name attached to the object specified by
+320	 *          the identifier \p loc_id.
+321	 *
+322	 *          The dataset&#x27;s datatype will be &lt;em&gt;long signed integer&lt;/em&gt;,
+323	 *          #H5T_NATIVE_LONG.
+324	 *
+325	 */
+326	H5HL_DLL herr_t H5LTmake_dataset_long(hid_t loc_id, const char *dset_name, int rank, const hsize_t *dims,
+327	                                      const long *buffer);
+328	
+329	/**
+330	 *-------------------------------------------------------------------------
+331	 * \ingroup H5LT
+332	 *
+333	 * \brief Creates and writes a dataset.
+334	 *
+335	 * \fg_loc_id
+336	 * \param[in] dset_name The Name of the dataset to create
+337	 * \param[in] rank      Number of dimensions of dataspace
+338	 * \param[in] dims      An array of the size of each dimension
+339	 * \param[in] buffer    Buffer with data to be written to the dataset
+340	 *
+341	 * \return \herr_t
+342	 *
+343	 * \details H5LTmake_dataset_float() creates and writes a dataset
+344	 *          named \p dset_name attached to the object specified by
+345	 *          the identifier \p loc_id.
+346	 *
+347	 *          The dataset&#x27;s datatype will be &lt;em&gt;native floating point&lt;/em&gt;,
+348	 *          #H5T_NATIVE_FLOAT.
+349	 *
+350	 * \version 1.8.7 Fortran subroutine modified in this release to accommodate
+351	 *                arrays with more than three dimensions.
+352	 *
+353	 */
+354	H5HL_DLL herr_t H5LTmake_dataset_float(hid_t loc_id, const char *dset_name, int rank, const hsize_t *dims,
+355	                                       const float *buffer);
+356	
+357	/**
+358	 *-------------------------------------------------------------------------
+359	 * \ingroup H5LT
+360	 *
+361	 * \brief Creates and writes a dataset.
+362	 *
+363	 * \fg_loc_id
+364	 * \param[in] dset_name The Name of the dataset to create
+365	 * \param[in] rank      Number of dimensions of dataspace
+366	 * \param[in] dims      An array of the size of each dimension
+367	 * \param[in] buffer    Buffer with data to be written to the dataset
+368	 *
+369	 * \return \herr_t
+370	 *
+371	 * \details H5LTmake_dataset_double() creates and writes a dataset
+372	 *          named \p dset_name attached to the object specified by
+373	 *          the identifier \p loc_id.
+374	 *
+375	 *          The dataset&#x27;s datatype will be
+376	 *          &lt;em&gt;native floating-point double&lt;/em&gt;, #H5T_NATIVE_DOUBLE.
+377	 *
+378	 * \version 1.8.7 Fortran subroutine modified in this release to accommodate
+379	 *                arrays with more than three dimensions.
+380	 *
+381	 */
+382	H5HL_DLL herr_t H5LTmake_dataset_double(hid_t loc_id, const char *dset_name, int rank, const hsize_t *dims,
+383	                                        const double *buffer);
+384	
+385	/**
+386	 *-------------------------------------------------------------------------
+387	 * \ingroup H5LT
+388	 *
+389	 * \brief Creates and writes a dataset with string datatype.
+390	 *
+391	 * \fg_loc_id
+392	 * \param[in] dset_name The name of the dataset to create
+393	 * \param[in] buf       Buffer with data to be written to the dataset
+394	 *
+395	 * \return \herr_t
+396	 *
+397	 * \details H5LTmake_dataset_string() creates and writes a dataset
+398	 *          named \p dset_name attached to the object specified by
+399	 *          the identifier \p loc_id.
+400	 *
+401	 *          The dataset&#x27;s datatype will be &lt;em&gt;C string&lt;/em&gt;, #H5T_C_S1.
+402	 *
+403	 */
+404	H5HL_DLL herr_t H5LTmake_dataset_string(hid_t loc_id, const char *dset_name, const char *buf);
+405	
+406	/*-------------------------------------------------------------------------
+407	 *
+408	 * Read dataset functions
+409	 *
+410	 *-------------------------------------------------------------------------
+411	 */
+412	
+413	/**
+414	 *-------------------------------------------------------------------------
+415	 * \ingroup H5LT
+416	 *
+417	 * \brief Reads a dataset from disk.
+418	 *
+419	 * \fg_loc_id
+420	 * \param[in] dset_name The name of the dataset to read
+421	 * \param[in] type_id   Identifier of the datatype to use when reading
+422	 *                      the dataset
+423	 * \param[out] buffer   Buffer with data
+424	 *
+425	 * \return \herr_t
+426	 *
+427	 * \details H5LTread_dataset() reads a dataset named \p dset_name
+428	 *          attached to the object specified by the identifier \p loc_id.
+429	 *
+430	 * \version 1.10.0  Fortran 2003 subroutine added to accept a C
+431	 *                  address of the data buffer.
+432	 * \version 1.8.7   Fortran subroutine modified in this release to
+433	 *                  accommodate arrays with more than three dimensions.
+434	 *
+435	 */
+436	H5HL_DLL herr_t H5LTread_dataset(hid_t loc_id, const char *dset_name, hid_t type_id, void *buffer);
+437	
+438	/**
+439	 *-------------------------------------------------------------------------
+440	 * \ingroup H5LT
+441	 *
+442	 * \brief Reads a dataset from disk.
+443	 *
+444	 * \fg_loc_id
+445	 * \param[in] dset_name The name of the dataset to read
+446	 * \param[out] buffer   Buffer with data
+447	 *
+448	 * \return \herr_t
+449	 *
+450	 * \details H5LTread_dataset_char() reads a dataset named \p dset_name
+451	 *          attached to the object specified by the identifier \p loc_id.
+452	 *          The HDF5 datatype is #H5T_NATIVE_CHAR.
+453	 *
+454	 */
+455	H5HL_DLL herr_t H5LTread_dataset_char(hid_t loc_id, const char *dset_name, char *buffer);
+456	
+457	/**
+458	 *-------------------------------------------------------------------------
+459	 * \ingroup H5LT
+460	 *
+461	 * \brief Reads a dataset from disk.
+462	 *
+463	 * \fg_loc_id
+464	 * \param[in] dset_name The name of the dataset to read
+465	 * \param[out] buffer   Buffer with data
+466	 *
+467	 * \return \herr_t
+468	 *
+469	 * \details H5LTread_dataset_short() reads a dataset named \p dset_name
+470	 *          attached to the object specified by the identifier \p loc_id.
+471	 *          The HDF5 datatype is #H5T_NATIVE_SHORT.
+472	 *
+473	 */
+474	H5HL_DLL herr_t H5LTread_dataset_short(hid_t loc_id, const char *dset_name, short *buffer);
+475	
+476	/**
+477	 *-------------------------------------------------------------------------
+478	 * \ingroup H5LT
+479	 *
+480	 * \brief Reads a dataset from disk.
+481	 *
+482	 * \fg_loc_id
+483	 * \param[in] dset_name The name of the dataset to read
+484	 * \param[out] buffer   Buffer with data
+485	 *
+486	 * \return \herr_t
+487	 *
+488	 * \details H5LTread_dataset_int() reads a dataset named \p dset_name
+489	 *          attached to the object specified by the identifier \p loc_id.
+490	 *          The HDF5 datatype is #H5T_NATIVE_INT.
+491	 *
+492	 * \version 1.8.7 Fortran subroutine modified in this release to
+493	 *                accommodate arrays with more than three dimensions.
+494	 *
+495	 */
+496	H5HL_DLL herr_t H5LTread_dataset_int(hid_t loc_id, const char *dset_name, int *buffer);
+497	
+498	/**
+499	 *-------------------------------------------------------------------------
+500	 * \ingroup H5LT
+501	 *
+502	 * \brief Reads a dataset from disk.
+503	 *
+504	 * \fg_loc_id
+505	 * \param[in] dset_name The name of the dataset to read
+506	 * \param[out] buffer   Buffer with data
+507	 *
+508	 * \return \herr_t
+509	 *
+510	 * 
+… (52025 more chars)</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:36:48Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>Now let me look at the extended fuzzer to understand the existing patterns:</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:36:49Z</span></div><div class="msg-text"><p>Now let me read the extended fuzzer and check where the HL library is built:</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:36:50Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/h5_extended_fuzzer.c&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:36:51Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;find /work/agent/target-src -name \&quot;*.cmake\&quot; | xargs grep -l \&quot;hdf5_hl\\|HL\\|hdf5hl\&quot; 2&gt;/dev/null | head -5; ls /work/agent/target-src/hl/&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find HL library cmake files&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:36:51Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">1	/* Copyright 2023 Google LLC
+2	Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+3	you may not use this file except in compliance with the License.
+4	You may obtain a copy of the License at
+5	      http://www.apache.org/licenses/LICENSE-2.0
+6	Unless required by applicable law or agreed to in writing, software
+7	distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+8	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+9	See the License for the specific language governing permissions and
+10	limitations under the License.
+11	*/
+12	
+13	#include &quot;hdf5.h&quot;
+14	
+15	#include &lt;unistd.h&gt;
+16	
+17	extern int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+18	{
+19	    char filename[256];
+20	    sprintf(filename, &quot;/tmp/libfuzzer.%d&quot;, getpid());
+21	
+22	    FILE *fp = fopen(filename, &quot;wb&quot;);
+23	    if (!fp) {
+24	        return 0;
+25	    }
+26	    fwrite(data, size, 1, fp);
+27	    fclose(fp);
+28	
+29	    hid_t fuzz_h5_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
+30	    if (fuzz_h5_id != H5I_INVALID_HID) {
+31	      hid_t  dataset_id = H5Dopen2(fuzz_h5_id, &quot;dsetname&quot;, H5P_DEFAULT);
+32	      if (dataset_id != H5I_INVALID_HID) {
+33	          hid_t attribute_id = H5Aopen_name(dataset_id, &quot;theattr&quot;);
+34	          if (attribute_id != H5I_INVALID_HID) {
+35	            H5Aclose(attribute_id);
+36	          }
+37	          H5Dclose(dataset_id);
+38	      }
+39	      H5Fclose(fuzz_h5_id);
+40	    }
+41	    return 0;
+42	}
+43	</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:36:51Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">/work/agent/target-src/HDF5Examples/config/cmake/cacheinit.cmake
+/work/agent/target-src/HDF5Examples/config/cmake/HDFExampleMacros.cmake
+/work/agent/target-src/CMakeInstallation.cmake
+/work/agent/target-src/hl/c++/test/CMakeTests.cmake
+/work/agent/target-src/hl/test/CMakeTests.cmake
+CMakeLists.txt
+c++
+fortran
+src
+test
+tools</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:36:54Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>Let me check the CMakeLists.txt in the HL directory to understand how the HL library is built.</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:36:55Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -r \&quot;hdf5_hl\\|libhdf5_hl\&quot; /work/agent/target-src/hl/src/CMakeLists.txt | head -20; ls /work/agent/target-src/hl/src/&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Check HL library build config&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:36:55Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">    ${HDF5_HL_SRC_SOURCE_DIR}/hdf5_hl.h
+CMakeLists.txt
+H5DO.c
+H5DOpublic.h
+H5DS.c
+H5DSprivate.h
+H5DSpublic.h
+H5HLprivate2.h
+H5IM.c
+H5IMprivate.h
+H5IMpublic.h
+H5LD.c
+H5LDprivate.h
+H5LDpublic.h
+H5LT.c
+H5LTanalyze.c
+H5LTanalyze.l
+H5LTparse.c
+H5LTparse.h
+H5LTparse.y
+H5LTprivate.h
+H5LTpublic.h
+H5PT.c
+H5PTprivate.h
+H5PTpublic.h
+H5TB.c
+H5TBprivate.h
+H5TBpublic.h
+hdf5_hl.h</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:36:58Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -i \&quot;hdf5_hl\\|libhdf5_hl\\|HDF5_BUILD_HL\\|hl_lib\\|HL_LIBRARY\&quot; /work/harness-proj/fuzz-proj/build.sh&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Check if HL library is built in existing build.sh&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:36:59Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -r \&quot;HDF5_BUILD_HL\\|BUILD_HL\\|hl_lib\&quot; /work/agent/target-src/CMakeLists.txt | head -10&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find HL build options in cmake&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:36:59Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">(Bash completed with no output)</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:36:59Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">  if (HDF5_BUILD_HL_LIB)
+  if (HDF5_BUILD_HL_LIB)
+  if (HDF5_BUILD_HL_LIB)
+    if (HDF5_BUILD_HL_LIB)
+    if (HDF5_BUILD_HL_LIB)
+  if (HDF5_BUILD_HL_LIB)</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:37:03Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -r \&quot;HDF5_BUILD_HL_LIB\&quot; /work/agent/target-src/CMakeLists.txt | head -5; grep \&quot;option.*HDF5_BUILD_HL_LIB\\|HDF5_BUILD_HL_LIB.*DEFAULT\\|HDF5_BUILD_HL_LIB.*ON\&quot; /work/agent/target-src/CMakeLists.txt | head -5&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Check default value of HDF5_BUILD_HL_LIB&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:37:03Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">  if (HDF5_BUILD_HL_LIB)
+  if (HDF5_BUILD_HL_LIB)
+  if (HDF5_BUILD_HL_LIB)
+    if (HDF5_BUILD_HL_LIB)
+    if (HDF5_BUILD_HL_LIB)</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:37:05Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -n \&quot;HDF5_BUILD_HL_LIB\&quot; /work/agent/target-src/CMakeLists.txt | head -10&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find HL_LIB option definition&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:37:05Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">1085:  if (HDF5_BUILD_HL_LIB)
+1132:  if (HDF5_BUILD_HL_LIB)
+1317:  if (HDF5_BUILD_HL_LIB)
+1334:    if (HDF5_BUILD_HL_LIB)
+1360:    if (HDF5_BUILD_HL_LIB)
+1417:  if (HDF5_BUILD_HL_LIB)</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:37:08Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -n \&quot;option.*HDF5_BUILD_HL\&quot; /work/agent/target-src/CMakeLists.txt | head -5; grep -n \&quot;set.*HDF5_BUILD_HL_LIB\&quot; /work/agent/target-src/CMakeLists.txt | head -5&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find where HDF5_BUILD_HL_LIB is set&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:37:08Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">(Bash completed with no output)</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:37:11Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -rn \&quot;HDF5_BUILD_HL_LIB\&quot; /work/agent/target-src/CMakeOptions.cmake 2&gt;/dev/null | head -10; find /work/agent/target-src -name \&quot;CMakeOptions.cmake\&quot; | xargs grep -l \&quot;HL\&quot; 2&gt;/dev/null&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find CMakeOptions for HL&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:37:11Z</span></div><details class="result err"><summary>↳ result · error</summary><pre><code class="hljs language-plaintext">Exit code 123</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:37:14Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -rn \&quot;HDF5_BUILD_HL_LIB\&quot; /work/agent/target-src/ --include=\&quot;*.cmake\&quot; | grep \&quot;option\\|set.*ON\\|DEFAULT\&quot; | head -10&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find HL_LIB default setting&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:37:14Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">/work/agent/target-src/CMakeBuildOptions.cmake:84:option (HDF5_BUILD_HL_LIB &quot;Build HIGH Level HDF5 Library&quot; ON)
+/work/agent/target-src/config/cmake/scripts/HDF5options.cmake:92:#set (ADD_BUILD_OPTIONS &quot;${ADD_BUILD_OPTIONS} -DHDF5_BUILD_HL_LIB:BOOL=OFF&quot;)
+/work/agent/target-src/config/cmake/MemcheckCacheinit.cmake:29:set (HDF5_BUILD_HL_LIB ON CACHE BOOL &quot;Build HIGH Level HDF5 Library&quot; FORCE)</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:37:18Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>Good. The HL library is built by default (ON). Now I need to check if the existing build.sh already builds it. Looking at the build.sh, I don&#39;t see it enabling HDF5_BUILD_HL_LIB explicitly, but the default is ON. But the existing fuzzers don&#39;t link against libhdf5_hl.a - they only link against libhdf5.a.</p>
+<p>Let me check what libraries are built after the cmake step:</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:37:19Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -n \&quot;libhdf5\&quot; /work/harness-proj/fuzz-proj/build.sh&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Check library linking in build.sh&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:37:19Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">42:$CXX $CXXFLAGS $LIB_FUZZING_ENGINE h5_read_fuzzer.o ./build-dir/bin/libhdf5.a -lz -o $OUT/h5_read_fuzzer
+47:$CXX $CXXFLAGS $LIB_FUZZING_ENGINE h5_extended_fuzzer.o ./build-dir/bin/libhdf5.a -lz -o $OUT/h5_extended_fuzzer</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:37:24Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>The current build only links against <code>libhdf5.a</code>. For the H5LT API, I&#39;ll need to also link against <code>libhdf5_hl.a</code>. The HL library is built by default (HDF5_BUILD_HL_LIB=ON), so it should be available after the cmake build.</p>
+<p>Let me check what the HL library path would be in the build directory. It would typically be at <code>./build-dir/bin/libhdf5_hl.a</code> or <code>./build-dir/hl/src/libhdf5_hl.a</code>.<br>Now I&#39;m examining the H5LT source code to see what patterns and functions I should use in the fuzzer.</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:37:24Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/agent/target-src/hl/src/H5LT.c&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">100</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:37:26Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -n \&quot;H5LTread_dataset\\b\\|H5LTget_dataset_info\\|H5LTfind_dataset\\|H5LTget_attribute_string\\|H5LTset_attribute_string\\|H5LTmake_dataset\\b\&quot; /work/agent/target-src/hl/src/H5LT.c | head -30&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find key function locations in H5LT.c&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:37:26Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">1	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+2	 * Copyright by The HDF Group.                                               *
+3	 * All rights reserved.                                                      *
+4	 *                                                                           *
+5	 * This file is part of HDF5.  The full HDF5 copyright notice, including     *
+6	 * terms governing use, modification, and redistribution, is contained in    *
+7	 * the LICENSE file, which can be found at the root of the source code       *
+8	 * distribution tree, or in https://www.hdfgroup.org/licenses.               *
+9	 * If you do not have access to either file, you may request a copy from     *
+10	 * help@hdfgroup.org.                                                        *
+11	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+12	
+13	#include &quot;H5LTprivate.h&quot;
+14	
+15	/* For Lex and Yacc */
+16	#define COL       3
+17	#define LIMIT     512
+18	#define INCREMENT 1024
+19	#define TMP_LEN   256
+20	#define MAX(a, b) (((a) &gt; (b)) ? (a) : (b))
+21	size_t input_len;
+22	char  *myinput;
+23	size_t indent = 0;
+24	
+25	/* File Image operations
+26	
+27	   A file image is a representation of an HDF5 file in a memory
+28	   buffer. In order to perform operations on an image in a similar way
+29	   to a  file, the application buffer is copied to a FAPL buffer, which
+30	   in turn is copied to a VFD buffer. Buffer copying can decrease
+31	   performance, especially when using large file images. A solution to
+32	   this issue is to simulate the copying of the application buffer,
+33	   when actually the same buffer is used for the FAPL and the VFD.
+34	   This is implemented by using callbacks that simulate the standard
+35	   functions for memory management (additional callbacks are used for
+36	   the management of associated data structures). From the application
+37	   standpoint, a file handle can be obtained from a file image by using
+38	   the API routine H5LTopen_file_image(). This function takes a flag
+39	   argument that indicates the HDF5 library how to handle the given image;
+40	   several flag values can be combined by using the bitwise OR operator.
+41	   Valid flag values include:
+42	
+43	   H5LT_FILE_IMAGE_OPEN_RW indicates the HDF5 library to open the file
+44	   image in read/write mode. Default is read-only mode.
+45	
+46	   H5LT_FILE_IMAGE_DONT_COPY indicates the HDF5 library to not copy the
+47	   supplied user buffer; the same buffer will be handled by the FAPL and
+48	   the VFD driver. Default operation copies the user buffer to the FAPL and
+49	   VFD driver.
+50	
+51	   H5LT_FILE_IMAGE_DONT_RELEASE indicates the HDF5 library to not release
+52	   the buffer handled by the FAPL and the VFD upon closing. This flag value
+53	   is only applicable when the flag value H5LT_FILE_IMAGE_DONT_COPY is set as
+54	   well. The application is responsible to release the image buffer.
+55	*/
+56	
+57	/* Data structure to pass application data to callbacks. */
+58	typedef struct {
+59	    void    *app_image_ptr;   /* Pointer to application buffer */
+60	    size_t   app_image_size;  /* Size of application buffer */
+61	    void    *fapl_image_ptr;  /* Pointer to FAPL buffer */
+62	    size_t   fapl_image_size; /* Size of FAPL buffer */
+63	    int      fapl_ref_count;  /* Reference counter for FAPL buffer */
+64	    void    *vfd_image_ptr;   /* Pointer to VFD buffer */
+65	    size_t   vfd_image_size;  /* Size of VFD buffer */
+66	    int      vfd_ref_count;   /* Reference counter for VFD buffer */
+67	    unsigned flags;           /* Flags indicate how the file image will */
+68	                              /* be open */
+69	    int ref_count;            /* Reference counter on udata struct */
+70	} H5LT_file_image_ud_t;
+71	
+72	/* callbacks prototypes for file image ops */
+73	static void  *image_malloc(size_t size, H5FD_file_image_op_t file_image_op, void *udata);
+74	static void  *image_memcpy(void *dest, const void *src, size_t size, H5FD_file_image_op_t file_image_op,
+75	                           void *udata);
+76	static void  *image_realloc(void *ptr, size_t size, H5FD_file_image_op_t file_image_op, void *udata);
+77	static herr_t image_free(void *ptr, H5FD_file_image_op_t file_image_op, void *udata);
+78	static void  *udata_copy(void *udata);
+79	static herr_t udata_free(void *udata);
+80	
+81	/* Definition of callbacks for file image operations. */
+82	
+83	/*-------------------------------------------------------------------------
+84	 * Function: image_malloc
+85	 *
+86	 * Purpose: Simulates malloc() function to avoid copying file images.
+87	 *          The application buffer is set to the buffer on only one FAPL.
+88	 *          Then the FAPL buffer can be copied to other FAPL buffers or
+89	 *          to only one VFD buffer.
+90	 *
+91	 * Return: Address of &quot;allocated&quot; buffer, if successful. Otherwise, it returns
+92	 *         NULL.
+93	 *
+94	 *-------------------------------------------------------------------------
+95	 */
+96	static void *
+97	image_malloc(size_t size, H5FD_file_image_op_t file_image_op, void *_udata)
+98	{
+99	    H5LT_file_image_ud_t *udata        = (H5LT_file_image_ud_t *)_udata;
+100	    void                 *return_value = NULL;</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:37:26Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">556: * Function: H5LTmake_dataset
+568:H5LTmake_dataset(hid_t loc_id, const char *dset_name, int rank, const hsize_t *dims, hid_t tid,
+917: * Function: H5LTread_dataset
+927:H5LTread_dataset(hid_t loc_id, const char *dset_name, hid_t tid, void *data)
+1130: * Function:    H5LTget_dataset_info
+1139:H5LTget_dataset_info(hid_t loc_id, const char *dset_name, hsize_t *dims, H5T_class_t *type_class,
+1203: * Purpose: operator function used by H5LTfind_dataset
+1238: * Function: H5LTfind_dataset
+1261:H5LTfind_dataset(hid_t loc_id, const char *dset_name)
+1275: * Function: H5LTset_attribute_string
+1287:H5LTset_attribute_string(hid_t loc_id, const char *obj_name, const char *attr_name, const char *attr_data)
+2906: * Function: H5LTget_attribute_string
+2918:H5LTget_attribute_string(hid_t loc_id, const char *obj_name, const char *attr_name, char *data)</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:37:29Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/agent/target-src/hl/src/H5LT.c&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;offset&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">917</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">80</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:37:30Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/agent/target-src/hl/src/H5LT.c&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;offset&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1130</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">150</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:37:30Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">917	 * Function: H5LTread_dataset
+918	 *
+919	 * Purpose: Reads a dataset from disk.
+920	 *
+921	 * Return: Success: 0, Failure: -1
+922	 *
+923	 *-------------------------------------------------------------------------
+924	 */
+925	
+926	herr_t
+927	H5LTread_dataset(hid_t loc_id, const char *dset_name, hid_t tid, void *data)
+928	{
+929	    return (H5LT_read_dataset_numerical(loc_id, dset_name, tid, data));
+930	}
+931	
+932	/*-------------------------------------------------------------------------
+933	 * Function: H5LTread_dataset_char
+934	 *
+935	 * Purpose: Reads a dataset from disk.
+936	 *
+937	 * Return: Success: 0, Failure: -1
+938	 *
+939	 *-------------------------------------------------------------------------
+940	 */
+941	
+942	herr_t
+943	H5LTread_dataset_char(hid_t loc_id, const char *dset_name, char *data)
+944	{
+945	    return (H5LT_read_dataset_numerical(loc_id, dset_name, H5T_NATIVE_CHAR, data));
+946	}
+947	
+948	/*-------------------------------------------------------------------------
+949	 * Function: H5LTread_dataset_short
+950	 *
+951	 * Purpose: Reads a dataset from disk.
+952	 *
+953	 * Return: Success: 0, Failure: -1
+954	 *
+955	 *-------------------------------------------------------------------------
+956	 */
+957	
+958	herr_t
+959	H5LTread_dataset_short(hid_t loc_id, const char *dset_name, short *data)
+960	{
+961	    return (H5LT_read_dataset_numerical(loc_id, dset_name, H5T_NATIVE_SHORT, data));
+962	}
+963	
+964	/*-------------------------------------------------------------------------
+965	 * Function: H5LTread_dataset_int
+966	 *
+967	 * Purpose: Reads a dataset from disk.
+968	 *
+969	 * Return: Success: 0, Failure: -1
+970	 *
+971	 *-------------------------------------------------------------------------
+972	 */
+973	
+974	herr_t
+975	H5LTread_dataset_int(hid_t loc_id, const char *dset_name, int *data)
+976	{
+977	    return (H5LT_read_dataset_numerical(loc_id, dset_name, H5T_NATIVE_INT, data));
+978	}
+979	
+980	/*-------------------------------------------------------------------------
+981	 * Function: H5LTread_dataset_long
+982	 *
+983	 * Purpose: Reads a dataset from disk.
+984	 *
+985	 * Return: Success: 0, Failure: -1
+986	 *
+987	 *-------------------------------------------------------------------------
+988	 */
+989	
+990	herr_t
+991	H5LTread_dataset_long(hid_t loc_id, const char *dset_name, long *data)
+992	{
+993	    return (H5LT_read_dataset_numerical(loc_id, dset_name, H5T_NATIVE_LONG, data));
+994	}
+995	
+996	/*-------------------------------------------------------------------------</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:37:30Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">1130	 * Function:    H5LTget_dataset_info
+1131	 *
+1132	 * Purpose:     Gets information about a dataset.
+1133	 *
+1134	 * Return:      Success: 0, Failure: -1
+1135	 *-------------------------------------------------------------------------
+1136	 */
+1137	
+1138	herr_t
+1139	H5LTget_dataset_info(hid_t loc_id, const char *dset_name, hsize_t *dims, H5T_class_t *type_class,
+1140	                     size_t *type_size)
+1141	{
+1142	    hid_t did = -1;
+1143	    hid_t tid = -1;
+1144	    hid_t sid = -1;
+1145	
+1146	    /* check the arguments */
+1147	    if (dset_name == NULL)
+1148	        return -1;
+1149	
+1150	    /* open the dataset. */
+1151	    if ((did = H5Dopen2(loc_id, dset_name, H5P_DEFAULT)) &lt; 0)
+1152	        return -1;
+1153	
+1154	    /* get an identifier for the datatype. */
+1155	    tid = H5Dget_type(did);
+1156	
+1157	    /* get the class. */
+1158	    if (type_class != NULL)
+1159	        *type_class = H5Tget_class(tid);
+1160	
+1161	    /* get the size. */
+1162	    if (type_size != NULL)
+1163	        *type_size = H5Tget_size(tid);
+1164	
+1165	    if (dims != NULL) {
+1166	        /* get the dataspace handle */
+1167	        if ((sid = H5Dget_space(did)) &lt; 0)
+1168	            goto out;
+1169	
+1170	        /* get dimensions */
+1171	        if (H5Sget_simple_extent_dims(sid, dims, NULL) &lt; 0)
+1172	            goto out;
+1173	
+1174	        /* terminate access to the dataspace */
+1175	        if (H5Sclose(sid) &lt; 0)
+1176	            goto out;
+1177	    } /* end if */
+1178	
+1179	    /* release the datatype. */
+1180	    if (H5Tclose(tid))
+1181	        return -1;
+1182	
+1183	    /* end access to the dataset */
+1184	    if (H5Dclose(did))
+1185	        return -1;
+1186	
+1187	    return 0;
+1188	
+1189	out:
+1190	    H5E_BEGIN_TRY
+1191	    {
+1192	        H5Tclose(tid);
+1193	        H5Sclose(sid);
+1194	        H5Dclose(did);
+1195	    }
+1196	    H5E_END_TRY
+1197	    return -1;
+1198	}
+1199	
+1200	/*-------------------------------------------------------------------------
+1201	 * Function: find_dataset
+1202	 *
+1203	 * Purpose: operator function used by H5LTfind_dataset
+1204	 *
+1205	 * Comments:
+1206	 *
+1207	 *-------------------------------------------------------------------------
+1208	 */
+1209	
+1210	static herr_t
+1211	find_dataset(H5_ATTR_UNUSED hid_t loc_id, const char *name, H5_ATTR_UNUSED const H5L_info2_t *linfo,
+1212	             void *op_data)
+1213	{
+1214	    /* Define a default zero value for return. This will cause the iterator to continue if
+1215	     * the dataset is not found yet.
+1216	     */
+1217	    int ret = 0;
+1218	
+1219	    /* check the arguments */
+1220	    if (name == NULL)
+1221	        return ret;
+1222	
+1223	    /* Shut the compiler up */
+1224	    (void)loc_id;
+1225	    (void)linfo;
+1226	
+1227	    /* Define a positive value for return value if the dataset was found. This will
+1228	     * cause the iterator to immediately return that positive value,
+1229	     * indicating short-circuit success
+1230	     */
+1231	    if (strcmp(name, (char *)op_data) == 0)
+1232	        ret = 1;
+1233	
+1234	    return ret;
+1235	}
+1236	
+1237	/*-------------------------------------------------------------------------
+1238	 * Function: H5LTfind_dataset
+1239	 *
+1240	 * Purpose:  Inquires if a dataset named dset_name exists attached
+1241	 *           to the object loc_id.
+1242	 *
+1243	 * Return:
+1244	 *     Success: The return value of the first operator that
+1245	 *              returns non-zero, or zero if all members were
+1246	 *              processed with no operator returning non-zero.
+1247	 *
+1248	 *      Failure:    Negative if something goes wrong within the
+1249	 *              library, or the negative value returned by one
+1250	 *              of the operators.
+1251	 *
+1252	 *-------------------------------------------------------------------------
+1253	 */
+1254	/* H5Literate wants a non-const pointer but we have a const pointer in the API
+1255	 * call. It&#x27;s safe to ignore this because we control the callback, don&#x27;t
+1256	 * modify the op_data buffer (i.e.: dset_name) during the traversal, and the
+1257	 * library never modifies that buffer.
+1258	 */
+1259	H5_WARN_CAST_AWAY_CONST_OFF
+1260	herr_t
+1261	H5LTfind_dataset(hid_t loc_id, const char *dset_name)
+1262	{
+1263	    return H5Literate2(loc_id, H5_INDEX_NAME, H5_ITER_INC, 0, find_dataset, (void *)dset_name);
+1264	}
+1265	H5_WARN_CAST_AWAY_CONST_ON
+1266	
+1267	/*-------------------------------------------------------------------------
+1268	 *
+1269	 * Set attribute functions
+1270	 *
+1271	 *-------------------------------------------------------------------------
+1272	 */
+1273	
+1274	/*-------------------------------------------------------------------------
+1275	 * Function: H5LTset_attribute_string
+1276	 *
+1277	 * Purpose: Creates and writes a string attribute named attr_name and attaches
+1278	 *          it to the object specified by the name obj_name.
+1279	 *</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:37:47Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>Now I have enough understanding of the H5LT API. Let me design the fuzzer:</p>
+<p>Strategy:</p>
+<ol>
+<li>Use <code>H5LTopen_file_image()</code> to load the fuzzer input as an HDF5 file image (avoids disk I/O and is more efficient)</li>
+<li>Try to open the file image</li>
+<li>Try <code>H5LTfind_dataset()</code> to look for specific dataset names</li>
+<li>Try <code>H5LTget_dataset_info()</code> to get dataset info</li>
+<li>For datasets found, try <code>H5LTread_dataset()</code> with a correctly-sized buffer</li>
+<li>Try <code>H5LTget_attribute_string()</code> to read string attributes</li>
+<li>The tricky part is that <code>H5LTread_dataset()</code> requires a pre-allocated buffer of the right size, so I need to first query the dataset dimensions and type information to calculate how much memory to allocate before actually reading the data</li>
+<li>Similarly, for string attributes, I&#39;ll need to query the attribute size first before allocating space for the read operation</li>
+<li>Since we&#39;re fuzzing with potentially malformed HDF5 files, the best approach is to open the file image and then iterate through the group to discover what datasets actually exist, rather than guessing at fixed dataset names</li>
+</ol>
+<p>. For each discovered dataset, I&#39;ll check its rank and dimensions, and if the total size is reasonable, allocate memory and read it. I&#39;ll also attempt to retrieve attributes from those datasets.</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:37:47Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/agent/target-src/hl/src/H5LT.c&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;offset&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">2906</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">80</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:37:47Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">2906	 * Function: H5LTget_attribute_string
+2907	 *
+2908	 * Purpose: Reads an attribute named attr_name
+2909	 *
+2910	 * Return: Success: 0, Failure: -1
+2911	 *
+2912	 * Comments:
+2913	 *
+2914	 *-------------------------------------------------------------------------
+2915	 */
+2916	
+2917	herr_t
+2918	H5LTget_attribute_string(hid_t loc_id, const char *obj_name, const char *attr_name, char *data)
+2919	{
+2920	    /* identifiers */
+2921	    hid_t obj_id;
+2922	
+2923	    /* check the arguments */
+2924	    if (obj_name == NULL)
+2925	        return -1;
+2926	    if (attr_name == NULL)
+2927	        return -1;
+2928	
+2929	    /* Open the object */
+2930	    if ((obj_id = H5Oopen(loc_id, obj_name, H5P_DEFAULT)) &lt; 0)
+2931	        return -1;
+2932	
+2933	    /* Get the attribute */
+2934	    if (H5LT_get_attribute_disk(obj_id, attr_name, data) &lt; 0) {
+2935	        H5Oclose(obj_id);
+2936	        return -1;
+2937	    }
+2938	
+2939	    /* Close the object */
+2940	    if (H5Oclose(obj_id) &lt; 0)
+2941	        return -1;
+2942	
+2943	    return 0;
+2944	}
+2945	
+2946	/*-------------------------------------------------------------------------
+2947	 * Function: H5LTget_attribute_char
+2948	 *
+2949	 * Purpose: Reads an attribute named attr_name
+2950	 *
+2951	 * Return: Success: 0, Failure: -1
+2952	 *
+2953	 * Comments:
+2954	 *
+2955	 *-------------------------------------------------------------------------
+2956	 */
+2957	herr_t
+2958	H5LTget_attribute_char(hid_t loc_id, const char *obj_name, const char *attr_name, char *data)
+2959	{
+2960	    /* Get the attribute */
+2961	    if (H5LT_get_attribute_mem(loc_id, obj_name, attr_name, H5T_NATIVE_CHAR, data) &lt; 0)
+2962	        return -1;
+2963	
+2964	    return 0;
+2965	}
+2966	
+2967	/*-------------------------------------------------------------------------
+2968	 * Function: H5LTget_attribute_uchar
+2969	 *
+2970	 * Purpose: Reads an attribute named attr_name
+2971	 *
+2972	 * Return: Success: 0, Failure: -1
+2973	 *
+2974	 * Comments:
+2975	 *
+2976	 *-------------------------------------------------------------------------
+2977	 */
+2978	herr_t
+2979	H5LTget_attribute_uchar(hid_t loc_id, const char *obj_name, const char *attr_name, unsigned char *data)
+2980	{
+2981	    /* Get the attribute */
+2982	    if (H5LT_get_attribute_mem(loc_id, obj_name, attr_name, H5T_NATIVE_UCHAR, data) &lt; 0)
+2983	        return -1;
+2984	
+2985	    return 0;</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:37:50Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -n \&quot;H5LT_get_attribute_disk\\|H5LTget_attribute_info\\b\&quot; /work/agent/target-src/hl/src/H5LT.c | head -20&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find H5LT_get_attribute_disk implementation&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:37:50Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">1786: * Function: H5LTget_attribute_info
+1796:H5LTget_attribute_info(hid_t loc_id, const char *obj_name, const char *attr_name, hsize_t *dims,
+2934:    if (H5LT_get_attribute_disk(obj_id, attr_name, data) &lt; 0) {
+3283: * Function: H5LT_get_attribute_disk
+3295:H5LT_get_attribute_disk(hid_t loc_id, const char *attr_name, void *attr_out)</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:37:52Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/agent/target-src/hl/src/H5LT.c&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;offset&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">3283</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">60</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:37:53Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/agent/target-src/hl/src/H5LT.c&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;offset&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1786</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">60</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:37:53Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">3283	 * Function: H5LT_get_attribute_disk
+3284	 *
+3285	 * Purpose: Reads an attribute named attr_name with the datatype stored on disk
+3286	 *
+3287	 * Return: Success: 0, Failure: -1
+3288	 *
+3289	 * Comments:
+3290	 *
+3291	 *-------------------------------------------------------------------------
+3292	 */
+3293	
+3294	herr_t
+3295	H5LT_get_attribute_disk(hid_t loc_id, const char *attr_name, void *attr_out)
+3296	{
+3297	    /* identifiers */
+3298	    hid_t attr_id;
+3299	    hid_t attr_type;
+3300	
+3301	    if ((attr_id = H5Aopen(loc_id, attr_name, H5P_DEFAULT)) &lt; 0)
+3302	        return -1;
+3303	
+3304	    if ((attr_type = H5Aget_type(attr_id)) &lt; 0)
+3305	        goto out;
+3306	
+3307	    if (H5Aread(attr_id, attr_type, attr_out) &lt; 0)
+3308	        goto out;
+3309	
+3310	    if (H5Tclose(attr_type) &lt; 0)
+3311	        goto out;
+3312	
+3313	    if (H5Aclose(attr_id) &lt; 0)
+3314	        return -1;
+3315	
+3316	    return 0;
+3317	
+3318	out:
+3319	    H5Tclose(attr_type);
+3320	    H5Aclose(attr_id);
+3321	    return -1;
+3322	}
+3323	
+3324	/*-------------------------------------------------------------------------
+3325	 * Function: H5LT_set_attribute_string
+3326	 *
+3327	 * Purpose: creates and writes an attribute named NAME to the dataset DSET_ID
+3328	 *
+3329	 * Return: FAIL on error, SUCCESS on success
+3330	 *
+3331	 * Comments:
+3332	 *
+3333	 *-------------------------------------------------------------------------
+3334	 */
+3335	herr_t
+3336	H5LT_set_attribute_string(hid_t dset_id, const char *name, const char *buf)
+3337	{
+3338	    hid_t  tid;
+3339	    hid_t  sid = -1;
+3340	    hid_t  aid = -1;
+3341	    htri_t has_attr;
+3342	    size_t size;</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:37:53Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">1786	 * Function: H5LTget_attribute_info
+1787	 *
+1788	 * Purpose: Gets information about an attribute.
+1789	 *
+1790	 * Return: Success: 0, Failure: -1
+1791	 *
+1792	 *-------------------------------------------------------------------------
+1793	 */
+1794	
+1795	herr_t
+1796	H5LTget_attribute_info(hid_t loc_id, const char *obj_name, const char *attr_name, hsize_t *dims,
+1797	                       H5T_class_t *type_class, size_t *type_size)
+1798	{
+1799	    hid_t attr_id;
+1800	    hid_t tid;
+1801	    hid_t sid;
+1802	    hid_t obj_id;
+1803	
+1804	    /* check the arguments */
+1805	    if (obj_name == NULL)
+1806	        return -1;
+1807	    if (attr_name == NULL)
+1808	        return -1;
+1809	
+1810	    /* Open the object */
+1811	    if ((obj_id = H5Oopen(loc_id, obj_name, H5P_DEFAULT)) &lt; 0)
+1812	        return -1;
+1813	
+1814	    /* Open the attribute. */
+1815	    if ((attr_id = H5Aopen(obj_id, attr_name, H5P_DEFAULT)) &lt; 0) {
+1816	        H5Oclose(obj_id);
+1817	        return -1;
+1818	    }
+1819	
+1820	    /* Get an identifier for the datatype. */
+1821	    tid = H5Aget_type(attr_id);
+1822	
+1823	    /* Get the class. */
+1824	    *type_class = H5Tget_class(tid);
+1825	
+1826	    /* Get the size. */
+1827	    *type_size = H5Tget_size(tid);
+1828	
+1829	    /* Get the dataspace handle */
+1830	    if ((sid = H5Aget_space(attr_id)) &lt; 0)
+1831	        goto out;
+1832	
+1833	    /* Get dimensions */
+1834	    if (H5Sget_simple_extent_dims(sid, dims, NULL) &lt; 0)
+1835	        goto out;
+1836	
+1837	    /* Terminate access to the dataspace */
+1838	    if (H5Sclose(sid) &lt; 0)
+1839	        goto out;
+1840	
+1841	    /* Release the datatype. */
+1842	    if (H5Tclose(tid))
+1843	        goto out;
+1844	
+1845	    /* End access to the attribute */</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:39:23Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>Now I understand the APIs well. The key issue with <code>H5LTget_attribute_string</code> is that the caller must provide a buffer large enough to hold the attribute. The size can be obtained by calling <code>H5LTget_attribute_info</code> first, which returns <code>type_size</code>.</p>
+<p>For a string attribute, <code>type_size</code> is the size of the string including null terminator. We need to allocate <code>type_size + 1</code> bytes to be safe (or just <code>type_size</code> if it&#39;s already including null).</p>
+<p>Now let me design the harness:</p>
+<p><strong>Approach:</strong></p>
+<ol>
+<li>Open fuzz input as HDF5 file image via <code>H5LTopen_file_image</code> (read-only)</li>
+<li>If successful, try the H5LT functions on the root group (&quot;/&quot;)</li>
+<li>Try a set of fixed candidate dataset names (from the fuzz data or hardcoded)</li>
+<li>For each candidate, check if it exists, get its rank and dimensions, retrieve type information, and guard against reading excessively large datasets (say, over 8MB)</li>
+<li>Read the dataset with a properly sized buffer</li>
+</ol>
+<p>, and similarly test attribute operations on &quot;/&quot; by querying attribute size and reading string attributes</p>
+<p>For dataset and attribute names, I should mix hardcoded names to exercise the &quot;not found&quot; path with names actually extracted from the fuzz input. To maximize coverage, I could iterate through the actual datasets in the file using H5Literate2 to discover real names, then exercise H5LT functions on those discovered datasets.</p>
+<p>For a more practical approach, I&#39;ll open the fuzz data as an HDF5 file image, iterate the root group to find dataset names, then for each dataset try finding it, getting its dimensions and info, reading its data with proper sizing, and checking for attributes. I&#39;ll also test with fixed hardcoded names that likely won&#39;t exist to hit the error paths.</p>
+<p>Writing the fuzzer harness... Writing HDF5 callback and fuzzer setup... Adding dataset name checks... Writing HDF5 dataset validation... Writing HDF5 attribute handling... I&#39;m realizing there&#39;s a type mismatch in how I&#39;m allocating the buffer versus reading the data. I&#39;m calculating the buffer size based on the file&#39;s type size, but then reading with H5T_NATIVE_INT which could be a different size, causing either overflow or underflow. I need to either read with the file&#39;s native type or adjust the buffer allocation to match the read type. Writing buffer allocation code... I&#39;m realizing the cleanest approach is to stick with <code>H5T_NATIVE_INT</code> consistently and calculate the buffer size as <code>total_elements * sizeof(int)</code>, keeping the overflow check straightforward rather than trying to handle different type sizes dynamically.</p>
+<p>Now I&#39;m looking at how <code>H5LTread_dataset</code> works—it wraps <code>H5LT_read_dataset_numerical</code> which eventually calls <code>H5Dread</code>, and HDF5&#39;s type conversion layer handles the actual conversion as long as the buffer is sized correctly for the target type.</p>
+<p>I should also account for scalar datasets where rank is 0 and there&#39;s just a single element, then finalize the fuzzer harness: suppress HDF5 errors, open the fuzz input as a file image, iterate through actual datasets and try fixed names, and process each one.</p>
+<p>For each candidate dataset I&#39;ll check its dimensions with <code>H5LTget_dataset_ndims</code>, validate the rank, get the dataset info, compute the element count, and if it&#39;s reasonable, read it as a native integer. I&#39;ll also try fixed attribute names on datasets and the root group using <code>H5LTget_attribute_string</code>, then close the file.</p>
+<p>The tricky part is that <code>H5LTget_attribute_info</code> needs a pre-allocated dims array sized to the rank, but I don&#39;t know the rank beforehand—I need to query that first. Since H5Sget_simple_extent_dims writes up to the rank number of values, a fixed array of 32 elements should be safe since HDF5 caps the maximum rank at 32 anyway. Now I need to check how string attributes are handled.</p>
+<p>For string attributes, H5LTget_attribute_info returns the type_size for a single element, but when H5LT_get_attribute_disk calls H5Aread with the disk type, variable-length strings would write a pointer into the buffer rather than the actual string data, which would break if we&#39;re using a flat buffer allocation.</p>
+<p>This is a potential bug in H5LT or a contract issue for callers. For our fuzzer to be a correct caller, I should allocate a reasonably sized fixed buffer (like 64KB) for string attributes rather than relying on type_size.</p>
+<p>The real issue is that H5LTget_attribute_string doesn&#39;t clearly document whether it handles variable-length strings correctly or if the caller needs to manually reclaim the memory afterward. Since the documentation is unclear, I&#39;ll just use a safe fixed buffer approach for the harness. The real problem is that H5LTget_attribute_string doesn&#39;t handle the memory management for variable-length strings—it returns a pointer that HDF5 allocated, but there&#39;s no clear ownership semantics for freeing it. Since ASan typically doesn&#39;t flag these as crashes, I&#39;ll just add a reasonable bounds check on the type size (between 1 and 65536 bytes) and move forward with writing the harness, being careful about the HDF5 include paths.</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:39:23Z</span></div><div class="msg-text"><p>Now I have enough context. Let me check include paths and HL library location:</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:39:25Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -r \&quot;hdf5_hl\\|H5LT\\|HL_DIR\\|hl/src\&quot; /work/agent/target-src/hl/src/CMakeLists.txt | head -20&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Check HL CMake build configuration&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:39:26Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -n \&quot;install.*libhdf5_hl\\|LIBRARY_OUTPUT\\|hdf5_hl\&quot; /work/agent/target-src/hl/src/CMakeLists.txt | head -20&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find where libhdf5_hl.a is installed&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:39:26Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">    ${HDF5_HL_SRC_SOURCE_DIR}/H5LT.c
+    ${HDF5_HL_SRC_SOURCE_DIR}/H5LTanalyze.c
+    ${HDF5_HL_SRC_SOURCE_DIR}/H5LTparse.c
+    ${HDF5_HL_SRC_SOURCE_DIR}/H5LTpublic.h
+    ${HDF5_HL_SRC_SOURCE_DIR}/hdf5_hl.h
+    ${HDF5_HL_SRC_SOURCE_DIR}/H5LTparse.h
+    ${HDF5_HL_SRC_SOURCE_DIR}/H5LTprivate.h</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:39:26Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">34:    ${HDF5_HL_SRC_SOURCE_DIR}/hdf5_hl.h</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:39:30Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -n \&quot;hdf5_hl\\|HDF5_HL\\|hl-static\\|hl_lib\&quot; /work/agent/target-src/hl/src/CMakeLists.txt | grep -i \&quot;target\\|add_library\\|output\\|bin\&quot; | head -20&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find HL library target name&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:39:30Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">50:  add_library (${HDF5_HL_LIB_TARGET} STATIC ${HL_SOURCES} ${HL_HEADERS} ${HL_PRIVATE_HEADERS})
+51:  target_include_directories (${HDF5_HL_LIB_TARGET}
+55:  target_compile_options(${HDF5_HL_LIB_TARGET} PRIVATE &quot;${HDF5_CMAKE_C_FLAGS}&quot;)
+56:  TARGET_C_PROPERTIES (${HDF5_HL_LIB_TARGET} STATIC)
+57:  target_link_libraries (${HDF5_HL_LIB_TARGET} PUBLIC ${HDF5_LIB_TARGET})
+58:  set_global_variable (HDF5_LIBRARIES_TO_EXPORT &quot;${HDF5_LIBRARIES_TO_EXPORT};${HDF5_HL_LIB_TARGET}&quot;)
+59:  H5_SET_LIB_OPTIONS (${HDF5_HL_LIB_TARGET} ${HDF5_HL_LIB_NAME} STATIC 0)
+60:  set_target_properties (${HDF5_HL_LIB_TARGET} PROPERTIES FOLDER libraries/hl)
+61:  set (install_targets_static ${HDF5_HL_LIB_TARGET})
+65:  add_library (${HDF5_HL_LIBSH_TARGET} SHARED ${HL_SOURCES} ${HL_HEADERS} ${HL_PRIVATE_HEADERS})
+66:  target_include_directories (${HDF5_HL_LIBSH_TARGET}
+70:  target_compile_options(${HDF5_HL_LIBSH_TARGET} PRIVATE &quot;${HDF5_CMAKE_C_FLAGS}&quot;)
+71:  target_compile_definitions(${HDF5_HL_LIBSH_TARGET} PUBLIC &quot;H5_BUILT_AS_DYNAMIC_LIB&quot;)
+72:  TARGET_C_PROPERTIES (${HDF5_HL_LIBSH_TARGET} SHARED)
+73:  target_link_libraries (${HDF5_HL_LIBSH_TARGET} PUBLIC ${HDF5_LIBSH_TARGET})
+74:  set_global_variable (HDF5_LIBRARIES_TO_EXPORT &quot;${HDF5_LIBRARIES_TO_EXPORT};${HDF5_HL_LIBSH_TARGET}&quot;)
+75:  H5_SET_LIB_OPTIONS (${HDF5_HL_LIBSH_TARGET} ${HDF5_HL_LIB_NAME} SHARED &quot;HL&quot;)
+76:  set_target_properties (${HDF5_HL_LIBSH_TARGET} PROPERTIES FOLDER libraries/hl)
+77:  set (install_targets_shared ${HDF5_HL_LIBSH_TARGET})
+85:    clang_format (HDF5_HL_SRC_FORMAT ${HDF5_HL_LIB_TARGET})</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:39:33Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -n \&quot;HDF5_HL_LIB_NAME\\b\\|HDF5_HL_LIB_TARGET\\b\&quot; /work/agent/target-src/CMakeLists.txt | head -10&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find HL library name variable&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:39:33Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">246:set (HDF5_HL_LIB_NAME           &quot;${HDF5_EXTERNAL_LIB_PREFIX}${HDF5_LIB_BASE}${HDF5_LIB_INFIX}${HDF5_HL_LIB_CORE}${HDF5_EXTERNAL_LIB_SUFFIX}&quot;)
+271:set (HDF5_HL_LIB_TARGET           &quot;${HDF5_HL_LIB_CORENAME}-static&quot;)</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:39:37Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -n \&quot;HDF5_HL_LIB_CORE\\b\\|HDF5_LIB_BASE\\b\\|HDF5_LIB_INFIX\\b\\|HDF5_EXTERNAL_LIB_PREFIX\\b\&quot; /work/agent/target-src/CMakeLists.txt | head -10&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find HL library naming components&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:39:37Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">125:#option (HDF5_EXTERNAL_LIB_PREFIX &quot;Use prefix for custom library naming.&quot; &quot;&quot;)
+126:set (HDF5_EXTERNAL_LIB_PREFIX &quot;&quot; CACHE STRING &quot;Use prefix for custom library naming.&quot;)
+127:mark_as_advanced (HDF5_EXTERNAL_LIB_PREFIX)
+128:# HDF5_EXTERNAL_LIB_PREFIX :
+132:set (HDF5_LIB_INFIX &quot;&quot; CACHE STRING &quot;Use infix for custom library naming.&quot;)
+133:mark_as_advanced (HDF5_LIB_INFIX)
+134:# HDF5_LIB_INFIX :
+160:#   set (HDF5_EXTERNAL_LIB_PREFIX &quot;vtk&quot;)
+201:set (HDF5_LIB_BASE              &quot;hdf5&quot;)
+207:set (HDF5_HL_LIB_CORE           &quot;_hl&quot;)</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:39:43Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>So the HL library name is:</p>
+<ul>
+<li><code>HDF5_HL_LIB_NAME = &quot;&quot; + &quot;hdf5&quot; + &quot;&quot; + &quot;_hl&quot; + &quot;&quot; = &quot;hdf5_hl&quot;</code></li>
+<li>Static target: <code>hdf5_hl-static</code></li>
+</ul>
+<p>The static library would be at <code>./build-dir/bin/libhdf5_hl.a</code> (like libhdf5.a). Let me verify this path pattern from the CMakeLists.txt.</p>
+<p>Also, the HL headers are in <code>/src/hdf5/hl/src/</code>. </p>
+<p>The main header file is at <code>/src/hdf5/hl/src/hdf5_hl.h</code>, so I need to add that include path and link against the static library. Let me check if there&#39;s an <code>ARCHIVE_OUTPUT_DIRECTORY</code> setting that might affect where the library ends up.</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:39:44Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -n \&quot;ARCHIVE_OUTPUT_DIRECTORY\\|LIBRARY_OUTPUT_DIRECTORY\\|CMAKE_ARCHIVE\\|RUNTIME_OUTPUT\\|bin.*hdf5\&quot; /work/agent/target-src/CMakeLists.txt | head -10&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find library output directory in cmake&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:39:44Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">(Bash completed with no output)</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:39:47Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -rn \&quot;ARCHIVE_OUTPUT_DIRECTORY\\|CMAKE_ARCHIVE_OUTPUT_DIRECTORY\&quot; /work/agent/target-src/ --include=\&quot;*.cmake\&quot; | head -5; grep -rn \&quot;ARCHIVE_OUTPUT_DIRECTORY\\|CMAKE_ARCHIVE_OUTPUT_DIRECTORY\&quot; /work/agent/target-src/CMakeLists.txt | head -5&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find output directory for archives&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:39:47Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">/work/agent/target-src/HDF5Examples/config/HDFMacros.cmake:24:    set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY
+/work/agent/target-src/config/HDFMacros.cmake:54:    set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY
+/work/agent/target-src/config/HDFMacros.cmake:57:    mark_as_advanced (CMAKE_ARCHIVE_OUTPUT_DIRECTORY)</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:39:50Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/agent/target-src/config/HDFMacros.cmake&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;offset&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">50</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">20</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:39:50Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">50	    set (CMAKE_LIBRARY_OUTPUT_DIRECTORY
+51	        ${PROJECT_BINARY_DIR}/bin CACHE PATH &quot;Single Directory for all Libraries&quot;
+52	    )
+53	    mark_as_advanced (CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+54	    set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY
+55	        ${PROJECT_BINARY_DIR}/bin CACHE PATH &quot;Single Directory for all static libraries.&quot;
+56	    )
+57	    mark_as_advanced (CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
+58	    set (CMAKE_Fortran_MODULE_DIRECTORY
+59	        ${PROJECT_BINARY_DIR}/mod CACHE PATH &quot;Single Directory for all fortran modules.&quot;
+60	    )
+61	    mark_as_advanced (CMAKE_Fortran_MODULE_DIRECTORY)
+62	    get_property(_isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+63	    if (_isMultiConfig)
+64	      set (CMAKE_TEST_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${HDF_CFG_NAME})
+65	      set (CMAKE_PDB_OUTPUT_DIRECTORY
+66	          ${PROJECT_BINARY_DIR}/bin CACHE PATH &quot;Single Directory for all pdb files.&quot;
+67	      )
+68	      mark_as_advanced (CMAKE_PDB_OUTPUT_DIRECTORY)
+69	    else ()</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:40:18Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>The library output is at <code>${PROJECT_BINARY_DIR}/bin</code>, which in the build.sh is <code>./build-dir/bin</code>. So the HL library would be at <code>./build-dir/bin/libhdf5_hl.a</code>.</p>
+<p>Now let me write the harness. I need to:</p>
+<ol>
+<li>Use the correct include path: <code>-I/src/hdf5/hl/src</code> for the HL headers</li>
+<li>Link against <code>./build-dir/bin/libhdf5_hl.a</code> before <code>./build-dir/bin/libhdf5.a</code></li>
+</ol>
+<p>Also note that the build.sh runs from <code>/src/hdf5</code> (the directory where cmake is run), so paths are relative to that.<br>The HL library is definitely being built as part of the cmake configuration, so I can rely on it being available in the build directory.</p>
+<p>Now I&#39;m designing the fuzzing harness with a few key approaches: using H5LTopen_file_image to load the fuzz input directly into memory without disk I/O, then H5Literate2 to discover what datasets actually exist in the file, and exercising the H5LT APIs against both discovered and hardcoded dataset names. I need to be careful with H5LTget_attribute_string since it handles fixed-length and variable-length strings differently—fixed-length strings fit in the buffer based on type size, but variable-length strings might return a pointer instead.</p>
+<p>To avoid false positives in the fuzzer, I should skip calling H5LTget_attribute_string on variable-length strings. I can detect these by checking if H5Tget_size returns H5T_VARIABLE (which is SIZE_MAX) versus an actual fixed size.</p>
+<p>Actually, looking at the HDF5 documentation more carefully: for VL strings, H5Tget_size returns the size of the pointer itself (8 bytes on 64-bit systems), not SIZE_MAX. So if I allocate a buffer based on that size and pass it to H5LTget_attribute_string, the H5Aread call would try to copy a char* pointer into that small buffer, which could overflow.</p>
+<p>The real issue is that for variable-length strings, I need to know the actual string length beforehand, or use a different approach. Let me check if H5LTfind_attribute exists to verify the attribute is there first, then figure out the proper way to read VL strings without knowing the size in advance.</p>
+<p>For the fuzzer, I&#39;ll call H5LTget_attribute_info to determine the string size, cap it at 65536 bytes to avoid huge allocations, and allocate that much space plus one byte for safety. Then I can call H5LTget_attribute_string with the properly sized buffer.</p>
+<p>Writing the harness code...</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:40:18Z</span></div><div class="msg-text"><p>I have all the information needed. Now let me write the harness:</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:41:09Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Write</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/h5_hlt_fuzzer.c&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;content&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/* Copyright 2024 Google LLC\n * Licensed under the Apache License, Version 2.0 (the \&quot;License\&quot;);\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *       http://www.apache.org/licenses/LICENSE-2.0\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \&quot;AS IS\&quot; BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n *\n * Fuzzing harness for the HDF5 High-Level Lite API (H5LT):\n *   H5LTfind_dataset, H5LTget_dataset_ndims, H5LTget_dataset_info,\n *   H5LTread_dataset, H5LTget_attribute_info, H5LTget_attribute_string,\n *   H5LTfind_attribute.\n *\n * Strategy:\n *   1. Open fuzz input as an in-memory HDF5 file image (H5LTopen_file_image,\n *      read-only) — exercises the HL image-open code path.\n *   2. Iterate the root group to discover actual dataset names inside the\n *      (potentially malformed) file.\n *   3. Also probe a small set of hard-coded names to exercise the \&quot;not found\&quot;\n *      paths.\n *   4. For every candidate name, call the four target APIs in the sequence a\n *      real caller would use:\n *       a. H5LTfind_dataset\n *       b. H5LTget_dataset_ndims  (guards the rank value)\n *       c. H5LTget_dataset_info   (obtains dims + type_size)\n *       d. H5LTread_dataset       (with a correctly-sized harness buffer)\n *       e. H5LTfind_attribute     (for a set of known attribute names)\n *       f. H5LTget_attribute_info (before any read, to size the buffer)\n *       g. H5LTget_attribute_string (with the sized buffer)\n */\n\n#include \&quot;hdf5.h\&quot;\n#include \&quot;hdf5_hl.h\&quot;\n\n#include &lt;stdint.h&gt;\n#include &lt;stdlib.h&gt;\n#include &lt;string.h&gt;\n\n/* -------------------------------------------------------------------------\n * Constants\n * ---------------------------------------------------------------------- */\n\n/* Maximum HDF5 rank (library limit is 32). */\n#define MAX_RANK  32\n\n/* Maximum bytes we are willing to allocate for a single dataset read.     */\n#define MAX_READ_BYTES  (4 * 1024 * 1024)   /* 4 MiB */\n\n/* Maximum bytes for an attribute string buffer. */\n#define MAX_ATTR_BYTES  (64 * 1024)         /* 64 KiB */\n\n/* Maximum number of dataset names we collect from the file. */\n#define MAX_DSETS  8\n\n/* Maximum length of a dataset or attribute name we store. */\n#define MAX_NAME   128\n\n/* -------------------------------------------------------------------------\n * Known attribute names to probe on every dataset/group.\n * ---------------------------------------------------------------------- */\nstatic const char * const KNOWN_ATTR_NAMES[] = {\n    \&quot;CLASS\&quot;, \&quot;TITLE\&quot;, \&quot;units\&quot;, \&quot;description\&quot;, \&quot;attr\&quot;, \&quot;label\&quot;,\n    \&quot;version\&quot;, \&quot;scale\&quot;, \&quot;offset\&quot;, \&quot;long_name\&quot;\n};\n#define N_KNOWN_ATTRS  (sizeof(KNOWN_ATTR_NAMES) / sizeof(KNOWN_ATTR_NAMES[0]))\n\n/* -------------------------------------------------------------------------\n * Hard-coded dataset names to probe (exercising \&quot;not found\&quot; paths).\n * ---------------------------------------------------------------------- */\nstatic const char * const FIXED_DSET_NAMES[] = {\n    \&quot;dataset\&quot;, \&quot;data\&quot;, \&quot;dset1\&quot;, \&quot;x\&quot;, \&quot;y\&quot;, \&quot;z\&quot;, \&quot;signal\&quot;, \&quot;values\&quot;\n};\n#define N_FIXED_NAMES  (sizeof(FIXED_DSET_NAMES) / sizeof(FIXED_DSET_NAMES[0]))\n\n/* -------------------------------------------------------------------------\n * Collected dataset names.\n * ---------------------------------------------------------------------- */\ntypedef struct {\n    char names[MAX_DSETS][MAX_NAME];\n    int  count;\n} found_dsets_t;\n\n/* H5Literate2 callback — collect up to MAX_DSETS dataset names. */\nstatic herr_t\ncollect_datasets(hid_t loc_id, const char *name,\n                 const H5L_info2_t *linfo, void *op_data)\n{\n    found_dsets_t *fd = (found_dsets_t *)op_data;\n    H5O_info2_t    oinfo;\n\n    (void)linfo;\n\n    if (fd-&gt;count &gt;= MAX_DSETS)\n        return 1; /* short-circuit */\n\n    H5E_BEGIN_TRY {\n        if (H5Oget_info_by_name3(loc_id, name, &amp;oinfo,\n                                 H5O_INFO_BASIC, H5P_DEFAULT) &gt;= 0) {\n            if (oinfo.type == H5O_TYPE_DATASET) {\n                strncpy(fd-&gt;names[fd-&gt;count], name, MAX_NAME - 1);\n                fd-&gt;names[fd-&gt;count][MAX_NAME - 1] = &#x27;\\0&#x27;;\n                fd-&gt;count++;\n            }\n        }\n    } H5E_END_TRY\n\n    return 0; /* keep iterating */\n}\n\n/* -------------------------------------------------------------------------\n * Exercise H5LTget_attribute_info + H5LTget_attribute_string on one\n * (obj_name, attr_name) pair inside the already-open file.\n * ---------------------------------------------------------------------- */\nstatic void\nprobe_attribute_string(hid_t file_id,\n                       const char *obj_name,\n                       const char *attr_name)\n{\n    /* Check existence first. */\n    herr_t found;\n    H5E_BEGIN_TRY {\n        found = H5LTfind_attribute(file_id, attr_name);\n    } H5E_END_TRY\n    /* found may be 0 (not found), 1 (found), or &lt;0 (error) — all OK. */\n    (void)found;\n\n    /* Query info to size the read buffer correctly. */\n    hsize_t     adims[MAX_RANK] = {0};\n    H5T_class_t atype_class     = H5T_NO_CLASS;\n    size_t      atype_size      = 0;\n    herr_t      ainfo;\n\n    H5E_BEGIN_TRY {\n        ainfo = H5LTget_attribute_info(file_id, obj_name, attr_name,\n                                       adims, &amp;atype_class, &amp;atype_size);\n    } H5E_END_TRY\n\n    if (ainfo &lt; 0 || atype_size == 0 || atype_size &gt; MAX_ATTR_BYTES)\n        return;\n\n    /* Only proceed for string-class attributes (the specific target API). */\n    if (atype_class != H5T_STRING)\n        return;\n\n    /* Allocate a buffer large enough for the string (+ NUL guard byte). */\n    char *abuf = (char *)calloc(1, atype_size + 1);\n    if (!abuf)\n        return;\n\n    H5E_BEGIN_TRY {\n        H5LTget_attribute_string(file_id, obj_name, attr_name, abuf);\n    } H5E_END_TRY\n\n    free(abuf);\n}\n\n/* -------------------------------------------------------------------------\n * Exercise H5LT dataset functions on one candidate name.\n * ---------------------------------------------------------------------- */\nstatic void\nprobe_dataset(hid_t file_id, const char *dset_name)\n{\n    /* 1. H5LTfind_dataset */\n    H5E_BEGIN_TRY {\n        H5LTfind_dataset(file_id, dset_name);\n    } H5E_END_TRY\n\n    /* 2. H5LTget_dataset_ndims */\n    int rank = -1;\n    H5E_BEGIN_TRY {\n        H5LTget_dataset_ndims(file_id, dset_name, &amp;rank);\n    } H5E_END_TRY\n\n    /* Guard: skip if rank is not sane. */\n    if (rank &lt; 0 || rank &gt; MAX_RANK)\n        return;\n\n    /* 3. H5LTget_dataset_info */\n    hsize_t     dims[MAX_RANK] = {0};\n    H5T_class_t type_class     = H5T_NO_CLASS;\n    size_t      type_size      = 0;\n    herr_t      info_ret;\n\n    H5E_BEGIN_TRY {\n        info_ret = H5LTget_dataset_info(file_id, dset_name,\n                                        dims, &amp;type_class, &amp;type_size);\n    } H5E_END_TRY\n\n    /* 4. H5LTread_dataset — only if the dataset info looks sane. */\n    if (info_ret &gt;= 0 &amp;&amp; type_size &gt; 0) {\n        /*\n         * Compute total element count, guarding against overflow and\n         * excessively large allocations.\n         *\n         * We read into a native-int buffer (H5T_NATIVE_INT), so the\n         * harness buffer size is total_elements * sizeof(int).  HDF5\n         * will perform type conversion internally.\n         *\n         * Scalar datasets have rank 0; treat them as 1 element.\n         */\n        hsize_t total_elements = 1;\n        int     overflow       = 0;\n\n        for (int d = 0; d &lt; rank; d++) {\n            if (dims[d] == 0) {\n                total_elements = 0;\n                break;\n            }\n            /* Overflow guard: total_elements * dims[d] &lt;= MAX_READ_BYTES */\n            if (total_elements &gt; (hsize_t)(MAX_READ_BYTES / sizeof(int) / (dims[d] ? dims[d] : 1))) {\n                overflow = 1;\n                break;\n            }\n            total_elements *= dims[d];\n        }\n\n        if (!overflow &amp;&amp; total_elements &gt; 0) {\n            size_t buf_bytes = (size_t)total_elements * sizeof(int);\n            if (buf_bytes &lt;= MAX_READ_BYTES) {\n                void *buf = calloc(1, buf_bytes);\n                if (buf) {\n                    H5E_BEGIN_TRY {\n                        H5LTread_dataset(file_id, dset_name,\n                                         H5T_NATIVE_INT, buf);\n                    } H5E_END_TRY\n                    free(buf);\n                }\n            }\n        }\n    }\n\n    /* 5. Probe known attribute names on this dataset. */\n    for (size_t a = 0; a &lt; N_KNOWN_ATTRS; a++)\n        probe_attribute_string(file_id, dset_name, KNOWN_ATTR_NAMES[a]);\n}\n\n/* -------------------------------------------------------------------------\n * Fuzzer entry point\n * ---------------------------------------------------------------------- */\nint LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)\n{\n    if (size &lt; 8)\n        return 0;\n\n    /* Suppress HDF5 diagnostic output during fuzzing. */\n    H5Eset_auto2(H5E_DEFAULT, NULL, NULL);\n\n    /*\n     * Open the fuzz input as a read-only in-memory HDF5 file image.\n     * flags=0 → read-only, HDF5 copies the buffer internally.\n     */\n    hid_t file_id;\n    H5E_BEGIN_TRY {\n        file_id = H5LTopen_file_image((void *)(uintptr_t)data, size, 0);\n    } H5E_END_TRY\n\n    if (file_id &lt; 0)\n        return 0;\n\n    /* Collect actual dataset names from the root group. */\n    found_dsets_t fd = {{{{0}}}, 0};\n    H5E_BEGIN_TRY {\n        H5Literate2(file_id, H5_INDEX_NAME, H5_ITER_INC,\n                    NULL, collect_datasets, &amp;fd);\n    } H5E_END_TRY\n\n    /*\n     * Build the full probe list: discovered names first, then the fixed\n     * hard-coded names (deduplicating to avoid redundant calls).\n     */\n    char all_names[MAX_DSETS + N_FIXED_NAMES][MAX_NAME];\n    int  all_count = 0;\n\n    /* Copy discovered names. */\n    for (int i = 0; i &lt; fd.count; i++) {\n        strncpy(all_names[all_count], fd.names[i], MAX_NAME - 1);\n        all_names[all_count][MAX_NAME - 1] = &#x27;\\0&#x27;;\n        all_count++;\n    }\n\n    /* Append fixed names if not already present. */\n    for (size_t fi = 0; fi &lt; N_FIXED_NAMES; fi++) {\n        int dup = 0;\n        for (int j = 0; j &lt; all_count; j++) {\n            if (strcmp(all_names[j], FIXED_DSET_NAMES[fi]) == 0) {\n                dup = 1;\n                break;\n            }\n        }\n        if (!dup) {\n            strncpy(all_names[all_count], FIXED_DSET_NAMES[fi], MAX_NAME - 1);\n            all_names[all_count][MAX_NAME - 1] = &#x27;\\0&#x27;;\n            all_count++;\n        }\n    }\n\n    /* Drive the H5LT functions for each candidate name. */\n    for (int i = 0; i &lt; all_count; i++)\n        probe_dataset(file_id, all_names[i]);\n\n    /* Also probe attribute strings attached directly to the root group. */\n    for (size_t a = 0; a &lt; N_KNOWN_ATTRS; a++)\n        probe_attribute_string(file_id, \&quot;.\&quot;, KNOWN_ATTR_NAMES[a]);\n\n    H5Fclose(file_id);\n    return 0;\n}\n&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:41:09Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">File created successfully at: /work/harness-proj/fuzz-proj/h5_hlt_fuzzer.c</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:41:13Z</span></div><div class="msg-text"><p>Now update <code>build.sh</code> to compile and link the new harness with the HL library:</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:41:13Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/build.sh&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:41:13Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">File unchanged since last read. The content from the earlier Read tool_result in this conversation is still current — refer to that instead of re-reading.</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:41:20Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Edit</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;replace_all&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/build.sh&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;old_string&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;zip -j $OUT/h5_extended_fuzzer_seed_corpus.zip $SRC/hdf5/test/testfiles/*.h5&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;new_string&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;zip -j $OUT/h5_extended_fuzzer_seed_corpus.zip $SRC/hdf5/test/testfiles/*.h5\n\n# H5LT (High-Level Lite API) fuzzer\n$CC $CFLAGS -std=c99 -c \\\n  -I/src/hdf5/src -I/src/hdf5/build-dir/src -I/src/hdf5/hl/src \\\n  -I./src/H5FDsubfiling/ \\\n  $SRC/h5_hlt_fuzzer.c\n$CXX $CXXFLAGS $LIB_FUZZING_ENGINE h5_hlt_fuzzer.o \\\n  ./build-dir/bin/libhdf5_hl.a ./build-dir/bin/libhdf5.a -lz \\\n  -o $OUT/h5_hlt_fuzzer\n\nzip -j $OUT/h5_hlt_fuzzer_seed_corpus.zip $SRC/hdf5/test/testfiles/*.h5&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:41:20Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">The file /work/harness-proj/fuzz-proj/build.sh has been updated successfully.</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:41:22Z</span></div><div class="msg-text"><p>Now let&#39;s build:</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:41:23Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;libCRS build-project --response-dir /work/agent/build-resp --fuzz-proj-dir /work/harness-proj/fuzz-proj 2&gt;&amp;1 | tail -5&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Build the harness project&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;timeout&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">300000</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:46:21Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">(Bash completed with no output)</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:46:25Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;cat /work/agent/build-resp/retcode&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Check build return code&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:46:26Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">0</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:46:28Z</span></div><div class="msg-text"><p>Build succeeded. Let me verify the binary was installed:</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:46:29Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;cat /work/agent/build-resp/stderr.log | grep -i \&quot;h5_hlt\\|error\\|warning\&quot; | head -20&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Check build output for the new harness&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:46:29Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">(Bash completed with no output)</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:46:32Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;ls -la /work/agent/build-resp/ &amp;&amp; grep -r \&quot;h5_hlt\&quot; /work/agent/build-resp/ 2&gt;/dev/null | head -5&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Check build response directory&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:46:32Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">total 3392
+drwxr-xr-x 2 root root    4096 Jun  6 19:46 .
+drwxr-xr-x 4 root root    4096 Jun  6 19:46 ..
+-rw-r--r-- 1 root root       1 Jun  6 19:46 exit_code
+-rw-r--r-- 1 root root       2 Jun  6 19:46 rebuild_id
+-rw-r--r-- 1 root root       1 Jun  6 19:46 retcode
+-rw-r--r-- 1 root root      40 Jun  6 19:46 stderr.log
+-rw-r--r-- 1 root root 3446918 Jun  6 19:46 stdout.log
+/work/agent/build-resp/stdout.log:+ clang -O1 -fno-omit-frame-pointer -gline-tables-only -Wno-error=incompatible-function-pointer-types -Wno-error=int-conversion -Wno-error=deprecated-declarations -Wno-error=implicit-function-declaration -Wno-error=implicit-int -Wno-error=unknown-warning-option -Wno-error=vla-cxx-extension -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -fsanitize=address -fsanitize-address-use-after-scope -fsanitize=fuzzer-no-link -std=c99 -c -I/src/hdf5/src -I/src/hdf5/build-dir/src -I/src/hdf5/hl/src -I./src/H5FDsubfiling/ /src/h5_hlt_fuzzer.c
+/work/agent/build-resp/stdout.log:/src/h5_hlt_fuzzer.c:264:27: warning: braces around scalar initializer [-Wbraced-scalar-init]
+/work/agent/build-resp/stdout.log:+ clang++ -O1 -fno-omit-frame-pointer -gline-tables-only -Wno-error=incompatible-function-pointer-types -Wno-error=int-conversion -Wno-error=deprecated-declarations -Wno-error=implicit-function-declaration -Wno-error=implicit-int -Wno-error=unknown-warning-option -Wno-error=vla-cxx-extension -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -fsanitize=address -fsanitize-address-use-after-scope -fsanitize=fuzzer-no-link -stdlib=libc++ -fsanitize=fuzzer h5_hlt_fuzzer.o ./build-dir/bin/libhdf5_hl.a ./build-dir/bin/libhdf5.a -lz -o /out/h5_hlt_fuzzer
+/work/agent/build-resp/stdout.log:+ zip -j /out/h5_hlt_fuzzer_seed_corpus.zip /src/hdf5/test/testfiles/aggr.h5 /src/hdf5/test/testfiles/bad_compound.h5 /src/hdf5/test/testfiles/bad_offset.h5 /src/hdf5/test/testfiles/be_data.h5 /src/hdf5/test/testfiles/be_extlink1.h5 /src/hdf5/test/testfiles/be_extlink2.h5 /src/hdf5/test/testfiles/btree_idx_1_6.h5 /src/hdf5/test/testfiles/btree_idx_1_8.h5 /src/hdf5/test/testfiles/charsets.h5 /src/hdf5/test/testfiles/corrupt_stab_msg.h5 /src/hdf5/test/testfiles/cve_2020_10810.h5 /src/hdf5/test/testfiles/cve_2020_10812.h5 /src/hdf5/test/testfiles/deflate.h5 /src/hdf5/test/testfiles/family_v16-000000.h5 /src/hdf5/test/testfiles/family_v16-000001.h5 /src/hdf5/test/testfiles/family_v16-000002.h5 /src/hdf5/test/testfiles/family_v16-000003.h5 /src/hdf5/test/testfiles/file_image_core_test.h5 /src/hdf5/test/testfiles/filespace_1_6.h5 /src/hdf5/test/testfiles/filespace_1_8.h5 /src/hdf5/test/testfiles/fill18.h5 /src/hdf5/test/testfiles/fill_old.h5 /src/hdf5/test/testfiles/filter_error.h5 /src/hdf5/test/testfiles/fsm_aggr_nopersist.h5 /src/hdf5/test/testfiles/fsm_aggr_persist.h5 /src/hdf5/test/testfiles/group_old.h5 /src/hdf5/test/testfiles/h5fc_ext1_f.h5 /src/hdf5/test/testfiles/h5fc_ext1_i.h5 /src/hdf5/test/testfiles/h5fc_ext2_if.h5 /src/hdf5/test/testfiles/h5fc_ext2_sf.h5 /src/hdf5/test/testfiles/h5fc_ext3_isf.h5 /src/hdf5/test/testfiles/h5fc_ext_none.h5 /src/hdf5/test/testfiles/le_data.h5 /src/hdf5/test/testfiles/le_extlink1.h5 /src/hdf5/test/testfiles/le_extlink2.h5 /src/hdf5/test/testfiles/memleak_H5O_dtype_decode_helper_H5Odtype.h5 /src/hdf5/test/testfiles/mergemsg.h5 /src/hdf5/test/testfiles/multi_file_v16-r.h5 /src/hdf5/test/testfiles/multi_file_v16-s.h5 /src/hdf5/test/testfiles/noencoder.h5 /src/hdf5/test/testfiles/none.h5 /src/hdf5/test/testfiles/paged_nopersist.h5 /src/hdf5/test/testfiles/paged_persist.h5 /src/hdf5/test/testfiles/specmetaread.h5 /src/hdf5/test/testfiles/tarrold.h5 /src/hdf5/test/testfiles/tbad_msg_count.h5 /src/hdf5/test/testfiles/tbogus.h5 /src/hdf5/test/testfiles/test_filters_be.h5 /src/hdf5/test/testfiles/test_filters_le.h5 /src/hdf5/test/testfiles/th5s.h5 /src/hdf5/test/testfiles/tlayouto.h5 /src/hdf5/test/testfiles/tmisc38a.h5 /src/hdf5/test/testfiles/tmisc38b.h5 /src/hdf5/test/testfiles/tmtimen.h5 /src/hdf5/test/testfiles/tmtimeo.h5 /src/hdf5/test/testfiles/tnullspace.h5 /src/hdf5/test/testfiles/tsizeslheap.h5</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:46:40Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>The binary was compiled and linked successfully (<code>/out/h5_hlt_fuzzer</code>). There&#39;s one warning about &quot;braces around scalar initializer&quot; in the <code>found_dsets_t fd = {{{{0}}}, 0};</code> initialization. Let me fix that to be cleaner:</p>
+<p>Line 264: <code>found_dsets_t fd = {{{{0}}}, 0};</code> - this is <code>{{{{0}}}, 0}</code> which is a bit awkward. Let me change it to a simpler initialization.</p>
+<p>Actually the build succeeded (retcode 0), and the warning is just about extra braces. </p>
+<p>The warning won&#39;t affect the submission, but I&#39;ll clean it up anyway. Actually, the build is passing cleanly, so I&#39;ll just write the harness name to new-harnesses.txt.</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:46:40Z</span></div><div class="msg-text"><p>Build is green (retcode=0). The binary <code>/out/h5_hlt_fuzzer</code> was produced and seeded with the test corpus. Let me fix the minor braces warning, then record the harness name:</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:46:42Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Edit</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;replace_all&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/h5_hlt_fuzzer.c&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;old_string&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;    /* Collect actual dataset names from the root group. */\n    found_dsets_t fd = {{{{0}}}, 0};&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;new_string&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;    /* Collect actual dataset names from the root group. */\n    found_dsets_t fd;\n    memset(&amp;fd, 0, sizeof(fd));&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:46:42Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">The file /work/harness-proj/fuzz-proj/h5_hlt_fuzzer.c has been updated successfully.</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:46:45Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;libCRS build-project --response-dir /work/agent/build-resp --fuzz-proj-dir /work/harness-proj/fuzz-proj 2&gt;&amp;1 | tail -3 &amp;&amp; cat /work/agent/build-resp/retcode&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Rebuild after warning fix&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;timeout&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">300000</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:51:46Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">Command running in background with ID: bob2rchyy. Output is being written to: /tmp/claude-0/-src/78b03bfe-9de1-460b-8747-2e452ecc1588/tasks/bob2rchyy.output</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:51:48Z</span></div><div class="tool"><div class="tool-head">🔧 <b>TaskOutput</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;task_id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;bob2rchyy&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;block&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;timeout&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">300000</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:53:32Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">&lt;retrieval_status&gt;success&lt;/retrieval_status&gt;
+
+&lt;task_id&gt;bob2rchyy&lt;/task_id&gt;
+
+&lt;task_type&gt;local_bash&lt;/task_type&gt;
+
+&lt;status&gt;completed&lt;/status&gt;
+
+&lt;exit_code&gt;0&lt;/exit_code&gt;
+
+&lt;output&gt;
+0
+&lt;/output&gt;</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:53:35Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep \&quot;warning\\|error\&quot; /work/agent/build-resp/stdout.log | grep -i \&quot;h5_hlt\&quot; | head -10&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Check for warnings in rebuild&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:53:35Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">+ clang -O1 -fno-omit-frame-pointer -gline-tables-only -Wno-error=incompatible-function-pointer-types -Wno-error=int-conversion -Wno-error=deprecated-declarations -Wno-error=implicit-function-declaration -Wno-error=implicit-int -Wno-error=unknown-warning-option -Wno-error=vla-cxx-extension -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -fsanitize=address -fsanitize-address-use-after-scope -fsanitize=fuzzer-no-link -std=c99 -c -I/src/hdf5/src -I/src/hdf5/build-dir/src -I/src/hdf5/hl/src -I./src/H5FDsubfiling/ /src/h5_hlt_fuzzer.c
++ clang++ -O1 -fno-omit-frame-pointer -gline-tables-only -Wno-error=incompatible-function-pointer-types -Wno-error=int-conversion -Wno-error=deprecated-declarations -Wno-error=implicit-function-declaration -Wno-error=implicit-int -Wno-error=unknown-warning-option -Wno-error=vla-cxx-extension -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -fsanitize=address -fsanitize-address-use-after-scope -fsanitize=fuzzer-no-link -stdlib=libc++ -fsanitize=fuzzer h5_hlt_fuzzer.o ./build-dir/bin/libhdf5_hl.a ./build-dir/bin/libhdf5.a -lz -o /out/h5_hlt_fuzzer
++ zip -j /out/h5_hlt_fuzzer_seed_corpus.zip /src/hdf5/test/testfiles/aggr.h5 /src/hdf5/test/testfiles/bad_compound.h5 /src/hdf5/test/testfiles/bad_offset.h5 /src/hdf5/test/testfiles/be_data.h5 /src/hdf5/test/testfiles/be_extlink1.h5 /src/hdf5/test/testfiles/be_extlink2.h5 /src/hdf5/test/testfiles/btree_idx_1_6.h5 /src/hdf5/test/testfiles/btree_idx_1_8.h5 /src/hdf5/test/testfiles/charsets.h5 /src/hdf5/test/testfiles/corrupt_stab_msg.h5 /src/hdf5/test/testfiles/cve_2020_10810.h5 /src/hdf5/test/testfiles/cve_2020_10812.h5 /src/hdf5/test/testfiles/deflate.h5 /src/hdf5/test/testfiles/family_v16-000000.h5 /src/hdf5/test/testfiles/family_v16-000001.h5 /src/hdf5/test/testfiles/family_v16-000002.h5 /src/hdf5/test/testfiles/family_v16-000003.h5 /src/hdf5/test/testfiles/file_image_core_test.h5 /src/hdf5/test/testfiles/filespace_1_6.h5 /src/hdf5/test/testfiles/filespace_1_8.h5 /src/hdf5/test/testfiles/fill18.h5 /src/hdf5/test/testfiles/fill_old.h5 /src/hdf5/test/testfiles/filter_error.h5 /src/hdf5/test/testfiles/fsm_aggr_nopersist.h5 /src/hdf5/test/testfiles/fsm_aggr_persist.h5 /src/hdf5/test/testfiles/group_old.h5 /src/hdf5/test/testfiles/h5fc_ext1_f.h5 /src/hdf5/test/testfiles/h5fc_ext1_i.h5 /src/hdf5/test/testfiles/h5fc_ext2_if.h5 /src/hdf5/test/testfiles/h5fc_ext2_sf.h5 /src/hdf5/test/testfiles/h5fc_ext3_isf.h5 /src/hdf5/test/testfiles/h5fc_ext_none.h5 /src/hdf5/test/testfiles/le_data.h5 /src/hdf5/test/testfiles/le_extlink1.h5 /src/hdf5/test/testfiles/le_extlink2.h5 /src/hdf5/test/testfiles/memleak_H5O_dtype_decode_helper_H5Odtype.h5 /src/hdf5/test/testfiles/mergemsg.h5 /src/hdf5/test/testfiles/multi_file_v16-r.h5 /src/hdf5/test/testfiles/multi_file_v16-s.h5 /src/hdf5/test/testfiles/noencoder.h5 /src/hdf5/test/testfiles/none.h5 /src/hdf5/test/testfiles/paged_nopersist.h5 /src/hdf5/test/testfiles/paged_persist.h5 /src/hdf5/test/testfiles/specmetaread.h5 /src/hdf5/test/testfiles/tarrold.h5 /src/hdf5/test/testfiles/tbad_msg_count.h5 /src/hdf5/test/testfiles/tbogus.h5 /src/hdf5/test/testfiles/test_filters_be.h5 /src/hdf5/test/testfiles/test_filters_le.h5 /src/hdf5/test/testfiles/th5s.h5 /src/hdf5/test/testfiles/tlayouto.h5 /src/hdf5/test/testfiles/tmisc38a.h5 /src/hdf5/test/testfiles/tmisc38b.h5 /src/hdf5/test/testfiles/tmtimen.h5 /src/hdf5/test/testfiles/tmtimeo.h5 /src/hdf5/test/testfiles/tnullspace.h5 /src/hdf5/test/testfiles/tsizeslheap.h5</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:53:37Z</span></div><div class="msg-text"><p>Clean build — no warnings. Write the harness name:</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:53:37Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Write</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/agent/new-harnesses.txt&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;content&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;h5_hlt_fuzzer\n&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:53:37Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">File created successfully at: /work/agent/new-harnesses.txt</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:53:50Z</span></div><div class="msg-text"><p>Build is green (retcode=0). Here&#39;s a summary of what was done:</p>
+<p><strong>Harness: <code>h5_hlt_fuzzer</code></strong></p>
+<p>The harness exercises the H5LT API the way a real caller would:</p>
+<ol>
+<li><p><strong><code>H5LTopen_file_image</code></strong> — opens the raw fuzz bytes as a read-only in-memory HDF5 file, exercising the HL image-open code path without disk I/O.</p>
+</li>
+<li><p><strong>Dataset discovery</strong> — uses <code>H5Literate2</code> to find actual dataset names inside the (potentially malformed) file, then augments with 8 hard-coded names to exercise &quot;not-found&quot; paths.</p>
+</li>
+<li><p><strong>Per-dataset pipeline</strong> (correct caller sequence):</p>
+<ul>
+<li><code>H5LTfind_dataset</code> — existence check (exercises <code>H5Literate2</code> internally)</li>
+<li><code>H5LTget_dataset_ndims</code> — get rank (guards against out-of-range values)</li>
+<li><code>H5LTget_dataset_info</code> — get dims, type class, type size</li>
+<li><code>H5LTread_dataset</code> — only if <code>total_elements × sizeof(int) ≤ 4 MiB</code>, with overflow-safe element counting; uses <code>H5T_NATIVE_INT</code> for the memory type (HDF5 handles conversion)</li>
+</ul>
+</li>
+<li><p><strong>Attribute pipeline</strong> — for 10 known attribute names on each dataset and on the root group:</p>
+<ul>
+<li><code>H5LTfind_attribute</code> — existence check</li>
+<li><code>H5LTget_attribute_info</code> — query type class and size before any read</li>
+<li><code>H5LTget_attribute_string</code> — only for string-class attributes with <code>type_size ≤ 64 KiB</code>, with a correctly sized <code>calloc</code>&#39;d buffer</li>
+</ul>
+</li>
+</ol>
+<p>The build links <code>libhdf5_hl.a</code> (before <code>libhdf5.a</code>) and includes <code>-I/src/hdf5/hl/src</code> for the <code>hdf5_hl.h</code> header. A seed corpus of 54 real HDF5 test files is zipped as <code>h5_hlt_fuzzer_seed_corpus.zip</code>.</p>
+</div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 19:53:50Z</span></div><div class="msg-text"><task-notification>
+<task-id>bob2rchyy</task-id>
+<tool-use-id>toolu_01EV5btqfYMr4zEAuAWSHcQC</tool-use-id>
+<output-file>/tmp/claude-0/-src/78b03bfe-9de1-460b-8747-2e452ecc1588/tasks/bob2rchyy.output</output-file>
+<status>completed</status>
+<summary>Background command "Rebuild after warning fix" completed (exit code 0)</summary>
+</task-notification></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 19:53:52Z</span></div><div class="msg-text"><p>Already handled — the background task completed successfully and I recorded the result above.</p>
+</div></div>
+ <div class="foot">Rendered offline from the raw session JSONL. Thinking / tool I/O are collapsed — click to expand.</div>
+</div></body></html>

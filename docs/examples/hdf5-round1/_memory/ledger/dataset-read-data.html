@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"><title>dataset-read-data</title>
+<style>
+ body{font:14px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#f6f7f9;color:#1c2128}
+ .md{max-width:900px;margin:0 auto;padding:28px 24px;background:#fff;min-height:100vh;border-left:1px solid #eaeef2;border-right:1px solid #eaeef2}
+ .md h1{font-size:22px;border-bottom:1px solid #d0d7de;padding-bottom:8px} .md h2{font-size:18px;margin-top:24px;border-bottom:1px solid #eaeef2;padding-bottom:5px}
+ .md h3{font-size:15px} .md p,.md li{font-size:14px}
+ .md table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px}
+ .md th,.md td{border:1px solid #d0d7de;padding:6px 10px;text-align:left} .md th{background:#f6f8fa}
+ .md tr:nth-child(2n) td{background:#fbfcfd}
+ .md code{background:#eff1f3;padding:1px 5px;border-radius:5px;font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
+ .md pre{background:#0d1117;color:#e6edf3;padding:12px;border-radius:6px;overflow-x:auto} .md pre code{background:none;padding:0}
+ .md a{color:#0969da;text-decoration:none} .md a:hover{text-decoration:underline}
+ .md blockquote{margin:8px 0;padding:4px 14px;border-left:3px solid #d0d7de;color:#57606a}
+ .hljs-comment,.hljs-quote{color:#8b949e} .hljs-keyword,.hljs-selector-tag,.hljs-type{color:#cf222e}
+ .hljs-string,.hljs-attr{color:#0a3069} .hljs-number,.hljs-literal{color:#0550ae} .hljs-title{color:#6639ba}
+</style></head><body><article class="md"><h1>Dataset data read with type/space inspection  (dataset-read-data)</h1>
+<ul>
+<li>status: done</li>
+<li>priority: 10</li>
+<li>harness: h5_dread_fuzzer</li>
+<li>attempts: 1</li>
+</ul>
+<h2>APIs</h2>
+<ul>
+<li><code>H5Dopen2</code></li>
+<li><code>H5Dread</code></li>
+<li><code>H5Dget_type</code></li>
+<li><code>H5Dget_space</code></li>
+<li><code>H5Dget_storage_size</code></li>
+<li><code>H5Dclose</code></li>
+</ul>
+<h2>Rationale</h2>
+<p>Existing harnesses only open datasets; no harness actually calls H5Dread to pull data through the type-conversion and filter pipeline. This is the richest attack surface for memory-safety bugs in decompression, type conversion, and fill-value logic.</p>
+<h2>Last feedback</h2>
+<p>The harness drives all six target APIs in correct real-caller order: H5Dopen2 → H5Dget_type → H5Dget_storage_size → H5Dget_space → H5Dread → H5Dclose. The entire fuzzer input is used as the HDF5 file (no hardcoding), H5Ovisit3 enumerates all datasets, VL types are handled properly with H5Treclaim, and H5Tget_native_type exercises the type-conversion pipeline. Coverage grew steadily to 2299 edges / 2761 features / 41 corpus items before plateauing — a pattern consistent with the HDF5 format complexity limiting valid file generation rather than any harness shortcut. The harness thoroughly exercises the attack surface.</p>
+</article></body></html>

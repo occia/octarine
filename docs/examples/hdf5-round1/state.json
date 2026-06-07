@@ -1,0 +1,136 @@
+{
+  "schema": 2,
+  "target": "hdf5",
+  "commit": "af19d9043785",
+  "startedAtMs": 1780741933402,
+  "surfaces": [
+    {
+      "id": "file-open-basic",
+      "title": "Basic HDF5 file open (H5Fopen)",
+      "status": "covered",
+      "attempts": 0
+    },
+    {
+      "id": "dataset-attribute-open",
+      "title": "Dataset + attribute open",
+      "status": "covered",
+      "attempts": 0
+    },
+    {
+      "id": "dataset-read-data",
+      "title": "Dataset data read with type/space inspection",
+      "status": "done",
+      "harnessName": "h5_dread_fuzzer",
+      "attempts": 1
+    },
+    {
+      "id": "datatype-parsing",
+      "title": "Committed datatype open and introspection",
+      "status": "done",
+      "harnessName": "h5_committed_type_fuzzer",
+      "attempts": 3
+    },
+    {
+      "id": "object-visit-iteration",
+      "title": "Object header visiting and iteration",
+      "status": "done",
+      "harnessName": "h5_obj_visit_fuzzer",
+      "attempts": 1
+    },
+    {
+      "id": "filter-pipeline-read",
+      "title": "Compressed/filtered dataset read",
+      "status": "done",
+      "harnessName": "h5_filter_read_fuzzer",
+      "attempts": 1
+    },
+    {
+      "id": "attribute-iteration-read",
+      "title": "Attribute iteration and data read",
+      "status": "done",
+      "harnessName": "h5_attr_iter_fuzzer",
+      "attempts": 1
+    },
+    {
+      "id": "group-link-iteration",
+      "title": "Group open and link traversal",
+      "status": "done",
+      "harnessName": "h5_group_link_fuzzer",
+      "attempts": 1
+    },
+    {
+      "id": "dataspace-encode-decode",
+      "title": "Dataspace encode/decode round-trip",
+      "status": "done",
+      "harnessName": "h5_dataspace_encode_decode_fuzzer",
+      "attempts": 1
+    },
+    {
+      "id": "property-list-encode-decode",
+      "title": "Property list encode/decode",
+      "status": "done",
+      "harnessName": "h5_plist_encode_decode_fuzzer",
+      "attempts": 1
+    },
+    {
+      "id": "references",
+      "title": "Object and region references",
+      "status": "done",
+      "harnessName": "h5_ref_fuzzer",
+      "attempts": 1
+    },
+    {
+      "id": "high-level-lite-api",
+      "title": "High-level Lite API (H5LT)",
+      "status": "done",
+      "harnessName": "h5_hlt_fuzzer",
+      "attempts": 1
+    },
+    {
+      "id": "image-api",
+      "title": "High-level Image API (H5IM)",
+      "status": "done",
+      "harnessName": "h5im_fuzzer",
+      "attempts": 1
+    },
+    {
+      "id": "table-api",
+      "title": "High-level Table API (H5TB)",
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "onion-vfd",
+      "title": "Onion (versioned) virtual file driver",
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "swmr-refresh",
+      "title": "SWMR dataset refresh",
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "vfd-core",
+      "title": "Core (in-memory) VFD with backing-store open",
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "async-event-set",
+      "title": "Asynchronous event-set API",
+      "status": "pending",
+      "attempts": 0
+    }
+  ],
+  "submittedCount": 11,
+  "updatedAtMs": 1780777136515,
+  "sourceVersion": {
+    "repoUrl": "https://github.com/HDFGroup/hdf5",
+    "branch": "develop",
+    "commit": "e124c36c55bf69e9087352a91c77e62ad52f4306",
+    "shortCommit": "e124c36c55bf",
+    "note": "commit re-derived 2026-06-07 (upstream HEAD) — the original build used an unpinned shallow clone and did not record the exact commit"
+  }
+}

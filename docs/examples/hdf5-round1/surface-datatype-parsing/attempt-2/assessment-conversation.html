@@ -1,0 +1,545 @@
+<!doctype html><html><head><meta charset="utf-8"><title>hdf5 — datatype-parsing · attempt 2 · assessment</title>
+<style>
+ body{font:14px/1.55 -apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#f6f7f9;color:#1c2128}
+ .wrap{max-width:900px;margin:0 auto;padding:20px}
+ h1{font-size:17px;margin:0 0 4px} .sub{color:#636c76;margin-bottom:16px;font-size:12px}
+ .turn{background:#fff;border:1px solid #d0d7de;border-radius:8px;margin:10px 0;padding:10px 14px;overflow:hidden}
+ .turn.assistant{border-left:3px solid #0969da} .turn.user{border-left:3px solid #8c959f;background:#fbfcfd}
+ .who{font-size:11px;font-weight:700;color:#636c76;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px}
+ .who .side{margin-left:8px;background:#fff1e5;color:#bc4c00;padding:1px 6px;border-radius:999px;font-size:10px}
+ .who .ts{margin-left:8px;font-weight:400;color:#a0a8b0;text-transform:none;letter-spacing:0}
+ .msg-text{font-size:14px} .msg-text p{margin:6px 0} .msg-text h1,.msg-text h2,.msg-text h3{font-size:15px;margin:10px 0 4px}
+ .msg-text ul,.msg-text ol{margin:6px 0 6px 22px} .msg-text code{background:#eff1f3;padding:1px 5px;border-radius:5px;font-size:12.5px}
+ .thinking{margin:6px 0;background:#fffbf0;border:1px solid #f0e6c8;border-radius:6px;padding:2px 10px}
+ .thinking>summary{cursor:pointer;color:#9a6700;font-size:12.5px;font-weight:600;padding:4px 0}
+ .thinking .msg-text{color:#6f5b1e;font-size:13px}
+ .tool{margin:8px 0;border:1px solid #d0d7de;border-radius:6px;overflow:hidden}
+ .tool-head{background:#ddf4ff;color:#0550ae;padding:5px 10px;font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
+ .tool details>summary,.result>summary{cursor:pointer;font-size:12px;color:#636c76;padding:5px 10px;user-select:none}
+ .result{margin:8px 0;border:1px solid #d0d7de;border-radius:6px;background:#f6f8fa}
+ .result.err{border-color:#ff818266;background:#fff5f5} .result.err>summary{color:#cf222e}
+ pre{margin:0;padding:10px 12px;overflow-x:auto;background:#0d1117;color:#e6edf3;font-size:12px;line-height:1.45}
+ pre code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:none;padding:0;color:inherit;white-space:pre}
+ .msg-text pre{border-radius:6px;margin:8px 0}
+ /* Block code (crash dumps / logs) must stay light-on-dark: the inline .msg-text code rule below
+    has higher specificity than the bare pre-code reset and would otherwise paint the code element
+    with a light inline-code background -- light-on-light (invisible until selected). Re-assert here. */
+ .msg-text pre code,.thinking .msg-text pre code{background:transparent;color:#e6edf3;font-size:12px;padding:0;border-radius:0}
+ /* compact highlight.js (github-dark subset) */
+ .hljs-comment,.hljs-quote{color:#8b949e} .hljs-keyword,.hljs-selector-tag,.hljs-type{color:#ff7b72}
+ .hljs-string,.hljs-attr,.hljs-template-tag{color:#a5d6ff} .hljs-number,.hljs-literal{color:#79c0ff}
+ .hljs-title,.hljs-function .hljs-title,.hljs-section{color:#d2a8ff} .hljs-built_in,.hljs-builtin-name{color:#ffa657}
+ .hljs-name,.hljs-tag{color:#7ee787} .hljs-meta{color:#79c0ff} .hljs-symbol,.hljs-bullet,.hljs-variable{color:#ffa657}
+ .foot{margin-top:18px;color:#636c76;font-size:12px}
+</style></head><body><div class="wrap">
+ <h1>hdf5 — datatype-parsing · attempt 2 · assessment</h1>
+ <div class="sub">20 turn(s) · Claude-Code conversation</div>
+ <div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:36:13Z</span></div><div class="msg-text"><p>You are judging whether a fuzz harness <em>sufficiently explores</em> one attack surface of the OSS-Fuzz<br>project <code>hdf5</code>. This is an agentic, first-principles judgment — there is no single metric. The<br>question: can a fuzzer driven by this harness thoroughly exercise this attack surface?</p>
+<p>Attack surface: Committed datatype open and introspection<br>APIs: H5Topen2, H5Tget_class, H5Tget_size, H5Tget_nmembers, H5Tget_member_type, H5Tget_member_offset, H5Tis_variable_str, H5Tclose<br>Harness binary: <code>h5_committed_type_fuzzer</code></p>
+<p>Method (use your tools):</p>
+<ol>
+<li>Read the harness source under <code>/work/harness-proj/fuzz-proj</code> — does it drive these APIs the way a real caller<br>would, feeding fuzzer bytes into the meaningful inputs (not hardcoding or short-circuiting them)?</li>
+<li>Read the relevant target source under <code>/src</code> — what input space / branches should a<br>thorough harness reach? Is a major part of the surface left unreachable as written?</li>
+<li>Read the fuzz run log at <code>/OSS_CRS_LOG_DIR/report/surface-datatype-parsing/attempt-2/harness-h5_committed_type_fuzzer/fuzz.log</code> and weigh coverage: edges=2226,<br>features=2677, corpus=29. Did coverage grow then plateau in a<br>way consistent with the surface being explored, or does it look stuck/shallow?</li>
+</ol>
+<p>Decide: sufficient=true if a fuzzer driven by this harness can thoroughly explore this attack surface.<br>Otherwise sufficient=false with concrete <code>feedback</code> on what to change in the harness (e.g. drive an uncovered<br>entry point, vary a mode/flag, stop discarding part of the input). Return ONLY the JSON verdict.</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:36:18Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>Let me analyze the harness for the committed datatype open and introspection attack surface. I&#39;ll read the harness source and relevant target source to make my judgment.</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:36:18Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Glob</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;pattern&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/*committed*&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:36:19Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;cat /OSS_CRS_LOG_DIR/report/surface-datatype-parsing/attempt-2/harness-h5_committed_type_fuzzer/fuzz.log 2&gt;/dev/null | tail -50&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:36:19Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">/work/harness-proj/fuzz-proj/h5_committed_type_fuzzer.c</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:36:19Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">#2090: cov: 2197 ft: 2548 corp: 7 exec/s: 152 oom/timeout/crash: 0/0/0 time: 5s job: 4 dft_time: 0
+#3144: cov: 2197 ft: 2548 corp: 7 exec/s: 175 oom/timeout/crash: 0/0/0 time: 6s job: 5 dft_time: 0
+#4094: cov: 2197 ft: 2548 corp: 7 exec/s: 135 oom/timeout/crash: 0/0/0 time: 10s job: 6 dft_time: 0
+#5084: cov: 2197 ft: 2548 corp: 7 exec/s: 123 oom/timeout/crash: 0/0/0 time: 12s job: 7 dft_time: 0
+#6028: cov: 2197 ft: 2548 corp: 7 exec/s: 104 oom/timeout/crash: 0/0/0 time: 14s job: 8 dft_time: 0
+#7286: cov: 2197 ft: 2548 corp: 7 exec/s: 125 oom/timeout/crash: 0/0/0 time: 16s job: 9 dft_time: 0
+#8712: cov: 2197 ft: 2548 corp: 7 exec/s: 129 oom/timeout/crash: 0/0/0 time: 18s job: 10 dft_time: 0
+#10010: cov: 2197 ft: 2548 corp: 7 exec/s: 108 oom/timeout/crash: 0/0/0 time: 23s job: 11 dft_time: 0
+#11382: cov: 2197 ft: 2548 corp: 7 exec/s: 105 oom/timeout/crash: 0/0/0 time: 26s job: 12 dft_time: 0
+#12902: cov: 2197 ft: 2548 corp: 7 exec/s: 108 oom/timeout/crash: 0/0/0 time: 30s job: 13 dft_time: 0
+#14585: cov: 2197 ft: 2548 corp: 7 exec/s: 112 oom/timeout/crash: 0/0/0 time: 32s job: 14 dft_time: 0
+#16389: cov: 2197 ft: 2548 corp: 7 exec/s: 112 oom/timeout/crash: 0/0/0 time: 35s job: 15 dft_time: 0
+#18547: cov: 2197 ft: 2548 corp: 7 exec/s: 126 oom/timeout/crash: 0/0/0 time: 41s job: 16 dft_time: 0
+#21008: cov: 2207 ft: 2647 corp: 10 exec/s: 136 oom/timeout/crash: 0/0/0 time: 45s job: 17 dft_time: 0
+#22136: cov: 2207 ft: 2647 corp: 10 exec/s: 59 oom/timeout/crash: 0/0/0 time: 50s job: 18 dft_time: 0
+#25092: cov: 2207 ft: 2647 corp: 10 exec/s: 147 oom/timeout/crash: 0/0/0 time: 53s job: 19 dft_time: 0
+#28102: cov: 2207 ft: 2647 corp: 10 exec/s: 143 oom/timeout/crash: 0/0/0 time: 57s job: 20 dft_time: 0
+#30691: cov: 2207 ft: 2647 corp: 10 exec/s: 117 oom/timeout/crash: 0/0/0 time: 64s job: 21 dft_time: 0
+#33797: cov: 2207 ft: 2647 corp: 10 exec/s: 135 oom/timeout/crash: 0/0/0 time: 69s job: 22 dft_time: 0
+#36872: cov: 2225 ft: 2674 corp: 26 exec/s: 128 oom/timeout/crash: 0/0/0 time: 75s job: 23 dft_time: 0
+#39279: cov: 2225 ft: 2674 corp: 26 exec/s: 96 oom/timeout/crash: 0/0/0 time: 79s job: 24 dft_time: 0
+#41323: cov: 2225 ft: 2674 corp: 26 exec/s: 78 oom/timeout/crash: 0/0/0 time: 84s job: 25 dft_time: 0
+#42811: cov: 2225 ft: 2674 corp: 26 exec/s: 55 oom/timeout/crash: 0/0/0 time: 92s job: 26 dft_time: 0
+#46386: cov: 2225 ft: 2674 corp: 26 exec/s: 127 oom/timeout/crash: 0/0/0 time: 98s job: 27 dft_time: 0
+#50528: cov: 2226 ft: 2676 corp: 28 exec/s: 142 oom/timeout/crash: 0/0/0 time: 105s job: 28 dft_time: 0
+#54203: cov: 2226 ft: 2676 corp: 28 exec/s: 122 oom/timeout/crash: 0/0/0 time: 111s job: 29 dft_time: 0
+#58340: cov: 2226 ft: 2676 corp: 28 exec/s: 133 oom/timeout/crash: 0/0/0 time: 116s job: 30 dft_time: 0
+#62533: cov: 2226 ft: 2676 corp: 28 exec/s: 131 oom/timeout/crash: 0/0/0 time: 125s job: 31 dft_time: 0
+#66933: cov: 2226 ft: 2676 corp: 28 exec/s: 133 oom/timeout/crash: 0/0/0 time: 132s job: 32 dft_time: 0
+#71604: cov: 2226 ft: 2676 corp: 28 exec/s: 137 oom/timeout/crash: 0/0/0 time: 140s job: 33 dft_time: 0
+#74909: cov: 2226 ft: 2677 corp: 29 exec/s: 94 oom/timeout/crash: 0/0/0 time: 147s job: 34 dft_time: 0
+#79281: cov: 2226 ft: 2677 corp: 29 exec/s: 121 oom/timeout/crash: 0/0/0 time: 153s job: 35 dft_time: 0
+#84258: cov: 2226 ft: 2677 corp: 29 exec/s: 134 oom/timeout/crash: 0/0/0 time: 164s job: 36 dft_time: 0
+#87718: cov: 2226 ft: 2677 corp: 29 exec/s: 91 oom/timeout/crash: 0/0/0 time: 171s job: 37 dft_time: 0
+#92433: cov: 2226 ft: 2677 corp: 29 exec/s: 120 oom/timeout/crash: 0/0/0 time: 180s job: 38 dft_time: 0
+#97120: cov: 2226 ft: 2677 corp: 29 exec/s: 117 oom/timeout/crash: 0/0/0 time: 188s job: 39 dft_time: 0
+#102889: cov: 2226 ft: 2677 corp: 29 exec/s: 140 oom/timeout/crash: 0/0/0 time: 195s job: 40 dft_time: 0
+#109656: cov: 2226 ft: 2677 corp: 29 exec/s: 161 oom/timeout/crash: 0/0/0 time: 207s job: 41 dft_time: 0
+#117852: cov: 2226 ft: 2677 corp: 29 exec/s: 190 oom/timeout/crash: 0/0/0 time: 216s job: 42 dft_time: 0
+#126710: cov: 2226 ft: 2677 corp: 29 exec/s: 201 oom/timeout/crash: 0/0/0 time: 225s job: 43 dft_time: 0
+#137362: cov: 2226 ft: 2677 corp: 29 exec/s: 236 oom/timeout/crash: 0/0/0 time: 234s job: 44 dft_time: 0
+#143856: cov: 2226 ft: 2677 corp: 29 exec/s: 141 oom/timeout/crash: 0/0/0 time: 242s job: 45 dft_time: 0
+#154435: cov: 2226 ft: 2677 corp: 29 exec/s: 225 oom/timeout/crash: 0/0/0 time: 254s job: 46 dft_time: 0
+#164893: cov: 2226 ft: 2677 corp: 29 exec/s: 217 oom/timeout/crash: 0/0/0 time: 264s job: 47 dft_time: 0
+#173865: cov: 2226 ft: 2677 corp: 29 exec/s: 183 oom/timeout/crash: 0/0/0 time: 275s job: 48 dft_time: 0
+#185838: cov: 2226 ft: 2677 corp: 29 exec/s: 239 oom/timeout/crash: 0/0/0 time: 285s job: 49 dft_time: 0
+#194647: cov: 2226 ft: 2677 corp: 29 exec/s: 172 oom/timeout/crash: 0/0/0 time: 294s job: 50 dft_time: 0
+#206850: cov: 2226 ft: 2677 corp: 29 exec/s: 234 oom/timeout/crash: 0/0/0 time: 307s job: 51 dft_time: 0
+INFO: fuzzed for 308 seconds, wrapping up soon
+INFO: exiting: 0 time: 308s</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:36:22Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/h5_committed_type_fuzzer.c&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:36:22Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">1	/* Copyright 2024 Google LLC
+2	 * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+3	 * you may not use this file except in compliance with the License.
+4	 * You may obtain a copy of the License at
+5	 *       http://www.apache.org/licenses/LICENSE-2.0
+6	 *
+7	 * Fuzzing harness: committed datatype open and introspection.
+8	 *
+9	 * Strategy
+10	 * --------
+11	 * One-time init (LLVMFuzzerInitialize):
+12	 *   Build a minimal valid HDF5 file entirely in RAM using the CORE VFD,
+13	 *   commit five named datatypes covering every interesting class
+14	 *   (compound with nested sub-compound, enum, variable-length string,
+15	 *   array, opaque), then capture the raw file bytes via H5Fget_file_image.
+16	 *
+17	 * Per-iteration (LLVMFuzzerTestOneInput):
+18	 *   Copy the golden image, overwrite the region AFTER the superblock
+19	 *   (bytes &gt;= SAFE_OFFSET) with fuzz bytes, then load the mutated image
+20	 *   back into a CORE VFD file via H5Pset_file_image + H5Fopen.  For each
+21	 *   known type name, call H5Topen2 and walk the full introspection chain
+22	 *   (H5Tget_class, H5Tget_size, H5Tget_nmembers, H5Tget_member_type,
+23	 *   H5Tget_member_offset, H5Tis_variable_str, H5Tget_super, H5Tclose).
+24	 *
+25	 * The superblock magic (\x89HDF\r\n\x1a\n) at bytes 0-7 is left intact so
+26	 * H5Fopen can open the file; everything from byte SAFE_OFFSET onward –
+27	 * including the object headers that encode the type descriptors – is
+28	 * handed directly to the fuzzer.
+29	 */
+30	
+31	#include &quot;hdf5.h&quot;      /* includes H5FDcore.h */
+32	
+33	#include &lt;stdint.h&gt;
+34	#include &lt;stdlib.h&gt;
+35	#include &lt;string.h&gt;
+36	
+37	/* Bytes to protect at the start of the image (superblock signature region) */
+38	#define SAFE_OFFSET 512
+39	
+40	/* Names of committed types baked into the golden image */
+41	#define TN_COMPOUND &quot;cmpd&quot;
+42	#define TN_ENUM     &quot;enum&quot;
+43	#define TN_VLSTR    &quot;vlstr&quot;
+44	#define TN_ARRAY    &quot;arr&quot;
+45	#define TN_OPAQUE   &quot;opq&quot;
+46	
+47	static const char * const g_names[] = {
+48	    TN_COMPOUND, TN_ENUM, TN_VLSTR, TN_ARRAY, TN_OPAQUE, NULL
+49	};
+50	
+51	static unsigned char *g_golden    = NULL;
+52	static size_t         g_golden_sz = 0;
+53	
+54	/* ------------------------------------------------------------------ */
+55	/* Recursive type introspection (depth-limited)                        */
+56	/* ------------------------------------------------------------------ */
+57	static void
+58	introspect(hid_t tid, int depth)
+59	{
+60	    if (depth &gt; 5 || tid &lt; 0)
+61	        return;
+62	
+63	    H5T_class_t cls = H5Tget_class(tid);
+64	    (void)H5Tget_size(tid);
+65	    (void)H5Tis_variable_str(tid);
+66	
+67	    switch (cls) {
+68	    case H5T_COMPOUND: {
+69	        int n = H5Tget_nmembers(tid);
+70	        for (int i = 0; i &lt; n &amp;&amp; i &lt; 64; i++) {
+71	            (void)H5Tget_member_offset(tid, (unsigned)i);
+72	            hid_t mt = H5Tget_member_type(tid, (unsigned)i);
+73	            if (mt &gt;= 0) {
+74	                introspect(mt, depth + 1);
+75	                H5Tclose(mt);
+76	            }
+77	        }
+78	        break;
+79	    }
+80	    case H5T_ENUM: {
+81	        (void)H5Tget_nmembers(tid);
+82	        /* fall through to read the base integer type */
+83	        hid_t super = H5Tget_super(tid);
+84	        if (super &gt;= 0) {
+85	            introspect(super, depth + 1);
+86	            H5Tclose(super);
+87	        }
+88	        break;
+89	    }
+90	    case H5T_VLEN:
+91	    case H5T_ARRAY: {
+92	        hid_t super = H5Tget_super(tid);
+93	        if (super &gt;= 0) {
+94	            introspect(super, depth + 1);
+95	            H5Tclose(super);
+96	        }
+97	        break;
+98	    }
+99	    default:
+100	        break;
+101	    }
+102	}
+103	
+104	/* ------------------------------------------------------------------ */
+105	/* Build the golden in-memory HDF5 file with committed types           */
+106	/* ------------------------------------------------------------------ */
+107	static int
+108	build_golden(void)
+109	{
+110	    hid_t fapl  = H5I_INVALID_HID;
+111	    hid_t fid   = H5I_INVALID_HID;
+112	    hid_t cmpd  = H5I_INVALID_HID;
+113	    hid_t icmpd = H5I_INVALID_HID;
+114	    hid_t enm   = H5I_INVALID_HID;
+115	    hid_t vlstr = H5I_INVALID_HID;
+116	    hid_t arr   = H5I_INVALID_HID;
+117	    hid_t opq   = H5I_INVALID_HID;
+118	    ssize_t isz;
+119	    int ival;
+120	
+121	    fapl = H5Pcreate(H5P_FILE_ACCESS);
+122	    if (fapl &lt; 0)
+123	        return -1;
+124	
+125	    /* Pure-in-memory CORE VFD, no disk backing */
+126	    if (H5Pset_fapl_core(fapl, (size_t)(2 * 1024 * 1024), false) &lt; 0)
+127	        goto fail;
+128	
+129	    fid = H5Fcreate(&quot;__fuzz_golden.h5&quot;, H5F_ACC_TRUNC, H5P_DEFAULT, fapl);
+130	    if (fid &lt; 0)
+131	        goto fail;
+132	
+133	    /* ---- Compound type: outer(24 bytes) + inner sub-compound(12 bytes) ---- */
+134	    /*
+135	     * outer layout (24 bytes total):
+136	     *   x      : int   at offset  0  (4 bytes)
+137	     *   y      : float at offset  4  (4 bytes)
+138	     *   inner  : icmpd at offset  8  (12 bytes)  -&gt; bytes 8..19
+139	     *   padding:                  20..23
+140	     *
+141	     * inner layout (12 bytes total):
+142	     *   a      : double at offset 0  (8 bytes)
+143	     *   b      : int    at offset 8  (4 bytes)
+144	     */
+145	    icmpd = H5Tcreate(H5T_COMPOUND, 12);
+146	    if (icmpd &lt; 0) goto fail;
+147	    if (H5Tinsert(icmpd, &quot;a&quot;, 0, H5T_NATIVE_DOUBLE) &lt; 0) goto fail;
+148	    if (H5Tinsert(icmpd, &quot;b&quot;, 8, H5T_NATIVE_INT)    &lt; 0) goto fail;
+149	
+150	    cmpd = H5Tcreate(H5T_COMPOUND, 24);
+151	    if (cmpd &lt; 0) goto fail;
+152	    if (H5Tinsert(cmpd, &quot;x&quot;,     0, H5T_NATIVE_INT)   &lt; 0) goto fail;
+153	    if (H5Tinsert(cmpd, &quot;y&quot;,     4, H5T_NATIVE_FLOAT) &lt; 0) goto fail;
+154	    if (H5Tinsert(cmpd, &quot;inner&quot;, 8, icmpd)             &lt; 0) goto fail;
+155	    H5Tclose(icmpd); icmpd = H5I_INVALID_HID;
+156	
+157	    if (H5Tcommit2(fid, TN_COMPOUND, cmpd,
+158	                   H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) &lt; 0) goto fail;
+159	    H5Tclose(cmpd); cmpd = H5I_INVALID_HID;
+160	
+161	    /* ---- Enum type (int base with three named values) ---- */
+162	    enm = H5Tenum_create(H5T_NATIVE_INT);
+163	    if (enm &lt; 0) goto fail;
+164	    ival = 0; if (H5Tenum_insert(enm, &quot;RED&quot;,   &amp;ival) &lt; 0) goto fail;
+165	    ival = 1; if (H5Tenum_insert(enm, &quot;GREEN&quot;, &amp;ival) &lt; 0) goto fail;
+166	    ival = 2; if (H5Tenum_insert(enm, &quot;BLUE&quot;,  &amp;ival) &lt; 0) goto fail;
+167	    if (H5Tcommit2(fid, TN_ENUM, enm,
+168	                   H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) &lt; 0) goto fail;
+169	    H5Tclose(enm); enm = H5I_INVALID_HID;
+170	
+171	    /* ---- Variable-length string type ---- */
+172	    vlstr = H5Tcopy(H5T_C_S1);
+173	    if (vlstr &lt; 0) goto fail;
+174	    if (H5Tset_size(vlstr, H5T_VARIABLE) &lt; 0) goto fail;
+175	    if (H5Tcommit2(fid, TN_VLSTR, vlstr,
+176	                   H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) &lt; 0) goto fail;
+177	    H5Tclose(vlstr); vlstr = H5I_INVALID_HID;
+178	
+179	    /* ---- Array type: 1-D array of 4 ints ---- */
+180	    {
+181	        hsize_t dims[1] = {4};
+182	        arr = H5Tarray_create2(H5T_NATIVE_INT, 1, dims);
+183	    }
+184	    if (arr &lt; 0) goto fail;
+185	    if (H5Tcommit2(fid, TN_ARRAY, arr,
+186	                   H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) &lt; 0) goto fail;
+187	    H5Tclose(arr); arr = H5I_INVALID_HID;
+188	
+189	    /* ---- Opaque type (8 bytes, tagged) ---- */
+190	    opq = H5Tcreate(H5T_OPAQUE, 8);
+191	    if (opq &lt; 0) goto fail;
+192	    if (H5Tset_tag(opq, &quot;blob&quot;) &lt; 0) goto fail;
+193	    if (H5Tcommit2(fid, TN_OPAQUE, opq,
+194	                   H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) &lt; 0) goto fail;
+195	    H5Tclose(opq); opq = H5I_INVALID_HID;
+196	
+197	    /* Flush and capture the raw image */
+198	    if (H5Fflush(fid, H5F_SCOPE_GLOBAL) &lt; 0) goto fail;
+199	    isz = H5Fget_file_image(fid, NULL, 0);
+200	    if (isz &lt;= 0) goto fail;
+201	    g_golden = (unsigned char *)malloc((size_t)isz);
+202	    if (!g_golden) goto fail;
+203	    if (H5Fget_file_image(fid, g_golden, (size_t)isz) &lt; 0) {
+204	        free(g_golden);
+205	        g_golden = NULL;
+206	        goto fail;
+207	    }
+208	    g_golden_sz = (size_t)isz;
+209	
+210	    H5Fclose(fid);
+211	    H5Pclose(fapl);
+212	    return 0;
+213	
+214	fail:
+215	    if (icmpd != H5I_INVALID_HID) H5Tclose(icmpd);
+216	    if (cmpd  != H5I_INVALID_HID) H5Tclose(cmpd);
+217	    if (enm   != H5I_INVALID_HID) H5Tclose(enm);
+218	    if (vlstr != H5I_INVALID_HID) H5Tclose(vlstr);
+219	    if (arr   != H5I_INVALID_HID) H5Tclose(arr);
+220	    if (opq   != H5I_INVALID_HID) H5Tclose(opq);
+221	    if (fid   != H5I_INVALID_HID) H5Fclose(fid);
+222	    if (fapl  != H5I_INVALID_HID) H5Pclose(fapl);
+223	    return -1;
+224	}
+225	
+226	/* ------------------------------------------------------------------ */
+227	/* Fuzzer entry points                                                  */
+228	/* ------------------------------------------------------------------ */
+229	
+230	int LLVMFuzzerInitialize(int *argc, char ***argv)
+231	{
+232	    (void)argc;
+233	    (void)argv;
+234	    /* Suppress all HDF5 error output during fuzzing */
+235	    H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
+236	    build_golden();
+237	    return 0;
+238	}
+239	
+240	int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+241	{
+242	    if (!g_golden || g_golden_sz &lt; SAFE_OFFSET)
+243	        return 0;
+244	
+245	    /* Copy the golden image and overlay fuzz bytes past the superblock */
+246	    unsigned char *img = (unsigned char *)malloc(g_golden_sz);
+247	    if (!img)
+248	        return 0;
+249	    memcpy(img, g_golden, g_golden_sz);
+250	
+251	    if (size &gt; 0) {
+252	        size_t mutable_region = g_golden_sz - SAFE_OFFSET;
+253	        size_t copy_len = (size &lt; mutable_region) ? size : mutable_region;
+254	        memcpy(img + SAFE_OFFSET, data, copy_len);
+255	    }
+256	
+257	    /* Open the mutated image via CORE VFD (no disk backing) */
+258	    hid_t fapl = H5Pcreate(H5P_FILE_ACCESS);
+259	    if (fapl &lt; 0) {
+260	        free(img);
+261	        return 0;
+262	    }
+263	    if (H5Pset_fapl_core(fapl, (size_t)(64 * 1024), false) &lt; 0 ||
+264	        H5Pset_file_image(fapl, img, g_golden_sz) &lt; 0) {
+265	        H5Pclose(fapl);
+266	        free(img);
+267	        return 0;
+268	    }
+269	    free(img);  /* H5Pset_file_image made its own internal copy */
+270	
+271	    hid_t fid = H5Fopen(&quot;__fuzz_golden.h5&quot;, H5F_ACC_RDONLY, fapl);
+272	    H5Pclose(fapl);
+273	    if (fid &lt; 0)
+274	        return 0;
+275	
+276	    /* Open each committed type and exercise the full introspection chain */
+277	    for (int i = 0; g_names[i] != NULL; i++) {
+278	        hid_t tid = H5Topen2(fid, g_names[i], H5P_DEFAULT);
+279	        if (tid &lt; 0)
+280	            continue;
+281	        introspect(tid, 0);
+282	        H5Tclose(tid);
+283	    }
+284	
+285	    H5Fclose(fid);
+286	    return 0;
+287	}
+288	</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:36:51Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>Let me analyze this harness:</p>
+<ol>
+<li><p><strong>Strategy</strong>: The harness creates a golden HDF5 file in memory with 5 committed types (compound, enum, variable-length string, array, opaque), then per-iteration mutates bytes after the superblock (offset 512) and tries to open the resulting file and introspect each committed type.</p>
+</li>
+<li><p><strong>API coverage</strong>:</p>
+<ul>
+<li>H5Topen2 ✓</li>
+<li>H5Tget_class ✓</li>
+<li>H5Tget_size ✓</li>
+<li>H5Tget_nmembers ✓</li>
+<li>H5Tget_member_type ✓</li>
+<li>H5Tget_member_offset ✓</li>
+<li>H5Tis_variable_str ✓</li>
+<li>H5Tclose ✓<br>All target APIs are covered.</li>
+</ul>
+</li>
+<li><p><strong>Coverage analysis</strong>: The fuzzer hit a plateau very quickly—coverage stayed flat from job 4 through 20 with only minor bumps later at jobs 17, 23, 28, and 34, suggesting the harness has exhausted its mutation space.</p>
+</li>
+<li><p><strong>Key limitations</strong>: The SAFE_OFFSET of 512 bytes is overly restrictive since the HDF5 superblock is much smaller (typically 96 bytes), which protects too much of the file structure from fuzzing. Additionally, the fuzzer can only mutate bytes after that offset within the fixed golden image size, so it can&#39;t explore files larger than the original.</p>
+</li>
+<li><p><strong>Coverage bottlenecks</strong>: The file must successfully pass H5Fopen to trigger type introspection, but aggressive mutations often corrupt the structure enough to fail that check, preventing deeper exploration. The hardcoded type names like &quot;cmpd&quot;, &quot;enum&quot;, &quot;vlstr&quot; also limit what file layouts the fuzzer can discover unless mutations happen to align with those specific patterns.</p>
+</li>
+<li><p><strong>The real limitation</strong>: Using a fixed golden image as the mutation base is fundamentally constraining—the fuzzer can&#39;t freely construct files with different type descriptor arrangements. A better strategy would let the fuzzer input directly drive the HDF5 file structure, similar to how other HDF5 harnesses work. The SAFE_OFFSET protection is also overly conservative, locking away metadata that could contain interesting type variations. The plateau at ~2226 edges early in the run suggests the harness isn&#39;t reaching much beyond initial type-parsing code. the type introspection APIs are being called, but the coverage metrics show the fuzzer is stuck in a local optimum. The golden-image approach creates a bottleneck where most mutations fail at the H5Fopen step, preventing deeper exploration of the datatype parsing logic. The stagnation after 41 seconds with only 2226 edges and 29 corpus entries confirms the harness needs restructuring to be more effective.</p>
+</li>
+</ol>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:36:52Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;head -30 /OSS_CRS_LOG_DIR/report/surface-datatype-parsing/attempt-2/harness-h5_committed_type_fuzzer/fuzz.log 2&gt;/dev/null&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:36:52Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 1993513972
+INFO: Loaded 1 modules   (122624 inline 8-bit counters): 122624 [0x5641faa5bb20, 0x5641faa79a20), 
+INFO: Loaded 1 PC tables (122624 PCs): 122624 [0x5641faa79a20,0x5641fac58a20), 
+INFO: -fork=5: fuzzing in separate process(s)
+INFO: -fork=5: 6 seed inputs, starting to fuzz in /tmp/libFuzzerTemp.FuzzWithFork4805.dir
+#299: cov: 2197 ft: 2546 corp: 6 exec/s: 149 oom/timeout/crash: 0/0/0 time: 2s job: 1 dft_time: 0
+#722: cov: 2197 ft: 2548 corp: 7 exec/s: 141 oom/timeout/crash: 0/0/0 time: 3s job: 2 dft_time: 0
+#1327: cov: 2197 ft: 2548 corp: 7 exec/s: 151 oom/timeout/crash: 0/0/0 time: 4s job: 3 dft_time: 0
+#2090: cov: 2197 ft: 2548 corp: 7 exec/s: 152 oom/timeout/crash: 0/0/0 time: 5s job: 4 dft_time: 0
+#3144: cov: 2197 ft: 2548 corp: 7 exec/s: 175 oom/timeout/crash: 0/0/0 time: 6s job: 5 dft_time: 0
+#4094: cov: 2197 ft: 2548 corp: 7 exec/s: 135 oom/timeout/crash: 0/0/0 time: 10s job: 6 dft_time: 0
+#5084: cov: 2197 ft: 2548 corp: 7 exec/s: 123 oom/timeout/crash: 0/0/0 time: 12s job: 7 dft_time: 0
+#6028: cov: 2197 ft: 2548 corp: 7 exec/s: 104 oom/timeout/crash: 0/0/0 time: 14s job: 8 dft_time: 0
+#7286: cov: 2197 ft: 2548 corp: 7 exec/s: 125 oom/timeout/crash: 0/0/0 time: 16s job: 9 dft_time: 0
+#8712: cov: 2197 ft: 2548 corp: 7 exec/s: 129 oom/timeout/crash: 0/0/0 time: 18s job: 10 dft_time: 0
+#10010: cov: 2197 ft: 2548 corp: 7 exec/s: 108 oom/timeout/crash: 0/0/0 time: 23s job: 11 dft_time: 0
+#11382: cov: 2197 ft: 2548 corp: 7 exec/s: 105 oom/timeout/crash: 0/0/0 time: 26s job: 12 dft_time: 0
+#12902: cov: 2197 ft: 2548 corp: 7 exec/s: 108 oom/timeout/crash: 0/0/0 time: 30s job: 13 dft_time: 0
+#14585: cov: 2197 ft: 2548 corp: 7 exec/s: 112 oom/timeout/crash: 0/0/0 time: 32s job: 14 dft_time: 0
+#16389: cov: 2197 ft: 2548 corp: 7 exec/s: 112 oom/timeout/crash: 0/0/0 time: 35s job: 15 dft_time: 0
+#18547: cov: 2197 ft: 2548 corp: 7 exec/s: 126 oom/timeout/crash: 0/0/0 time: 41s job: 16 dft_time: 0
+#21008: cov: 2207 ft: 2647 corp: 10 exec/s: 136 oom/timeout/crash: 0/0/0 time: 45s job: 17 dft_time: 0
+#22136: cov: 2207 ft: 2647 corp: 10 exec/s: 59 oom/timeout/crash: 0/0/0 time: 50s job: 18 dft_time: 0
+#25092: cov: 2207 ft: 2647 corp: 10 exec/s: 147 oom/timeout/crash: 0/0/0 time: 53s job: 19 dft_time: 0
+#28102: cov: 2207 ft: 2647 corp: 10 exec/s: 143 oom/timeout/crash: 0/0/0 time: 57s job: 20 dft_time: 0
+#30691: cov: 2207 ft: 2647 corp: 10 exec/s: 117 oom/timeout/crash: 0/0/0 time: 64s job: 21 dft_time: 0
+#33797: cov: 2207 ft: 2647 corp: 10 exec/s: 135 oom/timeout/crash: 0/0/0 time: 69s job: 22 dft_time: 0
+#36872: cov: 2225 ft: 2674 corp: 26 exec/s: 128 oom/timeout/crash: 0/0/0 time: 75s job: 23 dft_time: 0
+#39279: cov: 2225 ft: 2674 corp: 26 exec/s: 96 oom/timeout/crash: 0/0/0 time: 79s job: 24 dft_time: 0</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:36:54Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;ls /src/hdf5/src/H5T*.c 2&gt;/dev/null | head -20&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:36:54Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;ls /src/ 2&gt;/dev/null | head -20&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:36:55Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">/src/hdf5/src/H5T.c
+/src/hdf5/src/H5TS.c
+/src/hdf5/src/H5TSatomic.c
+/src/hdf5/src/H5TSbarrier.c
+/src/hdf5/src/H5TSc11.c
+/src/hdf5/src/H5TScond.c
+/src/hdf5/src/H5TSint.c
+/src/hdf5/src/H5TSkey.c
+/src/hdf5/src/H5TSmutex.c
+/src/hdf5/src/H5TSonce.c
+/src/hdf5/src/H5TSpool.c
+/src/hdf5/src/H5TSpthread.c
+/src/hdf5/src/H5TSrec_rwlock.c
+/src/hdf5/src/H5TSrwlock.c
+/src/hdf5/src/H5TSsemaphore.c
+/src/hdf5/src/H5TSthread.c
+/src/hdf5/src/H5TSwin.c
+/src/hdf5/src/H5Tarray.c
+/src/hdf5/src/H5Tbit.c
+/src/hdf5/src/H5Tcommit.c</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:36:55Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">CLAUDE.md
+afl_llvm22_patch.diff
+aflplusplus
+build.sh
+fuzztest
+h5_extended_fuzzer.c
+h5_read_fuzzer.c
+hdf5
+honggfuzz
+libfuzzer
+llvmsymbol.diff
+run_tests.sh</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:36:57Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -n \&quot;H5Topen\\|committed\\|H5Tget_class\\|H5Tget_size\\|nmembers\\|member_type\\|member_offset\\|variable_str\&quot; /src/hdf5/src/H5Tcommit.c | head -50&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:36:58Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">112:        HGOTO_ERROR(H5E_ARGS, H5E_CANTSET, FAIL, &quot;datatype is already committed&quot;);
+140:        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTALLOC, FAIL, &quot;can&#x27;t create VOL object for committed datatype&quot;);
+142:    /* Set the committed type object to the VOL connector pointer in the H5T_t struct */
+261:    /* If the datatype was committed but something failed after that, we need
+262:     * to return it to the state it was in before it was committed.
+324:        HGOTO_ERROR(H5E_ARGS, H5E_CANTSET, FAIL, &quot;datatype is already committed&quot;);
+356:        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTALLOC, FAIL, &quot;can&#x27;t create VOL object for committed datatype&quot;);
+358:    /* Set the committed type object to the VOL connector pointer in the H5T_t struct */
+368: * Purpose:     Create an anonymous committed datatype.
+393:    /* Get the new committed datatype&#x27;s object location */
+395:        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, &quot;unable to get object location of committed datatype&quot;);
+397:    /* Decrement refcount on committed datatype&#x27;s object header in memory */
+442:        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, &quot;datatype is already committed&quot;);
+483:    /* Check for creating committed datatype with unusual datatype */
+487:                    &quot;creating committed datatype with unusual datatype, see documentation for &quot;
+514:     *  used in memory after committed to disk, change its size back as in memory.
+558: * Function:    H5Tcommitted
+560: * Purpose:     Determines if a datatype is committed or not.
+567:H5Tcommitted(hid_t type_id)
+583:} /* end H5Tcommitted() */
+667: * Function:    H5Topen2
+679:H5Topen2(hid_t loc_id, const char *name, hid_t tapl_id)
+691:} /* end H5Topen2() */
+694: * Function:    H5Topen_async
+696: * Purpose:     Asynchronous version of H5Topen2.
+705:H5Topen_async(const char *app_file, const char *app_func, unsigned app_line, hid_t loc_id, const char *name,
+738:} /* end H5Topen_async() */
+769:    /* Check if the datatype is committed */
+771:        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, H5I_INVALID_HID, &quot;can&#x27;t check whether datatype is committed&quot;);
+773:    /* If the datatype is not committed/named, just copy the default
+786:    /* If the datatype is committed, retrieve further information */
+828:        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, &quot;not a committed datatype&quot;);
+871:        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, &quot;not a committed datatype&quot;);
+1261: * Purpose:     Helper function to free a committed datatype object that
+1263: *              happens when a failure occurs during opening a committed
+1281:        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTALLOC, FAIL, &quot;can&#x27;t create VOL object for committed datatype&quot;);
+1320: *              if datatype is committed, otherwise return the datatype
+1335:    /* Check if the datatype is committed */
+1427: * Purpose:     Check if the committed datatype is already VOL managed
+1462:    /* Check that datatype is committed */
+1464:        HGOTO_ERROR(H5E_DATATYPE, H5E_BADTYPE, FAIL, &quot;not a committed datatype&quot;);</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:37:17Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>Now I have a good understanding of the harness and the target. Let me summarize my findings:</p>
+<ol>
+<li><p><strong>Harness coverage</strong>: All target APIs are exercised (H5Topen2, H5Tget_class, H5Tget_size, H5Tget_nmembers, H5Tget_member_type, H5Tget_member_offset, H5Tis_variable_str, H5Tclose).</p>
+</li>
+<li><p><strong>Key structural limitation</strong>: The golden-image overlay approach with SAFE_OFFSET=512 is the main problem:</p>
+<ul>
+<li>The HDF5 superblock magic is only 8 bytes, yet the harness locks down 512 bytes from mutation, over-protecting structural metadata that should be fuzzable.</li>
+<li>The mutable region caps out at <code>g_golden_sz - 512</code> bytes, so any fuzz input longer than that gets silently truncated, wasting potential entropy.</li>
+<li>Most mutations cause H5Fopen to fail, which means the introspection code path rarely executes. The hard gate at H5Fopen prevents the vast majority of fuzzer iterations from ever reaching H5Topen2 or the other introspection functions.</li>
+</ul>
+</li>
+<li><p><strong>Coverage plateau</strong>: This creates a fundamental bottleneck where the fuzzer can&#39;t effectively explore the type introspection logic.</p>
+</li>
+<li><p><strong>Missing exploration</strong>: The approach severely constrains how the fuzzer can vary the committed type descriptors embedded in the file. A direct file-bytes approach would be far more effective since mutations wouldn&#39;t need to preserve any specific file structure to pass H5Fopen. The harness also can&#39;t explore different file organizations—different superblock versions, B-tree layouts, or object header versions—because those regions are locked down.</p>
+</li>
+</ol>
+<p>The coverage stagnated almost immediately, hitting 2197/2548 by the fifth job and barely moving for the next 200+ seconds, which is a clear sign the exploration is too shallow. The verdict is that this approach is insufficient because the coverage plateau is severe and immediate, and the H5Fopen gate blocks access to the type introspection APIs for most mutations.</p>
+<p>To fix this, I should either use the fuzzer input directly as raw HDF5 file bytes like the existing h5_read_fuzzer harness, or if keeping the golden-image approach, drastically reduce the protected zone from 512 bytes down to just the magic signature so mutations can reach the superblock and metadata regions where type descriptors live. The fixed golden image size also silently truncates inputs larger than the available space, wasting fuzzing entropy that could generate valid file byte variations.</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:37:25Z</span></div><div class="tool"><div class="tool-head">🔧 <b>StructuredOutput</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;sufficient&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;reasoning&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;The harness covers all target APIs (H5Topen2, H5Tget_class, H5Tget_size, H5Tget_nmembers, H5Tget_member_type, H5Tget_member_offset, H5Tis_variable_str, H5Tclose) and the introspection logic is sound. However, the golden-image overlay strategy creates a hard gate that severely limits coverage: the fuzzer must preserve enough file structure to pass H5Fopen before any introspection API is called, and most mutations fail this gate, meaning the type-parsing code paths are rarely exercised. The fuzz log confirms this: coverage stagnated at 2197 edges within the first 5 seconds of a 308-second run, with only trivial bumps (to 2226) over the remaining 300 seconds and a final corpus of only 29 entries. Additionally, SAFE_OFFSET=512 protects far more than the 8-byte HDF5 magic — it shields the entire superblock region where object headers encoding type descriptors reside, so the fuzzer cannot meaningfully vary the type descriptor bytes. Inputs larger than (golden_sz - 512) bytes are silently truncated, wasting entropy.&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;feedback&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Replace the golden-image overlay approach with one that feeds fuzzer bytes directly as raw HDF5 file content (similar to h5_read_fuzzer.c): copy fuzz data into an in-memory buffer, open it via H5Pset_file_image + CORE VFD, then call H5Topen2 for a set of candidate names. This eliminates the hard H5Fopen gate caused by heavy mutation. If the golden-image approach is kept, reduce SAFE_OFFSET from 512 to 8 (just the HDF5 magic \&quot;\\x89HDF\\r\\n\\x1a\\n\&quot;) so the fuzzer can mutate the superblock and object-header regions where committed type descriptors are actually encoded; the current 512-byte protection zone prevents the fuzzer from reaching the datatype-parsing code at all. Also avoid silently truncating inputs longer than the golden image — instead allocate max(golden_sz, size + SAFE_OFFSET) to allow the fuzzer to explore larger type descriptor payloads.&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:37:25Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">Structured output provided successfully</code></pre></details></div>
+ <div class="foot">Rendered offline from the raw session JSONL. Thinking / tool I/O are collapsed — click to expand.</div>
+</div></body></html>

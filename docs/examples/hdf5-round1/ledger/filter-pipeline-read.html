@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"><title>filter-pipeline-read</title>
+<style>
+ body{font:14px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#f6f7f9;color:#1c2128}
+ .md{max-width:900px;margin:0 auto;padding:28px 24px;background:#fff;min-height:100vh;border-left:1px solid #eaeef2;border-right:1px solid #eaeef2}
+ .md h1{font-size:22px;border-bottom:1px solid #d0d7de;padding-bottom:8px} .md h2{font-size:18px;margin-top:24px;border-bottom:1px solid #eaeef2;padding-bottom:5px}
+ .md h3{font-size:15px} .md p,.md li{font-size:14px}
+ .md table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px}
+ .md th,.md td{border:1px solid #d0d7de;padding:6px 10px;text-align:left} .md th{background:#f6f8fa}
+ .md tr:nth-child(2n) td{background:#fbfcfd}
+ .md code{background:#eff1f3;padding:1px 5px;border-radius:5px;font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
+ .md pre{background:#0d1117;color:#e6edf3;padding:12px;border-radius:6px;overflow-x:auto} .md pre code{background:none;padding:0}
+ .md a{color:#0969da;text-decoration:none} .md a:hover{text-decoration:underline}
+ .md blockquote{margin:8px 0;padding:4px 14px;border-left:3px solid #d0d7de;color:#57606a}
+ .hljs-comment,.hljs-quote{color:#8b949e} .hljs-keyword,.hljs-selector-tag,.hljs-type{color:#cf222e}
+ .hljs-string,.hljs-attr{color:#0a3069} .hljs-number,.hljs-literal{color:#0550ae} .hljs-title{color:#6639ba}
+</style></head><body><article class="md"><h1>Compressed/filtered dataset read  (filter-pipeline-read)</h1>
+<ul>
+<li>status: done</li>
+<li>priority: 8</li>
+<li>harness: h5_filter_read_fuzzer</li>
+<li>attempts: 1</li>
+</ul>
+<h2>APIs</h2>
+<ul>
+<li><code>H5Dopen2</code></li>
+<li><code>H5Dget_create_plist</code></li>
+<li><code>H5Pget_nfilters</code></li>
+<li><code>H5Pget_filter2</code></li>
+<li><code>H5Dread</code></li>
+<li><code>H5Zfilter_avail</code></li>
+</ul>
+<h2>Rationale</h2>
+<p>Reading a dataset that has a deflate, shuffle, Fletcher32, or SZIP filter triggers the entire decompression path (zlib, internal codecs). Buffer sizing and chunk reassembly are classic overflow spots.</p>
+<h2>Last feedback</h2>
+<p>The harness correctly drives all six target APIs in proper caller order without hardcoding or short-circuiting any inputs — the entire fuzzer-supplied buffer is used as the HDF5 file content. Buffer allocation honors documented API contracts (element count × type size, 64 MiB cap), so there are no harness-induced false-positive crashes. H5Ovisit3 ensures all datasets in the fuzz input are visited, maximizing the chance of hitting datasets with filter pipelines. Coverage grew steadily to 2305 edges / 2777 features in 5 minutes from a cold start against a complex binary format, and was still incrementing at run end — consistent with gradual structural exploration rather than a stuck harness. No structural barrier prevents the fuzzer from eventually reaching filter decompression paths (H5Z deflate/shuffle/Fletcher32) once valid-enough chunked+filtered dataset inputs are discovered.</p>
+</article></body></html>

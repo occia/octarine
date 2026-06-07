@@ -1,0 +1,10 @@
+{
+  "sufficient": true,
+  "reasoning": "The harness drives all six target APIs in correct real-caller order: H5Dopen2 → H5Dget_type → H5Dget_storage_size → H5Dget_space → H5Dread → H5Dclose. The entire fuzzer input is used as the HDF5 file (no hardcoding), H5Ovisit3 enumerates all datasets, VL types are handled properly with H5Treclaim, and H5Tget_native_type exercises the type-conversion pipeline. Coverage grew steadily to 2299 edges / 2761 features / 41 corpus items before plateauing — a pattern consistent with the HDF5 format complexity limiting valid file generation rather than any harness shortcut. The harness thoroughly exercises the attack surface.",
+  "stats": {
+    "durationMs": 83493,
+    "inputTokens": 285983,
+    "outputTokens": 3260,
+    "costUsd": 0.24915330000000002
+  }
+}

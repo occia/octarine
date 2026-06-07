@@ -1,0 +1,155 @@
+<!doctype html><html><head><meta charset="utf-8"><title>ledger</title>
+<style>
+ body{font:14px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#f6f7f9;color:#1c2128}
+ .md{max-width:900px;margin:0 auto;padding:28px 24px;background:#fff;min-height:100vh;border-left:1px solid #eaeef2;border-right:1px solid #eaeef2}
+ .md h1{font-size:22px;border-bottom:1px solid #d0d7de;padding-bottom:8px} .md h2{font-size:18px;margin-top:24px;border-bottom:1px solid #eaeef2;padding-bottom:5px}
+ .md h3{font-size:15px} .md p,.md li{font-size:14px}
+ .md table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px}
+ .md th,.md td{border:1px solid #d0d7de;padding:6px 10px;text-align:left} .md th{background:#f6f8fa}
+ .md tr:nth-child(2n) td{background:#fbfcfd}
+ .md code{background:#eff1f3;padding:1px 5px;border-radius:5px;font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
+ .md pre{background:#0d1117;color:#e6edf3;padding:12px;border-radius:6px;overflow-x:auto} .md pre code{background:none;padding:0}
+ .md a{color:#0969da;text-decoration:none} .md a:hover{text-decoration:underline}
+ .md blockquote{margin:8px 0;padding:4px 14px;border-left:3px solid #d0d7de;color:#57606a}
+ .hljs-comment,.hljs-quote{color:#8b949e} .hljs-keyword,.hljs-selector-tag,.hljs-type{color:#cf222e}
+ .hljs-string,.hljs-attr{color:#0a3069} .hljs-number,.hljs-literal{color:#0550ae} .hljs-title{color:#6639ba}
+</style></head><body><article class="md"><h1>Attack-surface ledger — hdf5 · develop @ <a href="https://github.com/HDFGroup/hdf5/commit/e124c36c55bf69e9087352a91c77e62ad52f4306"><code>e124c36c55bf</code></a>  (content-id <code>af19d9043785</code>)</h1>
+<p>covered=2  pending=5  in_progress=0  done=11  failed=0</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>status</th>
+<th>prio</th>
+<th>harness</th>
+<th>title</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>dataset-read-data</td>
+<td>done</td>
+<td>10</td>
+<td>h5_dread_fuzzer</td>
+<td>Dataset data read with type/space inspection</td>
+</tr>
+<tr>
+<td>datatype-parsing</td>
+<td>done</td>
+<td>9</td>
+<td>h5_committed_type_fuzzer</td>
+<td>Committed datatype open and introspection</td>
+</tr>
+<tr>
+<td>object-visit-iteration</td>
+<td>done</td>
+<td>9</td>
+<td>h5_obj_visit_fuzzer</td>
+<td>Object header visiting and iteration</td>
+</tr>
+<tr>
+<td>filter-pipeline-read</td>
+<td>done</td>
+<td>8</td>
+<td>h5_filter_read_fuzzer</td>
+<td>Compressed/filtered dataset read</td>
+</tr>
+<tr>
+<td>attribute-iteration-read</td>
+<td>done</td>
+<td>8</td>
+<td>h5_attr_iter_fuzzer</td>
+<td>Attribute iteration and data read</td>
+</tr>
+<tr>
+<td>group-link-iteration</td>
+<td>done</td>
+<td>7</td>
+<td>h5_group_link_fuzzer</td>
+<td>Group open and link traversal</td>
+</tr>
+<tr>
+<td>dataspace-encode-decode</td>
+<td>done</td>
+<td>7</td>
+<td>h5_dataspace_encode_decode_fuzzer</td>
+<td>Dataspace encode/decode round-trip</td>
+</tr>
+<tr>
+<td>property-list-encode-decode</td>
+<td>done</td>
+<td>7</td>
+<td>h5_plist_encode_decode_fuzzer</td>
+<td>Property list encode/decode</td>
+</tr>
+<tr>
+<td>references</td>
+<td>done</td>
+<td>6</td>
+<td>h5_ref_fuzzer</td>
+<td>Object and region references</td>
+</tr>
+<tr>
+<td>high-level-lite-api</td>
+<td>done</td>
+<td>6</td>
+<td>h5_hlt_fuzzer</td>
+<td>High-level Lite API (H5LT)</td>
+</tr>
+<tr>
+<td>file-open-basic</td>
+<td>covered</td>
+<td>5</td>
+<td>-</td>
+<td>Basic HDF5 file open (H5Fopen)</td>
+</tr>
+<tr>
+<td>dataset-attribute-open</td>
+<td>covered</td>
+<td>5</td>
+<td>-</td>
+<td>Dataset + attribute open</td>
+</tr>
+<tr>
+<td>image-api</td>
+<td>done</td>
+<td>5</td>
+<td>h5im_fuzzer</td>
+<td>High-level Image API (H5IM)</td>
+</tr>
+<tr>
+<td>table-api</td>
+<td>pending</td>
+<td>5</td>
+<td>-</td>
+<td>High-level Table API (H5TB)</td>
+</tr>
+<tr>
+<td>onion-vfd</td>
+<td>pending</td>
+<td>5</td>
+<td>-</td>
+<td>Onion (versioned) virtual file driver</td>
+</tr>
+<tr>
+<td>swmr-refresh</td>
+<td>pending</td>
+<td>4</td>
+<td>-</td>
+<td>SWMR dataset refresh</td>
+</tr>
+<tr>
+<td>vfd-core</td>
+<td>pending</td>
+<td>3</td>
+<td>-</td>
+<td>Core (in-memory) VFD with backing-store open</td>
+</tr>
+<tr>
+<td>async-event-set</td>
+<td>pending</td>
+<td>3</td>
+<td>-</td>
+<td>Asynchronous event-set API</td>
+</tr>
+</tbody></table>
+</article></body></html>

@@ -1,0 +1,568 @@
+<!doctype html><html><head><meta charset="utf-8"><title>hdf5 — datatype-parsing · attempt 3 · generation</title>
+<style>
+ body{font:14px/1.55 -apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#f6f7f9;color:#1c2128}
+ .wrap{max-width:900px;margin:0 auto;padding:20px}
+ h1{font-size:17px;margin:0 0 4px} .sub{color:#636c76;margin-bottom:16px;font-size:12px}
+ .turn{background:#fff;border:1px solid #d0d7de;border-radius:8px;margin:10px 0;padding:10px 14px;overflow:hidden}
+ .turn.assistant{border-left:3px solid #0969da} .turn.user{border-left:3px solid #8c959f;background:#fbfcfd}
+ .who{font-size:11px;font-weight:700;color:#636c76;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px}
+ .who .side{margin-left:8px;background:#fff1e5;color:#bc4c00;padding:1px 6px;border-radius:999px;font-size:10px}
+ .who .ts{margin-left:8px;font-weight:400;color:#a0a8b0;text-transform:none;letter-spacing:0}
+ .msg-text{font-size:14px} .msg-text p{margin:6px 0} .msg-text h1,.msg-text h2,.msg-text h3{font-size:15px;margin:10px 0 4px}
+ .msg-text ul,.msg-text ol{margin:6px 0 6px 22px} .msg-text code{background:#eff1f3;padding:1px 5px;border-radius:5px;font-size:12.5px}
+ .thinking{margin:6px 0;background:#fffbf0;border:1px solid #f0e6c8;border-radius:6px;padding:2px 10px}
+ .thinking>summary{cursor:pointer;color:#9a6700;font-size:12.5px;font-weight:600;padding:4px 0}
+ .thinking .msg-text{color:#6f5b1e;font-size:13px}
+ .tool{margin:8px 0;border:1px solid #d0d7de;border-radius:6px;overflow:hidden}
+ .tool-head{background:#ddf4ff;color:#0550ae;padding:5px 10px;font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
+ .tool details>summary,.result>summary{cursor:pointer;font-size:12px;color:#636c76;padding:5px 10px;user-select:none}
+ .result{margin:8px 0;border:1px solid #d0d7de;border-radius:6px;background:#f6f8fa}
+ .result.err{border-color:#ff818266;background:#fff5f5} .result.err>summary{color:#cf222e}
+ pre{margin:0;padding:10px 12px;overflow-x:auto;background:#0d1117;color:#e6edf3;font-size:12px;line-height:1.45}
+ pre code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:none;padding:0;color:inherit;white-space:pre}
+ .msg-text pre{border-radius:6px;margin:8px 0}
+ /* Block code (crash dumps / logs) must stay light-on-dark: the inline .msg-text code rule below
+    has higher specificity than the bare pre-code reset and would otherwise paint the code element
+    with a light inline-code background -- light-on-light (invisible until selected). Re-assert here. */
+ .msg-text pre code,.thinking .msg-text pre code{background:transparent;color:#e6edf3;font-size:12px;padding:0;border-radius:0}
+ /* compact highlight.js (github-dark subset) */
+ .hljs-comment,.hljs-quote{color:#8b949e} .hljs-keyword,.hljs-selector-tag,.hljs-type{color:#ff7b72}
+ .hljs-string,.hljs-attr,.hljs-template-tag{color:#a5d6ff} .hljs-number,.hljs-literal{color:#79c0ff}
+ .hljs-title,.hljs-function .hljs-title,.hljs-section{color:#d2a8ff} .hljs-built_in,.hljs-builtin-name{color:#ffa657}
+ .hljs-name,.hljs-tag{color:#7ee787} .hljs-meta{color:#79c0ff} .hljs-symbol,.hljs-bullet,.hljs-variable{color:#ffa657}
+ .foot{margin-top:18px;color:#636c76;font-size:12px}
+</style></head><body><div class="wrap">
+ <h1>hdf5 — datatype-parsing · attempt 3 · generation</h1>
+ <div class="sub">68 turn(s) · Claude-Code conversation</div>
+ <div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:37:36Z</span></div><div class="msg-text"><p>Write a fuzzing harness for ONE specific attack surface of <code>hdf5</code> (c, address).</p>
+<p>Attack surface: Committed datatype open and introspection<br>Target API(s): H5Topen2, H5Tget_class, H5Tget_size, H5Tget_nmembers, H5Tget_member_type, H5Tget_member_offset, H5Tis_variable_str, H5Tclose<br>Why this surface: Committed (named) datatypes are stored in the file and decoded on H5Topen2. Compound, enum, vlen, and array type descriptors are deeply nested and hand-parsed; historically a rich source of OOB/UAF bugs.</p>
+<p>This is a follow-up attempt. Feedback on the previous harness:<br>Replace the golden-image overlay approach with one that feeds fuzzer bytes directly as raw HDF5 file content (similar to h5_read_fuzzer.c): copy fuzz data into an in-memory buffer, open it via H5Pset_file_image + CORE VFD, then call H5Topen2 for a set of candidate names. This eliminates the hard H5Fopen gate caused by heavy mutation. If the golden-image approach is kept, reduce SAFE_OFFSET from 512 to 8 (just the HDF5 magic &quot;\x89HDF\r\n\x1a\n&quot;) so the fuzzer can mutate the superblock and object-header regions where committed type descriptors are actually encoded; the current 512-byte protection zone prevents the fuzzer from reaching the datatype-parsing code at all. Also avoid silently truncating inputs longer than the golden image — instead allocate max(golden_sz, size + SAFE_OFFSET) to allow the fuzzer to explore larger type descriptor payloads.</p>
+<p>Address it: if it was a false-positive crash, fix the API misuse; if the surface was not explored<br>thoroughly enough, improve how the harness drives these APIs.</p>
+<p>Follow CLAUDE.md for the full workflow (download, write into fuzz-proj, build green via build-project,<br>write /work/agent/new-harnesses.txt). Exercise the API the way a real caller would — a crash from<br>harness misuse is a false positive and will be rejected.</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:37:39Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>Let me start by following the workflow in CLAUDE.md:</p>
+<ol>
+<li>Download the OSS-Fuzz project</li>
+<li>Download the upstream source</li>
+<li>Read build.sh and existing harnesses</li>
+<li>Write the new harness</li>
+<li>Build and iterate</li>
+</ol>
+<p>Let me begin by downloading the necessary sources.</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:37:40Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;libCRS download-source fuzz-proj /work/harness-proj/fuzz-proj 2&gt;&amp;1 | tail -5&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Download OSS-Fuzz project&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:37:40Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;libCRS download-source target-source /work/agent/target-src 2&gt;&amp;1 | tail -5&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Download upstream HDF5 source&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:37:41Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">(Bash completed with no output)</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:37:42Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">(Bash completed with no output)</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:37:44Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;ls /work/harness-proj/fuzz-proj/&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;List fuzz-proj contents&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:37:45Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;ls /work/agent/target-src/&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;List target-src contents&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:37:45Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">ACKNOWLEDGMENTS
+CITATION.cff
+CMakeBuildOptions.cmake
+CMakeInstallation.cmake
+CMakeLists.txt
+CMakePlugins.cmake
+CMakePresets.json
+CMakeTests.cmake
+CMakeVOL.cmake
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+CTestConfig.cmake
+HDF5Examples
+LICENSE
+README.md
+SECURITY.md
+UserMacros.cmake
+bin
+c++
+config
+docs
+fortran
+hl
+java
+release_docs
+src
+test
+testpar
+tools
+utils</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:37:45Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">Dockerfile
+build.sh
+h5_extended_fuzzer.c
+h5_read_fuzzer.c
+project.yaml
+run_tests.sh</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:37:47Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/build.sh&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:37:47Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/h5_read_fuzzer.c&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:37:47Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">1	#!/bin/bash -eu
+2	# Copyright 2023 Google LLC.
+3	#
+4	# Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+5	# you may not use this file except in compliance with the License.
+6	# You may obtain a copy of the License at
+7	#
+8	#      http://www.apache.org/licenses/LICENSE-2.0
+9	#
+10	# Unless required by applicable law or agreed to in writing, software
+11	# distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+12	# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+13	# See the License for the specific language governing permissions and
+14	# limitations under the License.
+15	#
+16	################################################################################
+17	
+18	export LDFLAGS=&quot;${CFLAGS}&quot;
+19	export CMAKE_C_FLAGS=&quot;${CC} ${CFLAGS}&quot;
+20	export CMAKE_CXX_FLAGS=&quot;${CXX} ${CXXFLAGS}&quot;
+21	
+22	mkdir build-dir
+23	cd build-dir
+24	cmake -G &quot;Unix Makefiles&quot; \
+25	    -DCMAKE_BUILD_TYPE:STRING=Release \
+26	    -DBUILD_SHARED_LIBS:BOOL=OFF \
+27	    -DBUILD_TESTING:BOOL=OFF \
+28	    -DCMAKE_VERBOSE_MAKEFILES:BOOL=ON \
+29	    -DHDF5_BUILD_EXAMPLES:BOOL=OFF \
+30	    -DHDF5_BUILD_TOOLS:BOOL=OFF \
+31	    -DHDF5_ENABLE_SANITIZERS:BOOL=ON \
+32	    -DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=ON \
+33	    ..
+34	
+35	# Make the build verbose for easy logging inspection
+36	cmake --build . --verbose --config Release -j$(nproc)
+37	cd $SRC/hdf5
+38	
+39	$CC $CFLAGS  -std=c99 -c \
+40	  -I/src/hdf5/src -I/src/hdf5/build-dir/src -I./src/H5FDsubfiling/ \
+41	  $SRC/h5_read_fuzzer.c
+42	$CXX $CXXFLAGS $LIB_FUZZING_ENGINE h5_read_fuzzer.o ./build-dir/bin/libhdf5.a -lz -o $OUT/h5_read_fuzzer
+43	
+44	$CC $CFLAGS  -std=c99 -c \
+45	  -I/src/hdf5/src -I/src/hdf5/build-dir/src -I./src/H5FDsubfiling/ \
+46	  $SRC/h5_extended_fuzzer.c
+47	$CXX $CXXFLAGS $LIB_FUZZING_ENGINE h5_extended_fuzzer.o ./build-dir/bin/libhdf5.a -lz -o $OUT/h5_extended_fuzzer
+48	
+49	zip -j $OUT/h5_extended_fuzzer_seed_corpus.zip $SRC/hdf5/test/testfiles/*.h5
+50	
+51	# Build test
+52	mkdir $SRC/hdf5/build-test
+53	cd $SRC/hdf5/build-test
+54	cmake -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_TESTING:BOOL=ON ..
+55	cmake --build . --verbose --config Release -j$(nproc)
+56	</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:37:47Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">1	/* Copyright 2023 Google LLC
+2	Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+3	you may not use this file except in compliance with the License.
+4	You may obtain a copy of the License at
+5	      http://www.apache.org/licenses/LICENSE-2.0
+6	Unless required by applicable law or agreed to in writing, software
+7	distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+8	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+9	See the License for the specific language governing permissions and
+10	limitations under the License.
+11	*/
+12	
+13	#include &quot;hdf5.h&quot;
+14	
+15	#include &lt;unistd.h&gt;
+16	
+17	extern int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+18	{
+19	    // Some old logic with regards to skipping first byte. Leaving it here
+20	    // to avoid affecting the clusterfuzz-generated corpus.
+21	    if (size == 0) {
+22	        return 0;
+23	    }
+24	    uint8_t decider = data[0];
+25	    size -= 1;
+26	    data += 1;
+27	
+28	    char filename[256];
+29	    sprintf(filename, &quot;/tmp/libfuzzer.%d&quot;, getpid());
+30	
+31	    FILE *fp = fopen(filename, &quot;wb&quot;);
+32	    if (!fp) {
+33	        return 0;
+34	    }
+35	    fwrite(data, size, 1, fp);
+36	    fclose(fp);
+37	
+38	    hid_t fuzz_h5_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
+39	    if (fuzz_h5_id != H5I_INVALID_HID) {
+40	        H5Fclose(fuzz_h5_id);
+41	    }
+42	
+43	    return 0;
+44	}
+45	</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:37:50Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/h5_extended_fuzzer.c&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:37:50Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">1	/* Copyright 2023 Google LLC
+2	Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+3	you may not use this file except in compliance with the License.
+4	You may obtain a copy of the License at
+5	      http://www.apache.org/licenses/LICENSE-2.0
+6	Unless required by applicable law or agreed to in writing, software
+7	distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+8	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+9	See the License for the specific language governing permissions and
+10	limitations under the License.
+11	*/
+12	
+13	#include &quot;hdf5.h&quot;
+14	
+15	#include &lt;unistd.h&gt;
+16	
+17	extern int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+18	{
+19	    char filename[256];
+20	    sprintf(filename, &quot;/tmp/libfuzzer.%d&quot;, getpid());
+21	
+22	    FILE *fp = fopen(filename, &quot;wb&quot;);
+23	    if (!fp) {
+24	        return 0;
+25	    }
+26	    fwrite(data, size, 1, fp);
+27	    fclose(fp);
+28	
+29	    hid_t fuzz_h5_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
+30	    if (fuzz_h5_id != H5I_INVALID_HID) {
+31	      hid_t  dataset_id = H5Dopen2(fuzz_h5_id, &quot;dsetname&quot;, H5P_DEFAULT);
+32	      if (dataset_id != H5I_INVALID_HID) {
+33	          hid_t attribute_id = H5Aopen_name(dataset_id, &quot;theattr&quot;);
+34	          if (attribute_id != H5I_INVALID_HID) {
+35	            H5Aclose(attribute_id);
+36	          }
+37	          H5Dclose(dataset_id);
+38	      }
+39	      H5Fclose(fuzz_h5_id);
+40	    }
+41	    return 0;
+42	}
+43	</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:38:29Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>Now let me look at the HDF5 source to understand the committed datatype APIs better, particularly H5Topen2, H5Tget_class, H5Tget_size, H5Tget_nmembers, H5Tget_member_type, H5Tget_member_offset, H5Tis_variable_str, H5Tclose.</p>
+<p>Let me also look at the H5Pset_file_image API which we need for the in-memory buffer approach.</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:38:30Z</span></div><div class="msg-text"><p>Now let me look at relevant HDF5 headers and how to use H5Pset_file_image with the CORE VFD:</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:38:32Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -r \&quot;H5Pset_file_image\\|H5FD_CORE\\|H5Pset_fapl_core\&quot; /work/agent/target-src/src/*.h 2&gt;/dev/null | head -40&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find file image and CORE VFD API&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:38:33Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -r \&quot;H5Topen2\\|H5Tget_class\\|H5Tget_nmembers\\|H5Tis_variable_str\&quot; /work/agent/target-src/src/H5Tpublic.h | head -30&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find datatype API declarations&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:38:33Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">/work/agent/target-src/src/H5FDcore.h:#define H5FD_CORE (H5OPEN H5FD_CORE_id_g)
+/work/agent/target-src/src/H5FDcore.h:#define H5FD_CORE_VALUE H5_VFD_CORE
+/work/agent/target-src/src/H5FDcore.h:H5_DLLVAR hid_t H5FD_CORE_id_g;
+/work/agent/target-src/src/H5FDcore.h: * \brief Modifies the file access property list to use the #H5FD_CORE driver
+/work/agent/target-src/src/H5FDcore.h: * \details H5Pset_fapl_core() modifies the file access property list to use the
+/work/agent/target-src/src/H5FDcore.h: *          #H5FD_CORE driver.
+/work/agent/target-src/src/H5FDcore.h: *          The #H5FD_CORE driver enables an application to work with a file in
+/work/agent/target-src/src/H5FDcore.h: *          The application is allowed to open an existing file with #H5FD_CORE
+/work/agent/target-src/src/H5FDcore.h:H5_DLL herr_t H5Pset_fapl_core(hid_t fapl_id, size_t increment, bool backing_store);
+/work/agent/target-src/src/H5FDcore.h: * \details H5Pget_fapl_core() queries the #H5FD_CORE driver properties as set
+/work/agent/target-src/src/H5FDcore.h: *          by H5Pset_fapl_core().
+/work/agent/target-src/src/H5FDmodule.h: *     Provides fastest I/O for temporary files or small datasets. Set with #H5Pset_fapl_core.
+/work/agent/target-src/src/H5FDpublic.h:     * \param[in] udata Value passed in in the H5Pset_file_image_callbacks
+/work/agent/target-src/src/H5FDpublic.h:     * \param[in] udata Value passed in in the H5Pset_file_image_callbacks
+/work/agent/target-src/src/H5FDpublic.h:     * \param[in] udata Value passed in in the H5Pset_file_image_callbacks
+/work/agent/target-src/src/H5FDpublic.h:     * \param[in] udata Value passed in in the H5Pset_file_image_callbacks
+/work/agent/target-src/src/H5FDpublic.h:     * \param[in] udata Value passed in in the H5Pset_file_image_callbacks
+/work/agent/target-src/src/H5FDpublic.h:     * \param[in] udata Value passed in in the H5Pset_file_image_callbacks
+/work/agent/target-src/src/H5Fmodule.h: * The Memory driver, #H5FD_CORE, provides a mechanism for creating and managing such in memory files.
+/work/agent/target-src/src/H5Fmodule.h: * The functions #H5Pset_fapl_core and #H5Pget_fapl_core manage file access
+/work/agent/target-src/src/H5Fmodule.h: *   herr_t H5Pset_fapl_core (hid_t access_properties, size_t block_size, bool backing_store)
+/work/agent/target-src/src/H5Fmodule.h: * #H5Pset_fapl_core sets the file access property list to use the Memory driver; any previously
+/work/agent/target-src/src/H5Fmodule.h: * The application is allowed to open an existing file with the #H5FD_CORE driver. While using
+/work/agent/target-src/src/H5Fmodule.h: * &lt;td&gt;#H5Pset_file_image&lt;/td&gt;
+/work/agent/target-src/src/H5Fmodule.h: * &lt;td&gt;#H5Pset_file_image_callbacks&lt;/td&gt;
+/work/agent/target-src/src/H5Fmodule.h: * The #H5Pset_fapl_core function call can be used to modify the file access property list so
+/work/agent/target-src/src/H5Fmodule.h: * that the Memory virtual file driver, #H5FD_CORE, is used. The Memory file driver is also known
+/work/agent/target-src/src/H5Fmodule.h: * #H5Pget_file_image/#H5Pset_file_image calls. These calls allow the user to specify an initial file image.
+/work/agent/target-src/src/H5Fmodule.h: * A potential problem with the #H5Pget_file_image/#H5Pset_file_image calls is the overhead of allocating and
+/work/agent/target-src/src/H5Fmodule.h: * \anchor FI211 &lt;h4&gt;#H5Pset_file_image&lt;/h4&gt;
+/work/agent/target-src/src/H5Fmodule.h: * The #H5Pset_file_image routine allows an application to provide an image for a file driver to use as the
+/work/agent/target-src/src/H5Fmodule.h: * The signature of #H5Pset_file_image is defined as follows:
+/work/agent/target-src/src/H5Fmodule.h: *     herr_t H5Pset_file_image(hid_t fapl_id, void *buf_ptr, size_t buf_len)
+/work/agent/target-src/src/H5Fmodule.h: * The parameters of #H5Pset_file_image are defined as follows:
+/work/agent/target-src/src/H5Fmodule.h: *     call to #H5Pset_file_image for the supplied fapl_id. If no initial image has been
+/work/agent/target-src/src/H5Fmodule.h: *     will be 0. As with #H5Pset_file_image, appropriately defined file image callbacks can allow
+/work/agent/target-src/src/H5Fmodule.h: * \anchor FI213 &lt;h4&gt;#H5Pset_file_image_callbacks&lt;/h4&gt;
+/work/agent/target-src/src/H5Fmodule.h: * The #H5Pset_file_image_callbacks API call exists to allow an application to control the management of
+/work/agent/target-src/src/H5Fmodule.h: * The signature of #H5Pset_file_image_callbacks is defined as follows:
+/work/agent/target-src/src/H5Fmodule.h: *     herr_t H5Pset_file_image_callbacks(hid_t fapl_id, H5FD_file_image_callbacks_t *callbacks_ptr)</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:38:33Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext"> * \details H5Topen2() opens a committed datatype at the location specified
+H5_DLL hid_t H5Topen2(hid_t loc_id, const char *name, hid_t tapl_id);
+ * \brief Asynchronous version of H5Topen2().
+ * \details H5Tget_class() returns the class of the datatype \p type_id.
+H5_DLL H5T_class_t H5Tget_class(hid_t type_id);
+ * \details H5Tget_nmembers() retrieves the number of fields in a compound
+H5_DLL int H5Tget_nmembers(hid_t type_id);
+ *          0 through N-1, where N is the value returned by H5Tget_nmembers().
+ *          through N-1, where N is the value returned by H5Tget_nmembers() .
+ * \details H5Tis_variable_str() determines whether the datatype identified
+H5_DLL htri_t H5Tis_variable_str(hid_t type_id);
+ *             H5Topen2().</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:38:36Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -n \&quot;H5Pset_file_image\\b\&quot; /work/agent/target-src/src/H5Ppublic.h | head -10&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find H5Pset_file_image signature&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:38:37Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -rn \&quot;H5Pset_file_image\\|H5Pset_fapl_core\&quot; /work/agent/target-src/test/*.c 2&gt;/dev/null | head -20&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find usage examples in HDF5 tests&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:38:37Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">3673: *                H5Pset_file_image() for the supplied \p fapl_id. If no initial
+3702: * \see H5LTopen_file_image(), H5Fget_file_image(), H5Pset_file_image(),
+3741: * \see H5LTopen_file_image(), H5Fget_file_image(), H5Pset_file_image(),
+4671: * \details H5Pset_file_image() allows an application to provide a file image
+4673: *          Calling H5Pset_file_image()makes a copy of the buffer specified in
+4677: *          H5Pset_file_image() and other elements of HDF5 are
+4705:H5_DLL herr_t H5Pset_file_image(hid_t fapl_id, void *buf_ptr, size_t buf_len);
+4726: *         H5Pset_file_image() and H5Pget_file_image(),</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:38:37Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">/work/agent/target-src/test/cache.c:32122:        else if (H5Pset_fapl_core(fapl_id, MAX_ADDR, false) &lt; 0) {
+/work/agent/target-src/test/file_image.c:121:    if (H5Pset_file_image(fapl_1, (void *)buffer, size) &lt; 0)
+/work/agent/target-src/test/file_image.c:360:    if (H5Pset_file_image_callbacks(fapl_1, &amp;callbacks) &lt; 0)
+/work/agent/target-src/test/file_image.c:425:    if (H5Pset_file_image(fapl_1, (void *)file_image, size) &lt; 0)
+/work/agent/target-src/test/file_image.c:487:    if (H5Pset_file_image(fapl_1, (void *)file_image, size) &lt; 0)
+/work/agent/target-src/test/file_image.c:548:    ret = H5Pset_fapl_core(fapl, (size_t)0, 0);
+/work/agent/target-src/test/file_image.c:572:    ret = H5Pset_file_image_callbacks(fapl, &amp;callbacks);
+/work/agent/target-src/test/file_image.c:642:    if (H5Pset_file_image(fapl, file_image, size) &lt; 0)
+/work/agent/target-src/test/file_image.c:913:    err = H5Pset_fapl_core(core_fapl_id, (size_t)(64 * 1024), false);
+/work/agent/target-src/test/file_image.c:914:    VERIFY(err == SUCCEED, &quot;H5Pset_fapl_core() failed.&quot;);
+/work/agent/target-src/test/file_image.c:917:    err = H5Pset_file_image(core_fapl_id, image_ptr, (size_t)image_size);
+/work/agent/target-src/test/file_image.c:918:    VERIFY(err == SUCCEED, &quot;H5Pset_file_image() failed.&quot;);
+/work/agent/target-src/test/file_image.c:1364:            if (H5Pset_fapl_core(fapl, (size_t)(64 * 1024), true) &lt; 0)
+/work/agent/target-src/test/h5test.c:650:        if (H5Pset_fapl_core(fapl, (size_t)H5_MB, true) &lt; 0)
+/work/agent/target-src/test/h5test.c:655:        if (H5Pset_fapl_core(fapl, (size_t)H5_MB, true) &lt; 0)
+/work/agent/target-src/test/links.c:9460:    if (H5Pset_fapl_core(core_fapl, (size_t)CORE_INCREMENT, true) &lt; 0)
+/work/agent/target-src/test/links.c:9516:    if (H5Pset_fapl_core(core_fapl, (size_t)CORE_INCREMENT, false) &lt; 0)
+/work/agent/target-src/test/links.c:9632:    if (H5Pset_fapl_core(core_fapl, (size_t)CORE_INCREMENT, true) &lt; 0)
+/work/agent/target-src/test/tmisc.c:1817:    ret = H5Pset_fapl_core(fapl, (size_t)1024, 0);
+/work/agent/target-src/test/tmisc.c:1818:    CHECK(ret, FAIL, &quot;H5Pset_fapl_core&quot;);</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:38:40Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/agent/target-src/test/file_image.c&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;offset&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">100</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">80</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:38:41Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep -rn \&quot;H5Topen2\\|H5Tcommit\\|committed.*type\\|named.*type\&quot; /work/agent/target-src/test/*.c 2&gt;/dev/null | head -30&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Find committed type usage examples in tests&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:38:41Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">100	     */
+101	    size = (size_t)count * sizeof(char);
+102	    if (NULL == (buffer = (char *)malloc(size)))
+103	        TEST_ERROR;
+104	    for (i = 0; i &lt; count - 1; i++)
+105	        buffer[i] = (char)(65 + i);
+106	    buffer[count - 1] = &#x27;\0&#x27;;
+107	
+108	    /* Create fapl */
+109	    if ((fapl_1 = H5Pcreate(H5P_FILE_ACCESS)) &lt; 0)
+110	        FAIL_STACK_ERROR;
+111	
+112	    /* Get file image stuff */
+113	    if (H5Pget_file_image(fapl_1, (void **)&amp;temp, &amp;temp_size) &lt; 0)
+114	        FAIL_STACK_ERROR;
+115	
+116	    /* Check default values */
+117	    VERIFY(temp == NULL, &quot;Default pointer is wrong&quot;);
+118	    VERIFY(temp_size == 0, &quot;Default size is wrong&quot;);
+119	
+120	    /* Set file image stuff */
+121	    if (H5Pset_file_image(fapl_1, (void *)buffer, size) &lt; 0)
+122	        FAIL_STACK_ERROR;
+123	
+124	    /* Get the same */
+125	    if (H5Pget_file_image(fapl_1, (void **)&amp;temp, &amp;temp_size) &lt; 0)
+126	        FAIL_STACK_ERROR;
+127	
+128	    /* Check that sizes are the same, and that the buffers are identical but separate */
+129	    VERIFY(temp != NULL, &quot;temp is null!&quot;);
+130	    VERIFY(temp_size == size, &quot;Sizes of buffers don&#x27;t match&quot;);
+131	    VERIFY(temp != buffer, &quot;Retrieved buffer is the same as original&quot;);
+132	    VERIFY(0 == memcmp(temp, buffer, size), &quot;Buffers contain different data&quot;);
+133	
+134	    /* Copy the fapl */
+135	    if ((fapl_2 = H5Pcopy(fapl_1)) &lt; 0)
+136	        FAIL_STACK_ERROR;
+137	
+138	    /* Get values from the new fapl */
+139	    if (H5Pget_file_image(fapl_2, (void **)&amp;temp2, &amp;temp_size) &lt; 0)
+140	        FAIL_STACK_ERROR;
+141	
+142	    /* Check that sizes are the same, and that the buffers are identical but separate */
+143	    VERIFY(temp_size == size, &quot;Sizes of buffers don&#x27;t match&quot;);
+144	    VERIFY(temp2 != NULL, &quot;Received buffer not set&quot;);
+145	    VERIFY(temp2 != buffer, &quot;Retrieved buffer is the same as original&quot;);
+146	    VERIFY(temp2 != temp, &quot;Retrieved buffer is the same as previously retrieved buffer&quot;);
+147	    VERIFY(0 == memcmp(temp2, buffer, size), &quot;Buffers contain different data&quot;);
+148	
+149	    retval = 0;
+150	
+151	error:
+152	
+153	    /* Close everything */
+154	    if (H5Pclose(fapl_1) &lt; 0)
+155	        retval = 1;
+156	    if (H5Pclose(fapl_2) &lt; 0)
+157	        retval = 1;
+158	    free(buffer);
+159	    H5free_memory(temp);
+160	    H5free_memory(temp2);
+161	
+162	    if (retval == 0)
+163	        PASSED();
+164	
+165	    return retval;
+166	} /* end test_properties() */
+167	
+168	/******************************************************************************
+169	 * Function:    malloc_cb
+170	 *
+171	 * Purpose:     This function allows calls to the malloc callback to be tracked.
+172	 *
+173	 * Returns:     The result of a standard malloc
+174	 *
+175	 ******************************************************************************
+176	 */
+177	static void *
+178	malloc_cb(size_t size, H5FD_file_image_op_t op, void *udata)
+179	{</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:38:41Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">/work/agent/target-src/test/cmpd_dset.c:3136:    if (H5Tcommit2(file, &quot;dtype&quot;, dtype, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) &lt; 0)
+/work/agent/target-src/test/cmpd_dset.c:3148:    if ((dtype_tmp = H5Topen2(file, &quot;dtype&quot;, H5P_DEFAULT)) &lt; 0)
+/work/agent/target-src/test/cmpd_dset.c:3210:    if (H5Tcommit2(file, &quot;dtype2&quot;, dtype, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) &lt; 0)
+/work/agent/target-src/test/cmpd_dset.c:3224:    if ((dtype_tmp = H5Topen2(file, &quot;dtype2&quot;, H5P_DEFAULT)) &lt; 0)
+/work/agent/target-src/test/cork.c:911: * Purpose:     This function verifies corking operations for named datatypes.
+/work/agent/target-src/test/cork.c:937:        TESTING(&quot;cork status for named datatypes (SWMR)&quot;);
+/work/agent/target-src/test/cork.c:940:        TESTING(&quot;cork status for named datatypes&quot;);
+/work/agent/target-src/test/cork.c:966:    if (H5Tcommit2(fid, DT, tid, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) &lt; 0)
+/work/agent/target-src/test/cork.c:973:    if (H5Tcommit2(gid, DT2, tid2, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) &lt; 0)
+/work/agent/target-src/test/cork.c:980:    if (H5Tcommit2(gid2, DT3, tid3, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) &lt; 0)
+/work/agent/target-src/test/cork.c:983:    /* Cork 2 named datatypes: /DT and /GRP/GRP2/DT3 */
+/work/agent/target-src/test/cork.c:989:    /* Get named datatype object header addresses */
+/work/agent/target-src/test/cork.c:997:    /* Verify cork status of the named datatypes */
+/work/agent/target-src/test/cork.c:1013:    /* Re-open the named datatypes */
+/work/agent/target-src/test/cork.c:1014:    if ((tid = H5Topen2(fid, DT, H5P_DEFAULT)) &lt; 0)
+/work/agent/target-src/test/cork.c:1016:    if ((tid2 = H5Topen2(gid, DT2, H5P_DEFAULT)) &lt; 0)
+/work/agent/target-src/test/cork.c:1018:    if ((tid3 = H5Topen2(gid2, DT3, H5P_DEFAULT)) &lt; 0)
+/work/agent/target-src/test/cork.c:1021:    /* Verify cork status of the named datatypes */
+/work/agent/target-src/test/cork.c:1054:    /* Re-open the named datatypes */
+/work/agent/target-src/test/cork.c:1055:    if ((tid = H5Topen2(fid, DT, H5P_DEFAULT)) &lt; 0)
+/work/agent/target-src/test/cork.c:1057:    if ((tid2 = H5Topen2(gid, DT2, H5P_DEFAULT)) &lt; 0)
+/work/agent/target-src/test/cork.c:1059:    if ((tid3 = H5Topen2(gid2, DT3, H5P_DEFAULT)) &lt; 0)
+/work/agent/target-src/test/cork.c:1088:    /* Create a dataset with named datatype: DT */
+/work/agent/target-src/test/cork.c:1242:    if (H5Tcommit2(fid1, DT, tid1, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) &lt; 0)
+/work/agent/target-src/test/cork.c:1347:    if ((tid1 = H5Topen2(fid1, DT, H5P_DEFAULT)) &lt; 0)
+/work/agent/target-src/test/cork.c:1349:    if ((tid2 = H5Topen2(fid2, DT, H5P_DEFAULT)) &lt; 0)
+/work/agent/target-src/test/cork.c:1658:    /* Create a named datatype */
+/work/agent/target-src/test/cork.c:1659:    if (H5Tcommit2(fid, &quot;group/datatype&quot;, tid, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) &lt; 0)
+/work/agent/target-src/test/cork.c:1662:    /* Check cork status of the named datatype: not corked */
+/work/agent/target-src/test/cork.c:1668:    /* Cork the named datatype: an object */</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:38:48Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>Now I have a good understanding of the approach. Let me create a harness that:</p>
+<ol>
+<li>Uses the in-memory buffer approach (H5Pset_file_image + CORE VFD) similar to h5_read_fuzzer.c</li>
+<li>Directly passes fuzz bytes as raw HDF5 file content</li>
+<li>Tries to open committed datatypes with multiple candidate names</li>
+<li>If a type is found, calls H5Tget_class, H5Tget_size, H5Tget_nmembers, H5Tget_member_type, H5Tget_member_offset, H5Tis_variable_str, H5Tclose</li>
+<li>Now I&#39;ll write the fuzzing harness that implements this strategy.</li>
+</ol>
+<p>Writing the harness...</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:38:48Z</span></div><div class="msg-text"><p>Now I have enough context. Let me write the harness:</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:39:14Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Write</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/h5_committed_type_fuzzer.c&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;content&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/* Copyright 2024 Google LLC\nLicensed under the Apache License, Version 2.0 (the \&quot;License\&quot;);\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n      http://www.apache.org/licenses/LICENSE-2.0\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \&quot;AS IS\&quot; BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nFuzzer for committed (named) datatype open and introspection:\n  H5Topen2, H5Tget_class, H5Tget_size, H5Tget_nmembers,\n  H5Tget_member_type, H5Tget_member_offset, H5Tis_variable_str, H5Tclose\n\nThe entire fuzz input is treated as raw HDF5 file content.  We load it\ninto the CORE VFD via H5Pset_file_image so that every byte – including\nthe superblock and object-header regions that encode committed type\ndescriptors – is reachable by the fuzzer.  No golden-image overlay is\nused: if the bytes don&#x27;t form a valid HDF5 file H5Fopen simply returns\nan error and we exit cleanly.\n*/\n\n#include \&quot;hdf5.h\&quot;\n\n#include &lt;stdint.h&gt;\n#include &lt;stdlib.h&gt;\n#include &lt;string.h&gt;\n\n/* Candidate names that real callers might store committed types under. */\nstatic const char *const CANDIDATE_NAMES[] = {\n    \&quot;dtype\&quot;,\n    \&quot;datatype\&quot;,\n    \&quot;type\&quot;,\n    \&quot;mytype\&quot;,\n    \&quot;compound\&quot;,\n    \&quot;enum\&quot;,\n    \&quot;vlen\&quot;,\n    \&quot;array_type\&quot;,\n    \&quot;DT\&quot;,\n    \&quot;DT2\&quot;,\n    \&quot;DT3\&quot;,\n    \&quot;/dtype\&quot;,\n    \&quot;/datatype\&quot;,\n    \&quot;/type\&quot;,\n    \&quot;/mytype\&quot;,\n    \&quot;/compound\&quot;,\n    \&quot;/DT\&quot;,\n};\nstatic const int NUM_CANDIDATES =\n    (int)(sizeof(CANDIDATE_NAMES) / sizeof(CANDIDATE_NAMES[0]));\n\n/* Suppress HDF5 error output to stderr so the fuzzer isn&#x27;t noisy. */\nstatic void suppress_errors(void)\n{\n    H5Eset_auto2(H5E_DEFAULT, NULL, NULL);\n}\n\n/*\n * Recursively introspect a type id, exercising the target APIs.\n * depth prevents unbounded recursion on pathological compound-of-compound\n * types in a fuzzed file.\n */\nstatic void introspect_type(hid_t tid, int depth)\n{\n    if (tid &lt; 0 || depth &gt; 8)\n        return;\n\n    H5T_class_t cls = H5Tget_class(tid);\n    H5Tget_size(tid);\n    H5Tis_variable_str(tid);\n\n    if (cls == H5T_COMPOUND) {\n        int nmembers = H5Tget_nmembers(tid);\n        if (nmembers &gt; 0) {\n            /* Cap iterations to avoid spending too much time on huge types. */\n            int limit = nmembers &lt; 64 ? nmembers : 64;\n            for (int i = 0; i &lt; limit; i++) {\n                H5Tget_member_offset(tid, (unsigned)i);\n                hid_t mtype = H5Tget_member_type(tid, (unsigned)i);\n                if (mtype &gt;= 0) {\n                    introspect_type(mtype, depth + 1);\n                    H5Tclose(mtype);\n                }\n            }\n        }\n    } else if (cls == H5T_ENUM) {\n        int nmembers = H5Tget_nmembers(tid);\n        if (nmembers &gt; 0) {\n            int limit = nmembers &lt; 64 ? nmembers : 64;\n            for (int i = 0; i &lt; limit; i++) {\n                H5Tget_member_offset(tid, (unsigned)i);\n            }\n        }\n    } else if (cls == H5T_ARRAY || cls == H5T_VLEN) {\n        hid_t base = H5Tget_super(tid);\n        if (base &gt;= 0) {\n            introspect_type(base, depth + 1);\n            H5Tclose(base);\n        }\n    }\n}\n\nint LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)\n{\n    if (size == 0)\n        return 0;\n\n    suppress_errors();\n\n    /* Build a CORE-backed FAPL seeded with the fuzz bytes as the file image.\n     * H5Pset_file_image makes its own copy of the buffer, so we don&#x27;t need\n     * to keep &#x27;data&#x27; alive past this call.                                  */\n    hid_t fapl = H5Pcreate(H5P_FILE_ACCESS);\n    if (fapl &lt; 0)\n        return 0;\n\n    /* backing_store=false: don&#x27;t write to disk */\n    if (H5Pset_fapl_core(fapl, (size_t)(64 * 1024), /*backing_store=*/false) &lt; 0) {\n        H5Pclose(fapl);\n        return 0;\n    }\n\n    if (H5Pset_file_image(fapl, (void *)data, size) &lt; 0) {\n        H5Pclose(fapl);\n        return 0;\n    }\n\n    /* Open the in-memory image as an HDF5 file (read-only). */\n    hid_t fid = H5Fopen(\&quot;fuzz_image\&quot;, H5F_ACC_RDONLY, fapl);\n    H5Pclose(fapl);\n    if (fid &lt; 0)\n        return 0;\n\n    /* Try opening each candidate committed-type name. */\n    for (int i = 0; i &lt; NUM_CANDIDATES; i++) {\n        hid_t tid = H5Topen2(fid, CANDIDATE_NAMES[i], H5P_DEFAULT);\n        if (tid &gt;= 0) {\n            introspect_type(tid, 0);\n            H5Tclose(tid);\n        }\n    }\n\n    /* Also walk the root group to find whatever names are actually present\n     * and try to open them as committed types.                              */\n    hsize_t idx = 0;\n    hid_t root = H5Gopen2(fid, \&quot;/\&quot;, H5P_DEFAULT);\n    if (root &gt;= 0) {\n        hsize_t n = 0;\n        H5Gget_num_objs(root, &amp;n);\n        /* Cap at 32 to bound work on pathological files. */\n        hsize_t limit = n &lt; 32 ? n : 32;\n        for (hsize_t j = 0; j &lt; limit; j++) {\n            char name[256];\n            ssize_t name_len = H5Gget_objname_by_idx(root, j, name, sizeof(name));\n            if (name_len &gt; 0) {\n                hid_t tid = H5Topen2(fid, name, H5P_DEFAULT);\n                if (tid &gt;= 0) {\n                    introspect_type(tid, 0);\n                    H5Tclose(tid);\n                }\n            }\n        }\n        H5Gclose(root);\n    }\n    (void)idx;\n\n    H5Fclose(fid);\n    return 0;\n}\n&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:39:14Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">File created successfully at: /work/harness-proj/fuzz-proj/h5_committed_type_fuzzer.c</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:39:16Z</span></div><div class="msg-text"><p>Now update <code>build.sh</code> to compile and install the new harness:</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:39:16Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Read</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/build.sh&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:39:16Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">File unchanged since last read. The content from the earlier Read tool_result in this conversation is still current — refer to that instead of re-reading.</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:39:24Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Edit</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;replace_all&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/harness-proj/fuzz-proj/build.sh&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;old_string&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;$CC $CFLAGS  -std=c99 -c \\\n  -I/src/hdf5/src -I/src/hdf5/build-dir/src -I./src/H5FDsubfiling/ \\\n  $SRC/h5_extended_fuzzer.c\n$CXX $CXXFLAGS $LIB_FUZZING_ENGINE h5_extended_fuzzer.o ./build-dir/bin/libhdf5.a -lz -o $OUT/h5_extended_fuzzer&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;new_string&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;$CC $CFLAGS  -std=c99 -c \\\n  -I/src/hdf5/src -I/src/hdf5/build-dir/src -I./src/H5FDsubfiling/ \\\n  $SRC/h5_extended_fuzzer.c\n$CXX $CXXFLAGS $LIB_FUZZING_ENGINE h5_extended_fuzzer.o ./build-dir/bin/libhdf5.a -lz -o $OUT/h5_extended_fuzzer\n\n$CC $CFLAGS  -std=c99 -c \\\n  -I/src/hdf5/src -I/src/hdf5/build-dir/src -I./src/H5FDsubfiling/ \\\n  $SRC/h5_committed_type_fuzzer.c\n$CXX $CXXFLAGS $LIB_FUZZING_ENGINE h5_committed_type_fuzzer.o ./build-dir/bin/libhdf5.a -lz -o $OUT/h5_committed_type_fuzzer&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:39:24Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">The file /work/harness-proj/fuzz-proj/build.sh has been updated successfully.</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:39:28Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;libCRS build-project --response-dir /work/agent/build-resp --fuzz-proj-dir /work/harness-proj/fuzz-proj 2&gt;&amp;1 | tail -5&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Build the project&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;timeout&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">300000</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:44:28Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">Command running in background with ID: bjthh33z1. Output is being written to: /tmp/claude-0/-src/c0006d49-06ec-444f-bb84-615c6e895019/tasks/bjthh33z1.output</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:44:30Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;cat /work/agent/build-resp/retcode 2&gt;/dev/null || echo \&quot;not yet\&quot;&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Check build retcode&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;timeout&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">300000</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:44:30Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">not yet</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:44:32Z</span></div><div class="tool"><div class="tool-head">🔧 <b>TaskOutput</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;task_id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;bjthh33z1&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;block&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;timeout&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">300000</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:49:32Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">&lt;retrieval_status&gt;timeout&lt;/retrieval_status&gt;
+
+&lt;task_id&gt;bjthh33z1&lt;/task_id&gt;
+
+&lt;task_type&gt;local_bash&lt;/task_type&gt;
+
+&lt;status&gt;running&lt;/status&gt;</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:49:37Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;cat /work/agent/build-resp/retcode 2&gt;/dev/null || echo \&quot;still building\&quot;&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Check build retcode again&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;timeout&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">300000</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:49:37Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">still building</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:49:44Z</span></div><div class="tool"><div class="tool-head">🔧 <b>TaskOutput</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;task_id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;bjthh33z1&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;block&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;timeout&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">300000</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:54:44Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">&lt;retrieval_status&gt;timeout&lt;/retrieval_status&gt;
+
+&lt;task_id&gt;bjthh33z1&lt;/task_id&gt;
+
+&lt;task_type&gt;local_bash&lt;/task_type&gt;
+
+&lt;status&gt;running&lt;/status&gt;</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:54:46Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;cat /work/agent/build-resp/retcode 2&gt;/dev/null || echo \&quot;still building\&quot;&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Poll build status&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;timeout&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">600000</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 15:54:46Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">still building</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 15:54:49Z</span></div><div class="tool"><div class="tool-head">🔧 <b>TaskOutput</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;task_id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;bjthh33z1&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;block&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;timeout&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">600000</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 16:04:49Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">&lt;retrieval_status&gt;timeout&lt;/retrieval_status&gt;
+
+&lt;task_id&gt;bjthh33z1&lt;/task_id&gt;
+
+&lt;task_type&gt;local_bash&lt;/task_type&gt;
+
+&lt;status&gt;running&lt;/status&gt;</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 16:04:52Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;for i in $(seq 1 30); do\n  rc=$(cat /work/agent/build-resp/retcode 2&gt;/dev/null)\n  if [ -n \&quot;$rc\&quot; ]; then\n    echo \&quot;retcode: $rc\&quot;\n    break\n  fi\n  sleep 10\ndone&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Wait for build to complete (polling every 10s)&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;timeout&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">600000</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 16:05:52Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">retcode: 0</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 16:05:55Z</span></div><div class="msg-text"><p>Build succeeded. Let me verify the binary exists and write the harness name:</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 16:05:56Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;ls -la /work/agent/build-resp/ &amp;&amp; grep -i \&quot;committed_type\\|h5_committed\&quot; /work/agent/build-resp/stderr.log 2&gt;/dev/null | tail -5&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Check build output&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 16:05:57Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">total 3388
+drwxr-xr-x 2 root root    4096 Jun  6 16:05 .
+drwxr-xr-x 4 root root    4096 Jun  6 16:05 ..
+-rw-r--r-- 1 root root       1 Jun  6 16:05 exit_code
+-rw-r--r-- 1 root root       1 Jun  6 16:05 rebuild_id
+-rw-r--r-- 1 root root       1 Jun  6 16:05 retcode
+-rw-r--r-- 1 root root      40 Jun  6 16:05 stderr.log
+-rw-r--r-- 1 root root 3442001 Jun  6 16:05 stdout.log</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 16:05:59Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;cat /work/agent/build-resp/stderr.log&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Check stderr log&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 16:06:00Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Bash</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;command&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;grep \&quot;h5_committed_type_fuzzer\&quot; /work/agent/build-resp/stdout.log | tail -10&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Check stdout for harness compilation&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 16:06:00Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">Patch file is empty, skipping git apply</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 16:06:01Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">+ clang -O1 -fno-omit-frame-pointer -gline-tables-only -Wno-error=incompatible-function-pointer-types -Wno-error=int-conversion -Wno-error=deprecated-declarations -Wno-error=implicit-function-declaration -Wno-error=implicit-int -Wno-error=unknown-warning-option -Wno-error=vla-cxx-extension -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -fsanitize=address -fsanitize-address-use-after-scope -fsanitize=fuzzer-no-link -std=c99 -c -I/src/hdf5/src -I/src/hdf5/build-dir/src -I./src/H5FDsubfiling/ /src/h5_committed_type_fuzzer.c
++ clang++ -O1 -fno-omit-frame-pointer -gline-tables-only -Wno-error=incompatible-function-pointer-types -Wno-error=int-conversion -Wno-error=deprecated-declarations -Wno-error=implicit-function-declaration -Wno-error=implicit-int -Wno-error=unknown-warning-option -Wno-error=vla-cxx-extension -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -fsanitize=address -fsanitize-address-use-after-scope -fsanitize=fuzzer-no-link -stdlib=libc++ -fsanitize=fuzzer h5_committed_type_fuzzer.o ./build-dir/bin/libhdf5.a -lz -o /out/h5_committed_type_fuzzer</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 16:06:02Z</span></div><div class="msg-text"><p>Build is green. Write the harness name:</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 16:06:03Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Write</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;file_path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/work/agent/new-harnesses.txt&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;content&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;h5_committed_type_fuzzer\n&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 16:06:03Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">File created successfully at: /work/agent/new-harnesses.txt</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 16:06:12Z</span></div><div class="msg-text"><p>Build is green. Here&#39;s a summary of what the harness does:</p>
+<p><strong>Approach (in-memory CORE VFD):</strong></p>
+<ul>
+<li>Treats the entire fuzz input as raw HDF5 file bytes — no golden-image overlay, no protected region</li>
+<li>Uses <code>H5Pset_fapl_core</code> + <code>H5Pset_file_image</code> to load the fuzz buffer directly into the CORE VFD, then calls <code>H5Fopen(&quot;fuzz_image&quot;, H5F_ACC_RDONLY, fapl)</code> — if the bytes aren&#39;t a valid HDF5 file it returns an error and we exit cleanly</li>
+<li>This lets the fuzzer mutate the superblock, object-header, and all committed-type descriptor bytes</li>
+</ul>
+<p><strong>API coverage:</strong></p>
+<ol>
+<li><code>H5Topen2</code> — tried against 17 candidate names <em>and</em> every name discovered by walking the root group</li>
+<li>For each successfully opened type: <code>H5Tget_class</code>, <code>H5Tget_size</code>, <code>H5Tis_variable_str</code></li>
+<li>For compound types: <code>H5Tget_nmembers</code>, then per-member <code>H5Tget_member_offset</code> + <code>H5Tget_member_type</code> (recursive, up to depth 8)</li>
+<li>For enum types: <code>H5Tget_nmembers</code> + <code>H5Tget_member_offset</code></li>
+<li>For array/vlen types: <code>H5Tget_super</code> + recursive introspection</li>
+<li><code>H5Tclose</code> on every handle</li>
+</ol>
+</div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 16:06:12Z</span></div><div class="msg-text"><task-notification>
+<task-id>bjthh33z1</task-id>
+<tool-use-id>toolu_016FS1ef5T9KWrX4HAdsM62M</tool-use-id>
+<output-file>/tmp/claude-0/-src/c0006d49-06ec-444f-bb84-615c6e895019/tasks/bjthh33z1.output</output-file>
+<status>completed</status>
+<summary>Background command "Build the project" completed (exit code 0)</summary>
+</task-notification></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 16:06:14Z</span></div><div class="msg-text"><p>The background build task has completed successfully (exit code 0). The harness <code>h5_committed_type_fuzzer</code> is built and registered in <code>/work/agent/new-harnesses.txt</code>.</p>
+</div></div>
+ <div class="foot">Rendered offline from the raw session JSONL. Thinking / tool I/O are collapsed — click to expand.</div>
+</div></body></html>

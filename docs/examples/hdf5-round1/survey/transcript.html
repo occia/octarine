@@ -1,0 +1,624 @@
+<!doctype html><html><head><meta charset="utf-8"><title>hdf5 — attack-surface survey</title>
+<style>
+ body{font:14px/1.55 -apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#f6f7f9;color:#1c2128}
+ .wrap{max-width:900px;margin:0 auto;padding:20px}
+ h1{font-size:17px;margin:0 0 4px} .sub{color:#636c76;margin-bottom:16px;font-size:12px}
+ .turn{background:#fff;border:1px solid #d0d7de;border-radius:8px;margin:10px 0;padding:10px 14px;overflow:hidden}
+ .turn.assistant{border-left:3px solid #0969da} .turn.user{border-left:3px solid #8c959f;background:#fbfcfd}
+ .who{font-size:11px;font-weight:700;color:#636c76;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px}
+ .who .side{margin-left:8px;background:#fff1e5;color:#bc4c00;padding:1px 6px;border-radius:999px;font-size:10px}
+ .who .ts{margin-left:8px;font-weight:400;color:#a0a8b0;text-transform:none;letter-spacing:0}
+ .msg-text{font-size:14px} .msg-text p{margin:6px 0} .msg-text h1,.msg-text h2,.msg-text h3{font-size:15px;margin:10px 0 4px}
+ .msg-text ul,.msg-text ol{margin:6px 0 6px 22px} .msg-text code{background:#eff1f3;padding:1px 5px;border-radius:5px;font-size:12.5px}
+ .thinking{margin:6px 0;background:#fffbf0;border:1px solid #f0e6c8;border-radius:6px;padding:2px 10px}
+ .thinking>summary{cursor:pointer;color:#9a6700;font-size:12.5px;font-weight:600;padding:4px 0}
+ .thinking .msg-text{color:#6f5b1e;font-size:13px}
+ .tool{margin:8px 0;border:1px solid #d0d7de;border-radius:6px;overflow:hidden}
+ .tool-head{background:#ddf4ff;color:#0550ae;padding:5px 10px;font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
+ .tool details>summary,.result>summary{cursor:pointer;font-size:12px;color:#636c76;padding:5px 10px;user-select:none}
+ .result{margin:8px 0;border:1px solid #d0d7de;border-radius:6px;background:#f6f8fa}
+ .result.err{border-color:#ff818266;background:#fff5f5} .result.err>summary{color:#cf222e}
+ pre{margin:0;padding:10px 12px;overflow-x:auto;background:#0d1117;color:#e6edf3;font-size:12px;line-height:1.45}
+ pre code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:none;padding:0;color:inherit;white-space:pre}
+ .msg-text pre{border-radius:6px;margin:8px 0}
+ /* Block code (crash dumps / logs) must stay light-on-dark: the inline .msg-text code rule below
+    has higher specificity than the bare pre-code reset and would otherwise paint the code element
+    with a light inline-code background -- light-on-light (invisible until selected). Re-assert here. */
+ .msg-text pre code,.thinking .msg-text pre code{background:transparent;color:#e6edf3;font-size:12px;padding:0;border-radius:0}
+ /* compact highlight.js (github-dark subset) */
+ .hljs-comment,.hljs-quote{color:#8b949e} .hljs-keyword,.hljs-selector-tag,.hljs-type{color:#ff7b72}
+ .hljs-string,.hljs-attr,.hljs-template-tag{color:#a5d6ff} .hljs-number,.hljs-literal{color:#79c0ff}
+ .hljs-title,.hljs-function .hljs-title,.hljs-section{color:#d2a8ff} .hljs-built_in,.hljs-builtin-name{color:#ffa657}
+ .hljs-name,.hljs-tag{color:#7ee787} .hljs-meta{color:#79c0ff} .hljs-symbol,.hljs-bullet,.hljs-variable{color:#ffa657}
+ .foot{margin-top:18px;color:#636c76;font-size:12px}
+</style></head><body><div class="wrap">
+ <h1>hdf5 — attack-surface survey</h1>
+ <div class="sub">12 turn(s) · Claude-Code conversation</div>
+ <div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 10:32:21Z</span></div><div class="msg-text"><p>You are mapping the ATTACK SURFACE of the OSS-Fuzz project <code>hdf5</code> (c) for fuzzing.<br>An &quot;attack surface&quot; = one or more public APIs that make sense to exercise with a SINGLE fuzz harness<br>(a parser/decoder/reader that consumes untrusted input, or a small family of related entry points).</p>
+<p>Explore the target source under <code>/src</code> and the existing fuzz harnesses (read build.sh and the<br><em>fuzz</em>.c/.cc files). Then enumerate attack surfaces:</p>
+<ul>
+<li>coveredByExisting=true for surfaces an existing harness already exercises;</li>
+<li>propose the remaining promising surfaces (coveredByExisting=false) with priority (1-10) + short rationale;</li>
+<li>give each a stable short kebab-case id and the concrete API names.</li>
+</ul>
+<p>No prior ledger exists; produce the initial map.</p>
+<p>Return ONLY the JSON.</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 10:32:23Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>Let me explore the source code to understand the attack surface of the HDF5 project.</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 10:32:26Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Agent</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Explore HDF5 fuzz harnesses and build&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;subagent_type&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Explore&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;prompt&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Explore the OSS-Fuzz project for HDF5 at /src. I need to understand:\n1. Read /src/build.sh fully\n2. List all fuzz harness source files (*.c, *.cc files that contain LLVMFuzzerTestOneInput)\n3. Read each fuzz harness file fully\n4. List all public header files in /src to understand what APIs are exposed\n\nReport back the complete content of build.sh, the names and full content of all fuzz harness files, and a list of all .h header files available.&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 10:32:31Z</span></div><div class="tool"><div class="tool-head">🔧 <b>Agent</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Explore HDF5 public API headers&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;subagent_type&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Explore&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;prompt&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Explore /src/hdf5 directory. I need:\n1. List all public header files (*.h) at the top level of /src/hdf5 or in an include/ subdirectory\n2. Look for files named H5*.h or hdf5*.h\n3. Find any API documentation or header files that expose public functions for: file I/O, dataset operations, group operations, attribute operations, datatype operations, dataspace operations, filter/compression pipeline, VFL (virtual file layer), SWMR (single writer multiple reader), VOL (virtual object layer), image API, high-level API\n4. Report the directory structure of /src/hdf5 (top 2-3 levels)\n5. Read the content of the main public header (likely hdf5.h or H5public.h)\n\nReport all findings thoroughly.&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 10:33:11Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">Perfect! Now I have all the information needed. Let me compile the comprehensive report.
+
+## Complete Exploration Report: OSS-Fuzz HDF5 Project
+
+### 1. build.sh - Complete Content
+
+The build.sh script is located at `/src/build.sh` and contains:
+
+```bash
+#!/bin/bash -eu
+# Copyright 2023 Google LLC.
+#
+# Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+################################################################################
+
+export LDFLAGS=&quot;${CFLAGS}&quot;
+export CMAKE_C_FLAGS=&quot;${CC} ${CFLAGS}&quot;
+export CMAKE_CXX_FLAGS=&quot;${CXX} ${CXXFLAGS}&quot;
+
+mkdir build-dir
+cd build-dir
+cmake -G &quot;Unix Makefiles&quot; \
+    -DCMAKE_BUILD_TYPE:STRING=Release \
+    -DBUILD_SHARED_LIBS:BOOL=OFF \
+    -DBUILD_TESTING:BOOL=OFF \
+    -DCMAKE_VERBOSE_MAKEFILES:BOOL=ON \
+    -DHDF5_BUILD_EXAMPLES:BOOL=OFF \
+    -DHDF5_BUILD_TOOLS:BOOL=OFF \
+    -DHDF5_ENABLE_SANITIZERS:BOOL=ON \
+    -DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=ON \
+    ..
+
+# Make the build verbose for easy logging inspection
+cmake --build . --verbose --config Release -j$(nproc)
+cd $SRC/hdf5
+
+$CC $CFLAGS  -std=c99 -c \
+  -I/src/hdf5/src -I/src/hdf5/build-dir/src -I./src/H5FDsubfiling/ \
+  $SRC/h5_read_fuzzer.c
+$CXX $CXXFLAGS $LIB_FUZZING_ENGINE h5_read_fuzzer.o ./build-dir/bin/libhdf5.a -lz -o $OUT/h5_read_fuzzer
+
+$CC $CFLAGS  -std=c99 -c \
+  -I/src/hdf5/src -I/src/hdf5/build-dir/src -I./src/H5FDsubfiling/ \
+  $SRC/h5_extended_fuzzer.c
+$CXX $CXXFLAGS $LIB_FUZZING_ENGINE h5_extended_fuzzer.o ./build-dir/bin/libhdf5.a -lz -o $OUT/h5_extended_fuzzer
+
+zip -j $OUT/h5_extended_fuzzer_seed_corpus.zip $SRC/hdf5/test/testfiles/*.h5
+
+# Build test
+mkdir $SRC/hdf5/build-test
+cd $SRC/hdf5/build-test
+cmake -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_TESTING:BOOL=ON ..
+cmake --build . --verbose --config Release -j$(nproc)
+```
+
+**Key build settings:**
+- Builds HDF5 as static library (OFF for shared libs)
+- Disables testing and examples during main build
+- Enables sanitizers for fuzzing
+- Enables zlib support
+- Compiles two fuzzers: h5_read_fuzzer and h5_extended_fuzzer
+- Creates seed corpus from existing HDF5 test files
+
+---
+
+### 2. Fuzz Harness Files
+
+There are **2 fuzz harness source files** in the project:
+
+#### File 1: `/src/h5_read_fuzzer.c`
+
+```c
+/* Copyright 2023 Google LLC
+Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+      http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+#include &quot;hdf5.h&quot;
+
+#include &lt;unistd.h&gt;
+
+extern int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+{
+    // Some old logic with regards to skipping first byte. Leaving it here
+    // to avoid affecting the clusterfuzz-generated corpus.
+    if (size == 0) {
+        return 0;
+    }
+    uint8_t decider = data[0];
+    size -= 1;
+    data += 1;
+
+    char filename[256];
+    sprintf(filename, &quot;/tmp/libfuzzer.%d&quot;, getpid());
+
+    FILE *fp = fopen(filename, &quot;wb&quot;);
+    if (!fp) {
+        return 0;
+    }
+    fwrite(data, size, 1, fp);
+    fclose(fp);
+
+    hid_t fuzz_h5_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
+    if (fuzz_h5_id != H5I_INVALID_HID) {
+        H5Fclose(fuzz_h5_id);
+    }
+
+    return 0;
+}
+```
+
+**Functionality:** Basic HDF5 file reading fuzzer. Writes fuzzed data to a temporary file and attempts to open it as an HDF5 file in read-write mode, then closes it.
+
+---
+
+#### File 2: `/src/h5_extended_fuzzer.c`
+
+```c
+/* Copyright 2023 Google LLC
+Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+      http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+#include &quot;hdf5.h&quot;
+
+#include &lt;unistd.h&gt;
+
+extern int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+{
+    char filename[256];
+    sprintf(filename, &quot;/tmp/libfuzzer.%d&quot;, getpid());
+
+    FILE *fp = fopen(filename, &quot;wb&quot;);
+    if (!fp) {
+        return 0;
+    }
+    fwrite(data, size, 1, fp);
+    fclose(fp);
+
+    hid_t fuzz_h5_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
+    if (fuzz_h5_id != H5I_INVALID_HID) {
+      hid_t  dataset_id = H5Dopen2(fuzz_h5_id, &quot;dsetname&quot;, H5P_DEFAULT);
+      if (dataset_id != H5I_INVALID_HID) {
+          hid_t attribute_id = H5Aopen_name(dataset_id, &quot;theattr&quot;);
+          if (attribute_id != H5I_INVALID_HID) {
+            H5Aclose(attribute_id);
+          }
+          H5Dclose(dataset_id);
+      }
+      H5Fclose(fuzz_h5_id);
+    }
+    return 0;
+}
+```
+
+**Functionality:** Extended HDF5 fuzzer that goes deeper into the API. After opening an HDF5 file, it attempts to:
+1. Open a dataset named &quot;dsetname&quot;
+2. Open an attribute on that dataset named &quot;theattr&quot;
+3. Close the attribute if successfully opened
+4. Close the dataset and file
+
+---
+
+### 3. Public Header Files (Public API)
+
+The main public HDF5 API is exposed through `/src/hdf5/src/hdf5.h`, which includes the following **public header files** that define the exposed APIs:
+
+**Core Public Headers (included in hdf5.h):**
+1. `H5public.h` - Core HDF5 definitions
+2. `H5Apublic.h` - Attributes API
+3. `H5ACpublic.h` - Metadata cache API
+4. `H5Dpublic.h` - Datasets API
+5. `H5Epublic.h` - Error handling API
+6. `H5ESpublic.h` - Event Sets API
+7. `H5Fpublic.h` - Files API
+8. `H5FDpublic.h` - File drivers API
+9. `H5Gpublic.h` - Groups API
+10. `H5Ipublic.h` - ID management API
+11. `H5Lpublic.h` - Links API
+12. `H5Mpublic.h` - Maps API
+13. `H5MMpublic.h` - Memory management API
+14. `H5Opublic.h` - Object headers API
+15. `H5Ppublic.h` - Property lists API
+16. `H5PLpublic.h` - Plugins API
+17. `H5Rpublic.h` - References API
+18. `H5Spublic.h` - Dataspaces API
+19. `H5Tpublic.h` - Datatypes API
+20. `H5VLpublic.h` - Virtual Object Layer API
+21. `H5Zpublic.h` - Data filters API
+
+**Plugin/Component Developer Headers:**
+- `H5ESdevelop.h` - Event Sets developer API
+- `H5FDdevelop.h` - File drivers developer API
+- `H5Idevelop.h` - ID management developer API
+- `H5Ldevelop.h` - Links developer API
+- `H5Tdevelop.h` - Datatypes developer API
+- `H5TSdevelop.h` - Threadsafety developer API
+- `H5Zdevelop.h` - Data filters developer API
+
+**VOL Connector Developer Support:**
+- `H5VLconnector.h` - VOL connector author routines
+- `H5VLconnector_passthru.h` - Pass-through VOL connector author routines
+- `H5VLnative.h` - Native VOL connector macros
+
+**Predefined File Drivers:**
+- `H5FDcore.h` - In-memory files
+- `H5FDdirect.h` - Linux direct I/O
+- `H5FDfamily.h` - File families
+- `H5FDhdfs.h` - Hadoop HDFS
+- `H5FDlog.h` - Logging file driver
+- `H5FDmirror.h` - Mirror VFD
+- `H5FDmpi.h` - MPI-based drivers
+- `H5FDmulti.h` - Usage-partitioned files
+- `H5FDonion.h` - Onion file I/O
+- `H5FDros3.h` - S3 read-only file driver
+- `H5FDsec2.h` - POSIX unbuffered I/O
+- `H5FDsplitter.h` - Twin-channel I/O passthrough
+- `H5FDstdio.h` - Standard C buffered I/O
+- `H5FDwindows.h` - Win32 I/O (Windows only)
+- `H5FDsubfiling.h` - Subfiling VFD
+- `H5FDioc.h` - I/O Concentrator VFD
+
+**VOL Connectors:**
+- `H5VLnative.h` - Native VOL connector
+- `H5VLpassthru.h` - Pass-through VOL connector
+
+---
+
+### 4. Complete List of All Source-Level Header Files
+
+The `/src/hdf5/src/` directory contains **211 header files** including both public, developer, package, and private headers:
+
+**Public Headers (21 total):**
+H5ACpublic.h, H5Apublic.h, H5Cpublic.h, H5Dpublic.h, H5ESpublic.h, H5Epublic.h, H5FDpublic.h, H5Fpublic.h, H5Gpublic.h, H5Ipublic.h, H5Lpublic.h, H5MMpublic.h, H5Mpublic.h, H5Opublic.h, H5PLpublic.h, H5Ppublic.h, H5Rpublic.h, H5Spublic.h, H5Tpublic.h, H5VLpublic.h, H5Zpublic.h
+
+**Core/Main Headers (4 total):**
+hdf5.h, H5public.h, H5private.h, H5version.h
+
+**Module Headers (43 total):**
+H5ACmodule.h, H5Amodule.h, H5B2module.h, H5Bmodule.h, H5CXmodule.h, H5Cmodule.h, H5Dmodule.h, H5EAmodule.h, H5ESmodule.h, H5Emodule.h, H5FAmodule.h, H5FDmodule.h, H5Fmodule.h, H5Gmodule.h, H5HFmodule.h, H5HGmodule.h, H5HLmodule.h, H5Imodule.h, H5Lmodule.h, H5MFmodule.h, H5Mmodule.h, H5Omodule.h, H5PBmodule.h, H5PLmodule.h, H5Pmodule.h, H5RSmodule.h, H5RTmodule.h, H5Rmodule.h, H5SLmodule.h, H5SMmodule.h, H5Smodule.h, H5TSmodule.h, H5Tmodule.h, H5VLmodule.h, H5Zmodule.h, H5module.h
+
+**Developer Headers (7 total):**
+H5ESdevelop.h, H5FDdevelop.h, H5Idevelop.h, H5Ldevelop.h, H5Tdevelop.h, H5TSdevelop.h, H5Zdevelop.h
+
+**Package Headers (33 total):**
+H5ACpkg.h, H5Apkg.h, H5B2pkg.h, H5Bpkg.h, H5Cpkg.h, H5Dpkg.h, H5EApkg.h, H5ESpkg.h, H5Epkg.h, H5FApkg.h, H5FDpkg.h, H5Fpkg.h, H5Gpkg.h, H5HFpkg.h, H5HGpkg.h, H5HLpkg.h, H5Ipkg.h, H5Lpkg.h, H5MFpkg.h, H5Mpkg.h, H5Opkg.h, H5PBpkg.h, H5PLpkg.h, H5Ppkg.h, H5RTpkg.h, H5Rpkg.h, H5SMpkg.h, H5Spkg.h, H5TSpkg.h, H5Tpkg.h, H5VLpkg.h, H5Zpkg.h, H5PLsig.h
+
+**Private Headers (70+ total):**
+H5ACprivate.h, H5Aprivate.h, H5B2private.h, H5Bprivate.h, H5CXprivate.h, H5Cprivate.h, H5Dprivate.h, H5EAprivate.h, H5ESprivate.h, H5Eprivate.h, H5FAprivate.h, H5FDprivate.h, H5FOprivate.h, H5Fprivate.h, H5Gprivate.h, H5HFprivate.h, H5HGprivate.h, H5HLprivate.h, H5Iprivate.h, H5Lprivate.h, H5MFprivate.h, H5MMprivate.h, H5Mprivate.h, H5Oprivate.h, H5PBprivate.h, H5PLprivate.h, H5Pprivate.h, H5RSprivate.h, H5RSmodule.h, H5RTprivate.h, H5Rprivate.h, H5SLprivate.h, H5SMprivate.h, H5Sprivate.h, H5TSprivate.h, H5Tprivate.h, H5UCprivate.h, H5VLnative_private.h, H5VLpassthru_private.h, H5VLprivate.h, H5VMprivate.h, H5WBprivate.h
+
+**Datatype Conversion Headers (13 total):**
+H5Tconv.h, H5Tconv_array.h, H5Tconv_bitfield.h, H5Tconv_complex.h, H5Tconv_compound.h, H5Tconv_enum.h, H5Tconv_float.h, H5Tconv_integer.h, H5Tconv_macros.h, H5Tconv_reference.h, H5Tconv_string.h, H5Tconv_vlen.h
+
+**Threading/Synchronization Headers (12 total):**
+H5TSatomic.h, H5TSbarrier.h, H5TScond.h, H5TSkey.h, H5TSmutex.h, H5TSpool.h, H5TSrwlock.h, H5TSsemaphore.h
+
+**Utility/Miscellaneous Headers (8 total):**
+H5Clog.h, H5FDmirror_priv.h, H5FDmulti_private.h, H5FDonion_header.h, H5FDonion_history.h, H5FDonion_index.h, H5FDonion_priv.h, H5FDstdio_private.h
+
+**VOL &amp; Plugin Headers (4 total):**
+H5VLconnector.h, H5VLconnector_passthru.h, H5VLnative.h, H5VLpassthru.h, H5PLextern.h
+
+**Error Definition Headers (5 total):**
+H5Edefin.h, H5Einit.h, H5Emajdef.h, H5Emindef.h, H5Epubgen.h, H5Eterm.h
+
+**Utility Headers (4 total):**
+H5api_adpt.h, H5encode.h, H5overflow.h, H5timer.h, H5warnings.h, H5win32defs.h, uthash.h
+
+All of these headers are available in `/src/hdf5/src/` directory.</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 10:33:23Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">[redacted — crash / sanitizer detail]</code></pre></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 10:33:47Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>Now I have a comprehensive picture of the HDF5 project. Let me analyze the attack surfaces:</p>
+<p><strong>Existing harnesses:</strong></p>
+<ol>
+<li><code>h5_read_fuzzer</code> - Opens a fuzzed file with H5Fopen (basic file open)</li>
+<li><code>h5_extended_fuzzer</code> - Opens file + H5Dopen2 + H5Aopen_name (dataset + attribute read)</li>
+</ol>
+<p><strong>Uncovered attack surfaces to identify:</strong></p>
+<ol>
+<li><strong>Datatype operations</strong> (H5Tpublic.h) - H5Topen, H5Tget_class, H5Tconvert, various type commit/read operations.</li>
+</ol>
+<p>Datatype parsing from files involves complex logic that could harbor bugs. Beyond that, there are several other areas worth fuzzing: group iteration and traversal through the hierarchy, reference objects which can be intricate, the compression and filtering pipeline that processes encoded data, and property list parsing which handles encoded metadata.</p>
+<p>Object headers require careful parsing logic, as do links which can point externally or be soft references. Dataspaces have their own encoding format that needs decoding. The high-level API provides convenient wrappers around lower-level operations, and dataset reading itself is fundamental—extracting the actual data along with its associated space and type information.</p>
+<p>Beyond the core reading functionality, there are specialized areas worth tackling: the Onion VFD for versioned file access, async operations through event sets, single-writer/multiple-reader mode, metadata cache operations, and complex datatype conversions for compound and variable-length types. Prioritizing dataset reading with actual data extraction seems most critical since the current harness only opens files without pulling the data itself. Onion VFD and property list encoding are lower priority, along with event sets and the core VFD. Looking at what the existing harnesses actually exercise, they cover basic file and object opening but don&#39;t include the critical H5Dread operation for actually retrieving dataset data.</p>
+<p>Now I&#39;m mapping out the additional surfaces that need coverage: datatype operations, group and link iteration, object header visiting, references, the high-level API, filters, encoded dataspaces, property list decoding, alternative VFDs, and SWMR functionality. I&#39;ll structure these into a comprehensive fuzzing harness.</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 10:34:30Z</span></div><div class="tool"><div class="tool-head">🔧 <b>StructuredOutput</b></div><details open><summary>input</summary><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;surfaces&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;file-open-basic&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Basic HDF5 file open (H5Fopen)&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5Fopen&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Fclose&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;h5_read_fuzzer exercises H5Fopen in RDWR mode; covers file superblock and basic metadata parsing.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">5</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;dataset-attribute-open&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Dataset + attribute open&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5Fopen&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Dopen2&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Aopen_name&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Aclose&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Dclose&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Fclose&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;h5_extended_fuzzer opens a dataset by hardcoded name and reads an attribute from it.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">5</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;dataset-read-data&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Dataset data read with type/space inspection&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5Dopen2&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Dread&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Dget_type&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Dget_space&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Dget_storage_size&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Dclose&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Existing harnesses only open datasets; no harness actually calls H5Dread to pull data through the type-conversion and filter pipeline. This is the richest attack surface for memory-safety bugs in decompression, type conversion, and fill-value logic.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">10</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;datatype-parsing&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Committed datatype open and introspection&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5Topen2&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Tget_class&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Tget_size&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Tget_nmembers&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Tget_member_type&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Tget_member_offset&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Tis_variable_str&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Tclose&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Committed (named) datatypes are stored in the file and decoded on H5Topen2. Compound, enum, vlen, and array type descriptors are deeply nested and hand-parsed; historically a rich source of OOB/UAF bugs.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">9</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;object-visit-iteration&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Object header visiting and iteration&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5Oopen&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Oget_info3&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Ovisit3&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Oclose&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Literate2&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Lget_val&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;H5Ovisit3 and H5Literate2 recursively traverse object headers and links. Soft/external link resolution and recursive group traversal stress the object-header parser across many diverse object types from a single fuzzed file.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">9</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;filter-pipeline-read&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Compressed/filtered dataset read&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5Dopen2&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Dget_create_plist&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Pget_nfilters&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Pget_filter2&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Dread&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Zfilter_avail&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Reading a dataset that has a deflate, shuffle, Fletcher32, or SZIP filter triggers the entire decompression path (zlib, internal codecs). Buffer sizing and chunk reassembly are classic overflow spots.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">8</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;attribute-iteration-read&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Attribute iteration and data read&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5Aiterate2&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Aopen_by_idx&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Aget_type&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Aget_space&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Aread&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Aclose&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Existing harness opens one hardcoded attribute name; no harness iterates all attributes or calls H5Aread to pull attribute data through the type/space layer, missing conversion and vlen-string bugs.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">8</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;group-link-iteration&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Group open and link traversal&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5Gopen2&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Gget_info&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Giterate&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Lvisit2&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Lget_info2&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Gclose&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Group B-tree / fractal heap parsing and link table decoding happen on H5Gopen2 and H5Giterate. Dense vs. compact storage transitions and external-link targets are exercised here.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">7</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;dataspace-encode-decode&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Dataspace encode/decode round-trip&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5Sget_select_type&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Sencode2&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Sdecode&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Sis_simple&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Sget_simple_extent_dims&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Sclose&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;H5Sdecode parses a serialised dataspace blob — used internally when reading dataset chunks. Feeding fuzz bytes to H5Sdecode directly exercises the region/point-selection parser with no file-format overhead.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">7</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;property-list-encode-decode&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Property list encode/decode&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5Pencode2&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Pdecode&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Pget_filter2&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Pclose&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;H5Pdecode parses a binary property-list blob. Property lists are used everywhere (creation, access, transfer); bugs in their parser affect every HDF5 operation.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">7</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;references&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Object and region references&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5Rcreate_object&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Rcreate_region&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Rget_obj_type3&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Ropen_object&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Ropen_region&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Rdestroy&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;References store pointers into the file. Dereferencing a fuzz-controlled reference exercises file-offset arithmetic and address validation, historically a source of wild-read bugs.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">6</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;high-level-lite-api&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;High-level Lite API (H5LT)&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5LTread_dataset&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5LTget_dataset_info&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5LTfind_dataset&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5LTget_attribute_string&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;The HL Lite API is a thin but heavily-used wrapper. It calls the core stack through a different code path and does its own size calculations; worth fuzzing independently to catch HL-specific bugs.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">6</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;image-api&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;High-level Image API (H5IM)&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5IMread_image&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5IMget_image_info&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5IMis_image&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;H5IM parses image-type datasets with specific attribute conventions. Malformed image metadata (palette, interlace mode) could bypass dimension checks.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">5</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;table-api&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;High-level Table API (H5TB)&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5TBread_table&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5TBread_records&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5TBget_table_info&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5TBget_field_info&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;H5TB maps compound datasets to named columns. Field-offset and row-size arithmetic uses caller-supplied type sizes that could be fuzz-controlled.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">5</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;onion-vfd&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Onion (versioned) virtual file driver&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5Pset_fapl_onion&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Fopen&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Fclose&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;The Onion VFD has its own header, history, and index record formats parsed on open. These multi-format parsers are new (HDF5 1.13+) and lightly tested by fuzz infrastructure.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">5</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;swmr-refresh&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;SWMR dataset refresh&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5Fopen (H5F_ACC_RDONLY|H5F_ACC_SWMR_READ)&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Dopen2&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Drefresh&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Fstart_swmr_write&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;SWMR mode has its own file-consistency checks and metadata refresh paths that differ from normal open; fuzz bytes in the SWMR superblock extension could trigger distinct parsing bugs.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">4</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;vfd-core&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Core (in-memory) VFD with backing-store open&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5Pset_fapl_core&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Fopen&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Fflush&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5Fclose&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;The core VFD can back to disk; opening a fuzzed file with it exercises a different I/O code path and buffer-management logic than the default sec2 driver.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">3</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;async-event-set&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Asynchronous event-set API&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;apis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-string">&quot;H5EScreate&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5ESinsert_request&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5ESwait&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5ESget_err_info&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-string">&quot;H5ESclose&quot;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;rationale&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;The async event-set infrastructure is entirely new in HDF5 1.13 and has almost no existing fuzz coverage. Error-path handling across async completions could expose race or UAF bugs.&quot;</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;priority&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">3</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;coveredByExisting&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
+    <span class="hljs-punctuation">}</span>
+  <span class="hljs-punctuation">]</span>
+<span class="hljs-punctuation">}</span></code></pre></details></div></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 10:34:30Z</span></div><details class="result"><summary>↳ result</summary><pre><code class="hljs language-plaintext">Structured output provided successfully</code></pre></details></div><div class="turn user"><div class="who">User / tool<span class="ts">2026-06-06 10:34:32Z</span></div><div class="msg-text"><p>Stop hook feedback:<br>Your harness build is not green yet. Run <code>libCRS build-project --response-dir $HARNESS_GEN_BUILD_RESP --fuzz-proj-dir &lt;harness&gt;/fuzz-proj</code> until retcode is 0, then finish.</p>
+</div></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 10:34:41Z</span></div><details class="thinking"><summary>💭 thinking</summary><div class="msg-text"><p>The stop hook is telling me that I need to build a harness. But looking at the task, I was asked to map the attack surface and return JSON - which I did. The stop hook seems to be triggered automatically, but I haven&#39;t been asked to write a harness yet - I was only asked to enumerate attack surfaces.</p>
+<p>Let me re-read the user&#39;s request: &quot;You are mapping the ATTACK SURFACE of the OSS-Fuzz project <code>hdf5</code> (c) for fuzzing.&quot; - This is just an attack surface mapping task, not a harness writing task.</p>
+<p>The stop hook seems to be a generic hook that fires whenever there&#39;s no green build. But this task was specifically about attack surface mapping, not building a harness.<br>I think there&#39;s a mismatch here - the user asked for attack surface enumeration, which I completed using the structured output tool. The stop hook appears to be designed for a different workflow where harness building is the goal, but that wasn&#39;t what was requested in this case.</p>
+</div></details></div><div class="turn assistant"><div class="who">Claude<span class="ts">2026-06-06 10:34:43Z</span></div><div class="msg-text"><p>This session was an <strong>attack surface mapping task</strong> — the prompt asked for a JSON enumeration of fuzz surfaces, not for a harness to be written or built. I used <code>StructuredOutput</code> to return that JSON, which is the correct final action for this task type.</p>
+<p>No harness source was written and no build was attempted, so there is nothing to build green. The stop hook does not apply to a pure attack-surface-mapping run.</p>
+</div></div>
+ <div class="foot">Rendered offline from the raw session JSONL. Thinking / tool I/O are collapsed — click to expand.</div>
+</div></body></html>
