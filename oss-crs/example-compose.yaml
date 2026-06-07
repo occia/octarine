@@ -1,0 +1,35 @@
+##############################################################################
+#                 CRS Compose Configuration (example)                        #
+#                              octarine                                       #
+##############################################################################
+
+run_env: local
+docker_registry: local
+
+oss_crs_infra:
+  cpuset: "0-1"
+  memory: "8G"
+
+# Builder + runner sidecars are injected by the framework automatically.
+octarine:
+  source:
+    url: https://github.com/occia/octarine     # the CRS repo
+    ref: main
+    # — or use a local checkout instead of cloning:
+    # local_path: /path/to/octarine
+  cpuset: "2-7"                                       # UPDATE (more cores ⇒ more -fork jobs)
+  memory: "16G"                                       # UPDATE
+  llm_budget: 20
+  additional_env:
+    # ANTHROPIC_MODEL: claude-opus-4-6
+    CLAUDE_CODE_OAUTH_TOKEN: "${CLAUDE_CODE_OAUTH_TOKEN}"   # optional; else OSS-CRS LLM proxy
+    HARNESS_GEN_FUZZ_SEC: "1200"      # 20 min fuzzing per harness
+    HARNESS_GEN_MAX_SURFACE_ATTEMPTS: "3"
+
+# Optional external LiteLLM endpoint:
+# llm_config:
+#   litellm:
+#     mode: external
+#     external:
+#       url_env: EXTERNAL_LITELLM_API_BASE
+#       key_env: EXTERNAL_LITELLM_API_KEY

@@ -1,0 +1,52 @@
+#!/bin/bash
+set -e
+
+log() {
+    echo "[compile_target] $*"
+}
+
+log "Compiling target project..."
+
+# Capture upstream source provenance (real repo + branch + commit) BEFORE building.
+# This is the ONLY point in the pipeline where the clone's `.git` still exists: libCRS
+# delivers the source to the CRS via rsync with `--exclude=.git`, so the real branch/commit
+# are otherwise lost and we fall back to a synthetic content-hash. We write a regular file
+# (`$SRC/.crs-source-version.json`) so it survives every downstream rsync, then submit it as
+# part of the `src` build output. Best-effort: never fail the build over provenance.
+capture_source_version() {
+    python3 - "$SRC" <<'PYEOF'
+import json, os, subprocess, sys
+src = sys.argv[1]
+def git(d, *args):
+    try:
+        r = subprocess.run(["git", "-C", d, *args], capture_output=True, text=True, timeout=30)
+        return r.stdout.strip() if r.returncode == 0 else ""
+    except Exception:
+        return ""
+repos = []
+for name in sorted(os.listdir(src)):
+    d = os.path.join(src, name)
+    if not os.path.isdir(os.path.join(d, ".git")):
+        continue
+    repos.append({
+        "dir": name,
+        "commit": git(d, "rev-parse", "HEAD"),
+        "branch": git(d, "rev-parse", "--abbrev-ref", "HEAD"),
+        "remote": git(d, "config", "--get", "remote.origin.url"),
+        "describe": git(d, "describe", "--tags", "--always"),
+    })
+with open(os.path.join(src, ".crs-source-version.json"), "w") as f:
+    json.dump({"repos": repos}, f, indent=2)
+print("[compile_target] captured source version for %d repo(s)" % len(repos))
+PYEOF
+}
+capture_source_version || log "source-version capture skipped (non-fatal)"
+
+# Standard oss-fuzz compile
+compile
+
+# Submit build outputs
+libCRS submit-build-output "$OUT" build
+libCRS submit-build-output "$SRC" src
+
+log "Build completed successfully."

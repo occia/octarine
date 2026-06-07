@@ -1,0 +1,23 @@
+# dependencies / build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# logs
+*.log
+
+# local env / secrets — never commit tokens or proxy keys
+.env
+.env.*
+*.local
+compose.yaml
+compose.*.yaml
+
+# test / coverage
+coverage/
+
+# editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp

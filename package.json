@@ -1,0 +1,22 @@
+{
+  "name": "octarine",
+  "version": "0.1.0",
+  "description": "TypeScript harness-generation CRS for OSS-CRS: generates OSS-Fuzz harnesses with Claude Code and verifies them by fuzzing to reject false-positive harnesses.",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "@types/marked": "^4.3.2",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "dependencies": {
+    "highlight.js": "^11.11.1",
+    "marked": "^4.3.0"
+  }
+}
